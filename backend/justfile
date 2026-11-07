@@ -1,0 +1,19 @@
+# List available recipes.
+default:
+    @just --list
+
+# Run the development server with automatic reload.
+dev:
+    uv run --locked litestar --app disaster_response_api.app:app run --reload
+
+# Run the production server. Set HOST, PORT, and WEB_CONCURRENCY as needed.
+prod:
+    uv run --locked --no-dev uvicorn disaster_response_api.app:app --host "${HOST:-0.0.0.0}" --port "${PORT:-8000}"
+
+# Create missing database tables from the initial schema.
+schema:
+    uv run --locked python -c 'from disaster_response_api.db import initialize_database; initialize_database()'
+
+# Run the test suite.
+test:
+    uv run --locked pytest -q
