@@ -23,3 +23,9 @@ To create an operator, run `just create-operator` locally and enter credentials 
 The disaster-response endpoints and family ownership checks are not yet implemented. Use HTTPS and secure device storage when deploying; this is still a hackathon scaffold, not a production-ready authentication service.
 
 Existing accounts created with the earlier scrypt implementation cannot sign in; recreate those development accounts.
+
+## Demo data
+
+Run `just demo-data` to create a family account (`family@demo.example`) and a government operator (`government@demo.example`) in the configured database. The script generates a separate password for each account and prints it once when the account is created. Save those passwords for the demo. Re-running the script leaves existing accounts and passwords unchanged. These accounts are intended for demo databases.
+
+Region-specific resources will be added once a region is selected and their API routes exist.

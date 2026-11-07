@@ -21,3 +21,7 @@ test:
 # Create an operator interactively (password is not echoed).
 create-operator:
     uv run --locked python -m haven.create_operator
+
+# Create demo accounts; existing accounts are left unchanged.
+demo-data:
+    uv run --locked python -m haven.demo_data
