@@ -1,4 +1,10 @@
-# Haven
+<p align="center">
+  <img src="frontend/public/haven-mark.svg" alt="Haven logo" width="200" height="200" />
+</p>
+
+<h1 align="center">Haven</h1>
+
+<p align="center">Disaster response coordination for government operations teams and relief partners.</p>
 
 Haven is a disaster response coordination project. It brings together a government operations dashboard, a partner portal for shelters and relief organizations, and an API for managing households, shelters, plans, supplies, and response activity.
 
