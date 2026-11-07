@@ -37,6 +37,26 @@ def report_from_row(row: tuple) -> dict:
     }
 
 
+@get("/disasters/{disaster_id:str}/plans", tags=["Plans"])
+async def list_plans(disaster_id: FromPath[str], request: Request, limit: FromQuery[int] = 100, offset: FromQuery[int] = 0) -> dict:
+    if not 1 <= limit <= 1000 or offset < 0:
+        error(400, "invalid_request", "limit must be between 1 and 1000 and offset must be nonnegative.")
+    async with connect() as connection:
+        require_operator(await current_user(request, connection))
+        await require_disaster(connection, disaster_id)
+        rows = await (await connection.execute(
+            "SELECT p.plan_json FROM families f JOIN plans p ON p.family_id = f.id "
+            "AND p.version = (SELECT MAX(p2.version) FROM plans p2 WHERE p2.family_id = f.id) "
+            "WHERE f.disaster_id = ? ORDER BY f.created_at, f.id LIMIT ? OFFSET ?",
+            (disaster_id, limit, offset),
+        )).fetchall()
+        total = (await (await connection.execute(
+            "SELECT count(*) FROM families f WHERE f.disaster_id = ? AND EXISTS "
+            "(SELECT 1 FROM plans p WHERE p.family_id = f.id)", (disaster_id,),
+        )).fetchone())[0]
+    return {"plans": [public_plan(json.loads(row[0])) for row in rows], "total": total, "limit": limit, "offset": offset}
+
+
 @post("/families/{family_id:str}/plan/generate", status_code=200, tags=["Plans"])
 async def generate_plan(family_id: FromPath[str], request: Request) -> dict:
     async with connect() as connection:
@@ -114,4 +134,4 @@ async def list_reports(disaster_id: FromPath[str], request: Request) -> dict:
         return {"reports": [report_from_row(row) async for row in cursor]}
 
 
-router = Router(path="/", route_handlers=[generate_plan, get_plan, create_report, list_reports])
+router = Router(path="/", route_handlers=[list_plans, generate_plan, get_plan, create_report, list_reports])

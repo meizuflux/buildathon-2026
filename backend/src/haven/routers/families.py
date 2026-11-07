@@ -7,9 +7,9 @@ from uuid import uuid4
 import apsw
 import msgspec
 from litestar import Request, Router, get, patch, post
-from litestar.params import FromPath, JSONBody
+from litestar.params import FromPath, FromQuery, JSONBody
 
-from haven.api_common import current_user, error, require_disaster, require_family
+from haven.api_common import current_user, error, require_disaster, require_family, require_operator
 from haven.auth import now, timestamp
 from haven.allocation import recompute_disasters
 from haven.db import connect
@@ -85,6 +85,21 @@ def family_from_row(row: tuple) -> dict:
 def require_people(adults: int, children: int) -> None:
     if adults + children == 0:
         error(400, "invalid_request", "A family must contain at least one person.")
+
+
+@get("")
+async def list_families(request: Request, disaster_id: FromQuery[str], limit: FromQuery[int] = 100, offset: FromQuery[int] = 0) -> dict:
+    if not 1 <= limit <= 1000 or offset < 0:
+        error(400, "invalid_request", "limit must be between 1 and 1000 and offset must be nonnegative.")
+    async with connect() as connection:
+        require_operator(await current_user(request, connection))
+        await require_disaster(connection, disaster_id)
+        rows = await (await connection.execute(
+            "SELECT * FROM families WHERE disaster_id = ? ORDER BY created_at, id LIMIT ? OFFSET ?",
+            (disaster_id, limit, offset),
+        )).fetchall()
+        total = (await (await connection.execute("SELECT count(*) FROM families WHERE disaster_id = ?", (disaster_id,))).fetchone())[0]
+    return {"families": [family_from_row(row) for row in rows], "total": total, "limit": limit, "offset": offset}
 
 
 @post("")
@@ -165,4 +180,4 @@ async def patch_family(family_id: FromPath[str], data: JSONBody[FamilyPatch], re
             raise
 
 
-router = Router(path="/families", route_handlers=[create_family, get_family, patch_family], tags=["Families"])
+router = Router(path="/families", route_handlers=[list_families, create_family, get_family, patch_family], tags=["Families"])

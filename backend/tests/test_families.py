@@ -105,3 +105,25 @@ def test_invalid_patch_preserves_family(family_client, changes):
     response = client.patch(url, headers=headers(), json=changes)
     assert response.status_code == 400, response.text
     assert client.get(url, headers=headers()).json() == family
+
+
+def test_operator_can_list_families_and_latest_plans(family_client):
+    client = family_client
+    first = client.post('/api/families', headers=headers(), json=profile()).json()
+    client.post('/api/families', headers=headers('stranger'), json=profile())
+    family_url = '/api/families?disaster_id=disaster&limit=1'
+    plan_url = '/api/disasters/disaster/plans?limit=1'
+    for url in (family_url, plan_url):
+        assert client.get(url).status_code == 401
+        assert client.get(url, headers=headers()).status_code == 403
+        assert client.get(url + '&offset=-1', headers=headers('operator')).status_code == 400
+    families = client.get(family_url, headers=headers('operator')).json()
+    assert families['total'] == 2 and len(families['families']) == 1
+    assert 'owner_user_id' not in families['families'][0]
+    plans = client.get(plan_url, headers=headers('operator')).json()
+    assert plans['total'] == 2 and len(plans['plans']) == 1
+    assert '_allocation_fingerprint' not in plans['plans'][0]
+    assert len(client.get(family_url + '&offset=1', headers=headers('operator')).json()['families']) == 1
+    assert client.get('/api/disasters/missing/plans', headers=headers('operator')).status_code == 404
+    assert client.get('/api/families?disaster_id=missing', headers=headers('operator')).status_code == 404
+    assert first['id'] in [row['id'] for row in client.get('/api/families?disaster_id=disaster', headers=headers('operator')).json()['families']]

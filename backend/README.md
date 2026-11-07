@@ -39,6 +39,8 @@ All paths below start with `/api`. Handlers are grouped in `haven/routers`, with
 | Method | Path | Behavior |
 | --- | --- | --- |
 | GET | `/disasters` | List active disasters. |
+| GET | `/families?disaster_id=...` | List family profiles for a disaster (operator only; paginated). |
+| GET | `/disasters/{disaster_id}/plans` | List latest family plans for a disaster (operator only; paginated). |
 | POST | `/families` | Create the signed-in family's profile (one per account). |
 | GET, PATCH | `/families/{family_id}` | Read or merge changes into a family profile. |
 | GET | `/shelters?disaster_id=...` | List shelters for a disaster. |
@@ -49,6 +51,8 @@ All paths below start with `/api`. Handlers are grouped in `haven/routers`, with
 | GET, POST | `/disasters/{disaster_id}/updates` | Read official updates or publish one as an operator. |
 | POST | `/families/{family_id}/reports` | Submit an idempotent family report. |
 | GET | `/disasters/{disaster_id}/reports` | List family reports as an operator. |
+
+Family and plan listings accept `limit` (1–1000, default 100) and `offset` (default 0), and return `total`, `limit`, and `offset`. Shelter listings already include resource availability, capabilities, and capacity.
 
 PATCH requests merge supplied nested fields, preserving omitted fields. Nullable notes may be cleared with `null`. Coordinates, counts, capacities, and enumerated values are validated. Errors use `{"error":{"code":"...","message":"..."}}` consistently.
 
