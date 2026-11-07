@@ -78,6 +78,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "litestar", extra = ["standard"] },
+    { name = "msgspec" },
 ]
 
 [package.dev-dependencies]
@@ -87,7 +88,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "litestar", extras = ["standard"], specifier = ">=2.0,<3" }]
+requires-dist = [
+    { name = "litestar", extras = ["standard"], specifier = ">=2.0,<3" },
+    { name = "msgspec", specifier = ">=0.18,<1" },
+]
 
 [package.metadata.requires-dev]
 dev = [

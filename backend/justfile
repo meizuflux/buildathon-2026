@@ -8,7 +8,7 @@ dev:
 
 # Run the production server. Set HOST, PORT, and WEB_CONCURRENCY as needed.
 prod:
-    uv run --locked --no-dev uvicorn haven.app:app --host "${HOST:-0.0.0.0}" --port "${PORT:-8000}"
+    uv run --locked --no-dev uvicorn haven.app:app --no-proxy-headers --host "${HOST:-0.0.0.0}" --port "${PORT:-8000}"
 
 # Create missing database tables from the initial schema.
 schema:
@@ -17,3 +17,7 @@ schema:
 # Run the test suite.
 test:
     uv run --locked pytest -q
+
+# Create an operator interactively (password is not echoed).
+create-operator:
+    uv run --locked python -m haven.create_operator

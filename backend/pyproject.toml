@@ -3,7 +3,10 @@ name = "haven"
 version = "0.1.0"
 description = "Haven API"
 requires-python = ">=3.12"
-dependencies = ["litestar[standard]>=2.0,<3"]
+dependencies = [
+    "litestar[standard]>=2.0,<3",
+    "msgspec>=0.18,<1",
+]
 
 [dependency-groups]
 dev = ["httpx>=0.27", "pytest>=8"]

@@ -76,3 +76,9 @@ CREATE TABLE IF NOT EXISTS reports (
     created_at TEXT NOT NULL,
     UNIQUE (family_id, client_request_id)
 );
+-- Shared across workers; expired counters are cleared on login.
+CREATE TABLE IF NOT EXISTS login_attempts (
+    key TEXT PRIMARY KEY,
+    window_start TEXT NOT NULL,
+    attempts INTEGER NOT NULL CHECK (attempts >= 0)
+);

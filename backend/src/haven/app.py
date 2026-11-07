@@ -2,8 +2,11 @@
 
 from contextlib import closing
 
-from litestar import Litestar, get
+from litestar import Litestar, Request, get
+from litestar.exceptions import HTTPException
+from litestar.response import Response
 
+from haven.auth import login, logout, me, register
 from haven.db import connect, initialize_database
 
 
@@ -15,4 +18,9 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-app = Litestar(route_handlers=[health], on_startup=[initialize_database])
+def http_error(request: Request, exc: HTTPException) -> Response:
+    code = exc.extra.get("code") if isinstance(exc.extra, dict) else None
+    return Response({"error": {"code": code or "invalid_request", "message": exc.detail}}, status_code=exc.status_code)
+
+
+app = Litestar(route_handlers=[health, register, login, logout, me], on_startup=[initialize_database], exception_handlers={HTTPException: http_error})
