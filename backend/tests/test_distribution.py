@@ -188,3 +188,38 @@ def test_citizen_cancels_pledge(client, h):
     assert client.post(f"/api/pledges/{pledge_id}/cancel", headers=h["family2"]).status_code == 404
     assert client.post(f"/api/pledges/{pledge_id}/cancel", headers=h["family"]).json()["status"] == "cancelled"
     assert [p["status"] for p in client.get("/api/pledges/mine", headers=h["family"]).json()] == ["cancelled"]
+
+
+# Demand-adjusted request cap -------------------------------------------------
+
+def test_cap_loosens_when_supply_is_plentiful(client, h):
+    stock_hub(client, h["op"], "hub_mid", water=(100, 0))
+    for _ in range(4):
+        assert new_request(client, h["family"], water=1).status_code == 201
+    limit = new_request(client, h["family"], water=1)
+    assert limit.status_code == 409
+    assert limit.json()["error"]["code"] == "request_limit"
+    body = client.get("/api/requests/limits", headers=h["family"]).json()
+    assert body["active"] == 4
+    assert body["categories"]["water"]["level"] == "low"
+
+
+def test_cap_tightens_for_scarce_items_only(client, h):
+    stock_hub(client, h["op"], "hub_mid", formula=(4, 0), water=(100, 0))
+    assert new_request(client, h["family2"], formula=4).status_code == 201  # formula demand now equals supply
+    assert new_request(client, h["family"], formula=1).status_code == 201
+    blocked = new_request(client, h["family"], formula=1)
+    assert blocked.status_code == 409
+    assert "formula" in blocked.json()["error"]["message"]
+    assert new_request(client, h["family"], water=2).status_code == 201  # water is still plentiful
+    limits = client.get("/api/requests/limits", headers=h["family"]).json()
+    assert limits["categories"]["formula"] == {"cap": 1, "level": "critical", "pressure": 1.25}
+    assert limits["categories"]["blankets"]["pressure"] is None  # no stock anywhere
+
+
+def test_cancelled_and_fulfilled_requests_free_a_slot(client, h):
+    stock_hub(client, h["op"], "hub_mid", formula=(2, 0))
+    first = new_request(client, h["family"], formula=2).json()["id"]  # pressure now 1.0 -> cap 1
+    assert new_request(client, h["family"], formula=1).status_code == 409
+    client.post(f"/api/requests/{first}/cancel", headers=h["family"])
+    assert new_request(client, h["family"], formula=1).status_code == 201

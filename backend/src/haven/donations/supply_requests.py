@@ -19,6 +19,7 @@ from haven.donations.common import (
     Items, Notes, adjust_stock, error, hub_exists, items_json, not_found, parse_items, pledged, require_role,
     reserved, stock, write_transaction,
 )
+from haven.donations.fairness import BASE_CAP, active_count, cap_for_items, demand_pressure, limits
 from haven.donations.planner import HubState, OpenRequest, plan
 
 Status = Literal["open", "assigned", "fulfilled", "cancelled"]
@@ -108,12 +109,23 @@ async def suggest_hubs(connection: apsw.AsyncConnection, requests: list[dict]) -
 
 @post("/api/requests")
 async def create_request(data: JSONBody[RequestCreate], request: Request) -> dict:
-    """A citizen asks for goods to be delivered or made ready for pickup."""
+    """A citizen asks for goods to be delivered or made ready for pickup.
+
+    Limited to a demand-adjusted number of active requests per citizen (see fairness.py).
+    """
     encoded = items_json(data.items)
     async with connect() as connection:
         actor = await require_role(request, connection, "family")
         request_id, stamp = "request_" + uuid4().hex, timestamp(now())
-        async with connection:
+        async with write_transaction(connection):
+            cap, scarcest = cap_for_items(await demand_pressure(connection), msgspec.to_builtins(data.items))
+            active = await active_count(connection, actor.user_id)
+            if active >= cap:
+                level = "very high" if cap == 1 else "high" if cap < BASE_CAP else "normal"
+                raise error(409, "request_limit",
+                            f"You have {active} active request{'s' * (active != 1)}. While demand for "
+                            f"{scarcest.replace('_', ' ')} is {level}, each person can have {cap} at a time "
+                            f"so supplies reach everyone.")
             await connection.execute(
                 "INSERT INTO supply_requests (id, user_id, items_json, latitude, longitude, address, notes, status, "
                 "created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'open', ?, ?)",
@@ -121,6 +133,14 @@ async def create_request(data: JSONBody[RequestCreate], request: Request) -> dic
                  stamp, stamp),
             )
         return request_info(await fetch(connection, request_id))
+
+
+@get("/api/requests/limits")
+async def request_limits(request: Request) -> dict:
+    """The citizen's active request count and the current per-category cap and demand level."""
+    async with connect() as connection:
+        actor = await require_role(request, connection, "family")
+        return await limits(connection, actor.user_id)
 
 
 @get("/api/requests/mine")
@@ -229,5 +249,5 @@ async def fulfill_request(request_id: FromPath[str], request: Request) -> dict:
         return request_info(await fetch(connection, request_id))
 
 
-HANDLERS = [create_request, my_requests, cancel_request, list_requests, claim_request, release_request,
+HANDLERS = [create_request, request_limits, my_requests, cancel_request, list_requests, claim_request, release_request,
             fulfill_request]
