@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API_BASE, fetchHub } from './api';
-import { CATEGORY_LABELS, HUB_TYPES, capacityHex } from './format';
+import { HUB_TYPES, capacityHex } from './format';
 import HubInventoryEditor from './HubInventoryEditor';
 import PledgeInbox from './PledgeInbox';
 
@@ -35,8 +35,8 @@ function HubSummary({ hub }) {
         </thead>
         <tbody>
           {hub.supplies.map((s) => (
-            <tr key={s.category} className="border-t border-gray-100">
-              <td className="py-1 text-gray-800">{CATEGORY_LABELS[s.category]}</td>
+            <tr key={s.resource_type_id} className="border-t border-gray-100">
+              <td className="py-1 text-gray-800">{s.name}</td>
               <td className="py-1 text-right tabular-nums">{s.quantity}</td>
               <td className="py-1 text-right tabular-nums text-gray-600">{s.reserved}</td>
               <td className="py-1 text-right tabular-nums text-gray-600">{s.pledged}</td>

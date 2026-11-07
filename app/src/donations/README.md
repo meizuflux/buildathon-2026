@@ -11,7 +11,7 @@ import CitizenDonations from './src/donations/CitizenDonations';
 | Component | What it does |
 |---|---|
 | `CitizenDonations` | The full tab: Find hubs, Request supplies, My activity |
-| `NearbyHubs` | Hub cards nearest first, with capacity, needs, and stock on hand. Filters: "I want to donate" (hubs that need a category) and "I need supplies" (hubs that have it). Public, no token |
+| `NearbyHubs` | Hub cards nearest first, with capacity, needs, and stock on hand. Filters: "I want to donate" (hubs that need an item) and "I need supplies" (hubs that have it). Public, no token |
 | `PledgeForm` | Pledge a drop-off at a hub, prefilled with that hub's needs. Full hubs (90% or more) refuse pledges |
 | `RequestForm` | Ask for supplies, sent with the GPS position. A government worker delivers them or sets them aside for pickup |
 | `MyActivity` | The citizen's requests and pledges, with status and cancel buttons |
@@ -20,6 +20,6 @@ Common props: `token` (a `family` bearer token, required for pledges, requests, 
 
 **Location** comes from the device GPS: `location.native.js` uses `expo-location` (install it with `npx expo install expo-location`) and `location.js` uses browser geolocation on web. Requests can't be sent without a location fix; the form shows retry on denial. Pass `location={{ lat, lng }}` to `CitizenDonations` to simulate a position.
 
-**Request limit:** the request form shows how many more requests the person can open. The limit is 3 by default and adjusts with demand for the items picked; Send is disabled at the limit.
+**Request limit:** the request form shows how many more requests the person can open. The limit is 3 by default and adjusts with demand for the items picked; citizens choose from 13 resource types (clinical items are operator-only); Send is disabled at the limit.
 
 Render inside a container with `flex: 1`. Run it in a browser through `donations-sandbox/`.

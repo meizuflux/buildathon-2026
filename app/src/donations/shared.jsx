@@ -1,13 +1,23 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-export const CATEGORIES = [
-  ['water', 'Water'],
+// Citizen-requestable resource types, mirroring the server catalog (GET /api/resource-types).
+// Clinical items (insulin, prescription refills, oxygen) are handled by operators, not citizens.
+export const CITIZEN_RESOURCES = [
+  ['water_bottled', 'Bottled water'],
+  ['water_gallon', 'Water jugs'],
+  ['food_mre', 'Ready-to-eat meals'],
+  ['food_canned', 'Canned food'],
+  ['baby_formula', 'Baby formula'],
   ['diapers', 'Diapers'],
-  ['formula', 'Formula'],
-  ['canned_goods', 'Canned goods'],
+  ['first_aid', 'First aid kits'],
   ['blankets', 'Blankets'],
+  ['cots', 'Cots'],
+  ['hygiene_kit', 'Hygiene kits'],
+  ['clothing', 'Clothing bundles'],
+  ['generator', 'Generators'],
+  ['fuel', 'Fuel'],
 ];
-export const LABELS = Object.fromEntries(CATEGORIES);
+export const LABELS = Object.fromEntries(CITIZEN_RESOURCES);
 export const HUB_TYPES = {
   mosque: 'Mosque',
   church: 'Church',
@@ -31,7 +41,7 @@ export const colors = {
 };
 
 export function itemsText(items) {
-  return items.map((i) => `${i.quantity} ${LABELS[i.category] ?? i.category}`).join(', ');
+  return items.map((i) => `${i.quantity} ${i.name ?? LABELS[i.resource_type_id] ?? i.resource_type_id}`).join(', ');
 }
 
 export function Chip({ label, active, onPress }) {
@@ -54,12 +64,12 @@ export function Button({ title, onPress, disabled, variant = 'primary' }) {
   );
 }
 
-/** One row per category with − / + controls. value: { [category]: quantity }. */
+/** One row per resource type with − / + controls. value: { [resource_type_id]: quantity }. */
 export function ItemPicker({ value, onChange, step = 1 }) {
   const set = (key, quantity) => onChange({ ...value, [key]: Math.max(0, Math.min(10000, quantity)) });
   return (
     <View style={styles.picker}>
-      {CATEGORIES.map(([key, label]) => (
+      {CITIZEN_RESOURCES.map(([key, label]) => (
         <View key={key} style={styles.pickerRow}>
           <Text style={styles.pickerLabel}>{label}</Text>
           <Pressable accessibilityLabel={`Fewer ${label}`} onPress={() => set(key, (value[key] ?? 0) - step)} style={styles.stepper}>
@@ -78,7 +88,7 @@ export function ItemPicker({ value, onChange, step = 1 }) {
 export function pickedItems(value) {
   return Object.entries(value)
     .filter(([, quantity]) => quantity > 0)
-    .map(([category, quantity]) => ({ category, quantity }));
+    .map(([resource_type_id, quantity]) => ({ resource_type_id, quantity }));
 }
 
 export const styles = StyleSheet.create({

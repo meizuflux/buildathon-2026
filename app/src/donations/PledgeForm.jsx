@@ -9,7 +9,11 @@ import { Button, FULL_PCT, ItemPicker, LABELS, colors, itemsText, pickedItems } 
  */
 export default function PledgeForm({ hub, token, apiBase = API_BASE, onDone, onCancel }) {
   const [items, setItems] = useState(() =>
-    Object.fromEntries(hub.supplies.filter((s) => s.need > 0).map((s) => [s.category, Math.min(s.need, 10)])),
+    Object.fromEntries(
+      hub.supplies
+        .filter((s) => s.need > 0 && LABELS[s.resource_type_id])
+        .map((s) => [s.resource_type_id, Math.min(s.need, 10)]),
+    ),
   );
   const [notes, setNotes] = useState('');
   const [state, setState] = useState({ kind: 'idle' });
@@ -48,7 +52,7 @@ export default function PledgeForm({ hub, token, apiBase = API_BASE, onDone, onC
       ) : (
         <>
           <Text style={styles.body}>
-            {needs.length ? `Most needed: ${needs.map((s) => `${LABELS[s.category]} (${s.need})`).join(', ')}` : 'No urgent needs; any of these help.'}
+            {needs.length ? `Most needed: ${needs.map((s) => `${s.name} (${s.need})`).join(', ')}` : 'No urgent needs; any of these help.'}
           </Text>
           <ItemPicker value={items} onChange={setItems} />
           <TextInput

@@ -1,10 +1,23 @@
-export const CATEGORY_LABELS = {
-  water: 'Water',
-  diapers: 'Diapers',
-  formula: 'Formula',
-  canned_goods: 'Canned goods',
-  blankets: 'Blankets',
-};
+// Mirrors the server resource catalog (GET /api/resource-types).
+export const RESOURCE_TYPES = [
+  ['water_bottled', 'Bottled water'],
+  ['water_gallon', 'Water jugs (1 gal)'],
+  ['food_mre', 'Ready-to-eat meals'],
+  ['food_canned', 'Canned food'],
+  ['baby_formula', 'Baby formula'],
+  ['diapers', 'Diapers'],
+  ['insulin', 'Insulin (refrigerated)'],
+  ['rx_refills', 'Prescription refills'],
+  ['first_aid', 'First aid kits'],
+  ['oxygen', 'Oxygen cylinders'],
+  ['blankets', 'Blankets'],
+  ['cots', 'Cots'],
+  ['hygiene_kit', 'Hygiene kits'],
+  ['clothing', 'Clothing bundles'],
+  ['generator', 'Generators'],
+  ['fuel', 'Fuel'],
+];
+export const RESOURCE_LABELS = Object.fromEntries(RESOURCE_TYPES);
 
 export const HUB_TYPES = {
   mosque: 'Mosque',
@@ -15,7 +28,8 @@ export const HUB_TYPES = {
   other: 'Hub',
 };
 
-export const itemsText = (items) => items.map((i) => `${i.quantity} ${CATEGORY_LABELS[i.category] ?? i.category}`).join(', ');
+export const itemsText = (items) =>
+  items.map((i) => `${i.quantity} ${i.name ?? RESOURCE_LABELS[i.resource_type_id] ?? i.resource_type_id}`).join(', ');
 
 export function timeAgo(iso) {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);

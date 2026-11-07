@@ -19,7 +19,7 @@ def hub(hub_id, lat_offset, capacity=50, **stock):
 
 def req(request_id, **items):
     return OpenRequest(
-        request_id, *HOME, [{"category": c, "quantity": q} for c, q in items.items()]
+        request_id, *HOME, [{"resource_type_id": c, "quantity": q} for c, q in items.items()]
     )
 
 

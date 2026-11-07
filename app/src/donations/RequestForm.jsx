@@ -29,12 +29,13 @@ function LocationStatus({ place }) {
   );
 }
 
-/** The cap that applies to the picked items (their scarcest category) and how many requests are left. */
+/** The cap that applies to the picked items (their scarcest resource type) and how many requests are left. */
 function limitFor(limits, picked) {
   if (!limits) return null;
-  const relevant = picked.length ? picked.map((i) => i.category) : Object.keys(limits.categories);
-  const scarcest = relevant.reduce((a, b) => (limits.categories[b].cap < limits.categories[a].cap ? b : a));
-  const { cap, level } = limits.categories[scarcest];
+  const caps = limits.resource_types;
+  const relevant = picked.length ? picked.map((i) => i.resource_type_id) : Object.keys(caps);
+  const scarcest = relevant.reduce((a, b) => ((caps[b]?.cap ?? 0) < (caps[a]?.cap ?? 0) ? b : a));
+  const { cap, level } = caps[scarcest] ?? { cap: 0, level: 'critical' };
   return { cap, level, scarcest, remaining: Math.max(cap - limits.active, 0) };
 }
 

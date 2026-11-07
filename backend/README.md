@@ -101,16 +101,16 @@ Community hubs (churches, fire stations, schools) hold donated supplies. Citizen
 
 Roles: `family` (citizen), `hub_staff` (linked to one hub through the `hub_staff` table), and `operator`. The `users.role` check now includes `hub_staff`, so recreate development databases created before this change.
 
-Supply categories are `water`, `diapers`, `formula`, `canned_goods`, and `blankets`. Each hub supply in a response has `quantity` (on hand), `target`, `pledged` (pending drop-offs), `reserved` (promised to assigned requests), `available = quantity - reserved`, and `need = max(target - quantity - pledged, 0)`. Staff set the capacity percentage by hand in check-ins. Hub responses also include `open_pickup` (the dispatched transport, or `null`).
+Hubs and back-office depots share one stock engine with the supply logistics API below: a hub is an organization with a `site_type` (church, fire station, and so on), and its supplies are rows in the shared `inventory` table, keyed by `resource_type_id` from the fixed catalog at `GET /api/resource-types`. Citizens can request and pledge every type except insulin, prescription refills, and oxygen (`citizen_requestable: false`). Each hub supply in a response has `resource_type_id`, `name`, `unit`, `quantity` (on hand), `target`, `pledged` (pending drop-offs), `reserved` (promised to approved shipments and claimed citizen requests), `available = quantity - reserved`, and `need = max(target - quantity - pledged, 0)`. Staff set the capacity percentage by hand in check-ins. Hub responses also include `open_pickup` (the dispatched transport, or `null`).
 
 ### Hubs and transport
 
 | Endpoint | Auth | Purpose |
 |---|---|---|
-| `GET /api/hubs/nearby?lat=&lng=&radius_km=25&limit=20&needs=&has=` | public | Hubs within the radius, nearest first, with `distance_km`. `needs=<category>` keeps hubs short on that category; `has=<category>` keeps hubs with some available |
+| `GET /api/hubs/nearby?lat=&lng=&radius_km=25&limit=20&needs=&has=` | public | Hubs within the radius, nearest first, with `distance_km`. `needs=<resource_type_id>` keeps hubs short on it; `has=<resource_type_id>` keeps hubs with some available |
 | `GET /api/hubs?min_capacity=0` | public | Hubs at or above a capacity percentage, fullest first |
 | `GET /api/hubs/{hub_id}` | public | One hub |
-| `PUT /api/hubs/{hub_id}/inventory` | that hub's staff, operator | `{"capacity_pct": 0-100, "supplies": [{"category","quantity","target"}]}` |
+| `PUT /api/hubs/{hub_id}/inventory` | that hub's staff, operator | `{"capacity_pct": 0-100, "supplies": [{"resource_type_id","quantity","target"}]}`. 409 `inventory_conflict` if a quantity would drop below what is reserved |
 | `POST /api/hubs/{hub_id}/pickups` | operator | Dispatches transport; 409 `pickup_already_open` if one is already dispatched |
 | `GET /api/pickups?status=` | operator | Pickups, newest first, with `hub_name` |
 | `PATCH /api/pickups/{pickup_id}` | operator | `{"status": "completed" or "cancelled", "capacity_pct": 25}`; capacity applies only when completed |
@@ -121,8 +121,8 @@ Supply categories are `water`, `diapers`, `formula`, `canned_goods`, and `blanke
 
 | Endpoint | Auth | Purpose |
 |---|---|---|
-| `POST /api/requests` | family | `{"items": [{"category","quantity"}], "latitude", "longitude", "address", "notes"}`. 409 `request_limit` when the citizen is at their cap |
-| `GET /api/requests/limits` | family | `{"active", "base_cap", "categories": {category: {"cap", "level", "pressure"}}}` |
+| `POST /api/requests` | family | `{"items": [{"resource_type_id","quantity"}], "latitude", "longitude", "address", "notes"}`. 409 `request_limit` when the citizen is at their cap |
+| `GET /api/requests/limits` | family | `{"active", "base_cap", "resource_types": {id: {"cap", "level", "pressure"}}}` |
 | `GET /api/requests/mine` | family | The citizen's requests, with source `hub` and `method` once assigned |
 | `POST /api/requests/{id}/cancel` | family (owner) | 409 `request_closed` once fulfilled or cancelled |
 | `GET /api/requests?status=&assigned_to_me=true` | operator | Oldest first. Open requests include `suggested_hubs`: up to three ranked hubs with `score` and `reasons`; the first is recommended |
@@ -132,7 +132,7 @@ Supply categories are `water`, `diapers`, `formula`, `canned_goods`, and `blanke
 
 **Recommended source hubs** (`donations/planner.py`): each hub that can cover a request is scored in kilometre-equivalents as distance, plus 15 times the share of the drawn units that would push the hub below its target (pending pledges count as stock), minus 5 for hubs at 90% capacity or more (2 at 70% or more), since sending goods out frees space. All open requests are planned together with a regret heuristic, so suggestions never promise the same units twice and a request with few options is placed before one with many.
 
-**Fair-share cap** (`donations/fairness.py`): a citizen may hold 3 active (open or assigned) requests. For each category, pressure is open demand divided by available stock; below 0.25 the cap rises to 4, from 0.6 it drops to 2, and from 1.0 to 1. A request is limited by its scarcest category.
+**Fair-share cap** (`donations/fairness.py`): a citizen may hold 3 active (open or assigned) requests. For each resource type, pressure is open demand divided by available hub stock; below 0.25 the cap rises to 4, from 0.6 it drops to 2, and from 1.0 to 1. A request is limited by its scarcest resource type.
 
 ### Drop-off pledges
 
@@ -146,5 +146,23 @@ Supply categories are `water`, `diapers`, `formula`, `canned_goods`, and `blanke
 | `GET /api/hubs/{hub_id}/pledges?status=pending` | that hub's staff, operator | Oldest first, with `donor_email` |
 | `POST /api/pledges/{id}/receive` | that hub's staff, operator | Adds the items to inventory |
 | `POST /api/pledges/{id}/no-show` | that hub's staff, operator | Closes the pledge without changing inventory |
+
+### Supply logistics (API contract part 2)
+
+These implement sections 1 to 5 of the dashboard's `frontend/docs/api-contract-part-2.md` (on the `frontend` branch): resource types, organizations, inventory, needs, and shipments. Everything is operator-only (403 `not_permitted`) except `GET /resource-types`, which any signed-in user may call. Hubs appear here as organizations, so a shipment out of a hub and a citizen request served from it draw on the same stock.
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/resource-types` | The 16-item catalog: `id`, `name`, `category`, `unit`, `citizen_requestable` |
+| `GET, POST /api/organizations?disaster_id=` | List or create organizations; hubs carry `site_type` and `capacity_pct` |
+| `GET, PATCH /api/organizations/{id}` | Read or nested-merge an organization (`location` and `contact` merge key by key) |
+| `GET /api/inventory?disaster_id=&holder_kind=organization&holder_id=` | Stock rows with `holder`, `quantity`, `reserved`, `target` |
+| `PATCH /api/organizations/{id}/inventory` | `{"items": [{"resource_type_id", "quantity"}]}` sets absolute quantities; 409 `inventory_conflict` below `reserved` |
+| `GET, POST /api/needs?disaster_id=&status=` | Shelter or organization needs for one resource type |
+| `PATCH /api/needs/{id}` | Change quantities, priority, status, `needed_by`, or notes; an open need closes as `fulfilled` when `quantity_fulfilled` reaches `quantity_needed` |
+| `GET, POST /api/shipments?disaster_id=` | Operator shipments start `approved` and reserve stock at the source; 409 `insufficient_inventory` if short |
+| `PATCH /api/shipments/{id}` | `{"status"}`, `eta`, `notes`. `approved → in_transit` deducts stock, `→ cancelled` releases it, `in_transit → delivered` adds stock at an organization destination and credits linked needs. Other changes return 409 `invalid_transition` |
+
+Broadcast targeting, conversations, and the activity feed (contract sections 6 and later) are not implemented yet.
 
 CORS allows all origins by default; set `CORS_ORIGINS` to a comma-separated list to restrict it. UI components live in `app/src/donations/` (React Native) and `frontend/src/donations/` (React + Tailwind); `donations-sandbox/` runs them against this API.

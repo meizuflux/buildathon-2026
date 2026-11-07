@@ -151,8 +151,8 @@ export default function OverCapacityHubs({ token, apiBase = API_BASE, pollMs = 3
                     {hub.supplies.length === 0
                       ? '—'
                       : hub.supplies.map((s) => (
-                          <div key={s.category} className="tabular-nums">
-                            {s.category.replace('_', ' ')}: {s.quantity}
+                          <div key={s.resource_type_id} className="tabular-nums">
+                            {s.name}: {s.quantity}
                             {s.quantity > s.target && <span className="ml-1 text-xs text-amber-700">(+{s.quantity - s.target} surplus)</span>}
                           </div>
                         ))}

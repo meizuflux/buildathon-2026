@@ -37,7 +37,7 @@ export const closePickup = (pickupId, status, capacityPct, options) =>
     body: JSON.stringify(capacityPct == null ? { status } : { status, capacity_pct: capacityPct }),
   });
 
-// supplies: [{ category, quantity, target }]
+// supplies: [{ resource_type_id, quantity, target }]
 export const updateInventory = (hubId, capacityPct, supplies, options) =>
   request(`/api/hubs/${encodeURIComponent(hubId)}/inventory`, {
     ...options,

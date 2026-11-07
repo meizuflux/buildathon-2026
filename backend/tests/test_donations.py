@@ -17,9 +17,11 @@ def test_nearby_hubs_sorted_and_filtered_by_radius(client):
     assert body[0]["distance_km"] < body[1]["distance_km"]
     assert body[0]["supplies"] == [
         {
-            "category": "water",
+            "resource_type_id": "water_bottled",
             "quantity": 10,
             "target": 50,
+            "name": "Bottled water",
+            "unit": "cases",
             "pledged": 0,
             "reserved": 0,
             "available": 10,
@@ -58,21 +60,24 @@ def test_inventory_update_upserts_supplies(client):
     update = {
         "capacity_pct": 70,
         "supplies": [
-            {"category": "water", "quantity": 60, "target": 50},
-            {"category": "blankets", "quantity": 2, "target": 20},
+            {"resource_type_id": "water_bottled", "quantity": 60, "target": 50},
+            {"resource_type_id": "blankets", "quantity": 2, "target": 20},
         ],
     }
     response = client.put("/api/hubs/hub_near/inventory", json=update, headers=operator)
     assert response.status_code == 200
     body = response.json()
     assert body["capacity_pct"] == 70
-    assert {s["category"]: s["need"] for s in body["supplies"]} == {"blankets": 18, "water": 0}
+    assert {s["resource_type_id"]: s["need"] for s in body["supplies"]} == {
+        "blankets": 18,
+        "water_bottled": 0,
+    }
     assert (
         client.put("/api/hubs/missing/inventory", json=update, headers=operator).status_code == 404
     )
     duplicate = {
         "capacity_pct": 10,
-        "supplies": [{"category": "water", "quantity": 1, "target": 1}] * 2,
+        "supplies": [{"resource_type_id": "water_bottled", "quantity": 1, "target": 1}] * 2,
     }
     assert (
         client.put("/api/hubs/hub_near/inventory", json=duplicate, headers=operator).status_code

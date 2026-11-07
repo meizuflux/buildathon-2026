@@ -1,16 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { API_BASE, fetchHubs, updateInventory } from './api';
+import { RESOURCE_TYPES } from './format';
 
-const CATEGORIES = [
-  ['water', 'Water'],
-  ['diapers', 'Diapers'],
-  ['formula', 'Formula'],
-  ['canned_goods', 'Canned goods'],
-  ['blankets', 'Blankets'],
-];
+const CATEGORIES = RESOURCE_TYPES;
 
 function formFromHub(hub) {
-  const byCategory = Object.fromEntries((hub?.supplies ?? []).map((s) => [s.category, s]));
+  const byCategory = Object.fromEntries((hub?.supplies ?? []).map((s) => [s.resource_type_id, s]));
   return {
     capacity: hub?.capacity_pct ?? 0,
     supplies: Object.fromEntries(
@@ -50,7 +45,7 @@ export default function HubInventoryEditor({ token, apiBase = API_BASE, hubId, o
     event.preventDefault();
     setStatus({ kind: 'saving' });
     try {
-      const supplies = CATEGORIES.map(([category]) => ({ category, ...form.supplies[category] }));
+      const supplies = CATEGORIES.map(([id]) => ({ resource_type_id: id, ...form.supplies[id] }));
       const saved = await updateInventory(selected, form.capacity, supplies, { apiBase, token });
       setHubs((list) => list.map((h) => (h.id === saved.id ? saved : h)));
       setStatus({ kind: 'saved' });
@@ -118,7 +113,7 @@ export default function HubInventoryEditor({ token, apiBase = API_BASE, hubId, o
           {CATEGORIES.map(([key, label]) => {
             const { quantity, target } = form.supplies[key];
             // Matches the API: pledged drop-offs already count toward the target.
-            const incoming = hub?.supplies.find((s) => s.category === key)?.pledged ?? 0;
+            const incoming = hub?.supplies.find((s) => s.resource_type_id === key)?.pledged ?? 0;
             const need = Math.max(target - quantity - incoming, 0);
             return (
               <tr key={key}>

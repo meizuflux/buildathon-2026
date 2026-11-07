@@ -2,7 +2,7 @@ import 'leaflet/dist/leaflet.css';
 import { useCallback, useEffect, useState } from 'react';
 import { CircleMarker, MapContainer, Popup, TileLayer, Tooltip } from 'react-leaflet';
 import { API_BASE, dispatchPickup, fetchHubs, fetchRequests } from './api';
-import { CATEGORY_LABELS, authMessage, capacityHex, itemsText } from './format';
+import { authMessage, capacityHex, itemsText } from './format';
 
 const DEFAULT_CENTER = [27.9506, -82.4572]; // Tampa demo region
 
@@ -15,7 +15,7 @@ function HubPopup({ hub, onDispatch, busy, error }) {
         {hub.capacity_pct}% full
       </div>
       <div className="text-xs text-gray-600">
-        {hub.supplies.map((s) => `${CATEGORY_LABELS[s.category]}: ${s.quantity}`).join(' · ') || 'No stock logged'}
+        {hub.supplies.map((s) => `${s.name}: ${s.quantity}`).join(' · ') || 'No stock logged'}
       </div>
       {hub.open_pickup ? (
         <div className="text-xs font-semibold text-green-700">Transport dispatched ✓</div>

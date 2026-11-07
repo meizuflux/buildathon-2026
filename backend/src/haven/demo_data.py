@@ -1,4 +1,5 @@
-"""Create demo accounts, the fictional Tampa scenario, and donation hubs with sample activity."""
+"""Create demo accounts, the fictional Tampa scenario, donation hubs, depots, shelter needs, and
+sample citizen activity."""
 
 import asyncio
 import json
@@ -13,7 +14,8 @@ from haven.db import connect, initialize_database
 # Demo region: the fictional Tampa hurricane scenario (see seed_tampa_scenario). Hubs are
 # fictional sites in real Tampa neighbourhoods, inside the scenario's shelter and family area.
 DEMO_CENTER = (27.9506, -82.4572)
-# (id, name, type, address, lat, lng, capacity_pct, {category: (quantity, target)})
+# Public hubs (organizations with a site type).
+# (id, name, site_type, address, lat, lng, capacity_pct, {resource_type_id: (quantity, target)})
 DEMO_HUBS = (
     (
         "hub_demo_ybor",
@@ -24,11 +26,11 @@ DEMO_HUBS = (
         -82.4360,
         96,
         {
-            "water": (900, 400),
-            "canned_goods": (650, 300),
+            "water_bottled": (900, 400),
+            "food_canned": (650, 300),
             "blankets": (80, 150),
             "diapers": (40, 200),
-            "formula": (10, 60),
+            "baby_formula": (10, 60),
         },
     ),
     (
@@ -39,7 +41,7 @@ DEMO_HUBS = (
         27.9480,
         -82.4580,
         92,
-        {"water": (1200, 500), "blankets": (300, 120), "canned_goods": (90, 200)},
+        {"water_bottled": (1200, 500), "blankets": (300, 120), "food_canned": (90, 200)},
     ),
     (
         "hub_demo_seminole_heights",
@@ -50,10 +52,10 @@ DEMO_HUBS = (
         -82.4590,
         74,
         {
-            "water": (250, 300),
+            "water_bottled": (250, 300),
             "diapers": (180, 150),
-            "formula": (35, 80),
-            "canned_goods": (210, 250),
+            "baby_formula": (35, 80),
+            "food_canned": (210, 250),
         },
     ),
     (
@@ -64,7 +66,7 @@ DEMO_HUBS = (
         27.9480,
         -82.5250,
         55,
-        {"water": (150, 400), "blankets": (60, 200), "canned_goods": (120, 300)},
+        {"water_bottled": (150, 400), "blankets": (60, 200), "food_canned": (120, 300)},
     ),
     (
         "hub_demo_east_tampa_mosque",
@@ -74,7 +76,7 @@ DEMO_HUBS = (
         27.9800,
         -82.4150,
         91,
-        {"canned_goods": (800, 300), "diapers": (500, 200), "water": (100, 300)},
+        {"food_canned": (800, 300), "diapers": (500, 200), "water_bottled": (100, 300)},
     ),
     (
         "hub_demo_sulphur_springs_fire",
@@ -84,7 +86,7 @@ DEMO_HUBS = (
         28.0230,
         -82.4520,
         30,
-        {"water": (60, 300), "formula": (5, 50), "diapers": (20, 100)},
+        {"water_bottled": (60, 300), "baby_formula": (5, 50), "diapers": (20, 100)},
     ),
     (
         "hub_demo_palmetto_beach",
@@ -94,8 +96,82 @@ DEMO_HUBS = (
         27.9520,
         -82.4140,
         18,
-        {"water": (40, 250), "blankets": (10, 100), "canned_goods": (30, 200)},
+        {"water_bottled": (40, 250), "blankets": (10, 100), "food_canned": (30, 200)},
     ),
+)
+
+ORG_TYPE_FOR_SITE = {
+    "church": "faith",
+    "mosque": "faith",
+    "fire_station": "government",
+    "school": "government",
+    "community_center": "nonprofit",
+}
+
+# Back-office organizations that hold bulk stock but aren't citizen-facing hubs.
+# (id, name, type, services, address, lat, lng, notes, {resource_type_id: quantity})
+DEMO_DEPOTS = (
+    (
+        "org_demo_county_depot",
+        "Hillsborough Relief Depot",
+        "government",
+        ["distribution", "logistics", "transport"],
+        "Fictional address, Port Tampa Bay, Tampa, FL",
+        27.9370,
+        -82.4430,
+        "Forklift and two box trucks on site.",
+        {
+            "water_bottled": 4000,
+            "water_gallon": 1500,
+            "food_mre": 6000,
+            "cots": 300,
+            "blankets": 800,
+            "generator": 12,
+            "fuel": 900,
+            "first_aid": 250,
+        },
+    ),
+    (
+        "org_demo_food_bank",
+        "Bayside Food Bank",
+        "nonprofit",
+        ["distribution", "food"],
+        "Fictional address, Drew Park, Tampa, FL",
+        27.9750,
+        -82.4990,
+        "Refrigerated truck available.",
+        {
+            "food_canned": 2500,
+            "food_mre": 1200,
+            "baby_formula": 400,
+            "diapers": 600,
+            "hygiene_kit": 500,
+            "insulin": 60,
+        },
+    ),
+)
+
+# Open shelter needs for the logistics dashboard: (id, shelter_id, resource_type_id, quantity,
+# priority, notes)
+DEMO_NEEDS = (
+    (
+        "need_demo_water",
+        "demo_tampa_shelter_03",
+        "water_bottled",
+        40,
+        "critical",
+        "Over capacity, turning families away.",
+    ),
+    ("need_demo_cots", "demo_tampa_shelter_07", "cots", 60, "high", "Overflow sleeping area."),
+    (
+        "need_demo_insulin",
+        "demo_tampa_shelter_12",
+        "insulin",
+        15,
+        "critical",
+        "Two diabetic residents.",
+    ),
+    ("need_demo_formula", "demo_tampa_shelter_15", "baby_formula", 30, "medium", ""),
 )
 
 
@@ -115,7 +191,10 @@ DEMO_ACCOUNTS = (
 DEMO_REQUESTS = (
     (
         "request_demo_formula",
-        [{"category": "formula", "quantity": 4}, {"category": "diapers", "quantity": 2}],
+        [
+            {"resource_type_id": "baby_formula", "quantity": 4},
+            {"resource_type_id": "diapers", "quantity": 2},
+        ],
         28.0180,
         -82.4600,
         "Fictional address, Sulphur Springs, Tampa, FL",
@@ -123,7 +202,7 @@ DEMO_REQUESTS = (
     ),
     (
         "request_demo_water",
-        [{"category": "water", "quantity": 24}],
+        [{"resource_type_id": "water_bottled", "quantity": 24}],
         27.9550,
         -82.4180,
         "Fictional address, Palmetto Beach, Tampa, FL",
@@ -131,7 +210,10 @@ DEMO_REQUESTS = (
     ),
     (
         "request_demo_blankets",
-        [{"category": "blankets", "quantity": 3}, {"category": "canned_goods", "quantity": 10}],
+        [
+            {"resource_type_id": "blankets", "quantity": 3},
+            {"resource_type_id": "food_canned", "quantity": 10},
+        ],
         27.9620,
         -82.4850,
         "Fictional address, West Tampa, Tampa, FL",
@@ -143,13 +225,16 @@ DEMO_PLEDGES = (
     (
         "pledge_demo_seminole_heights",
         "hub_demo_seminole_heights",
-        [{"category": "formula", "quantity": 12}],
+        [{"resource_type_id": "baby_formula", "quantity": 12}],
         "Dropping off after 5pm",
     ),
     (
         "pledge_demo_sulphur_springs",
         "hub_demo_sulphur_springs_fire",
-        [{"category": "water", "quantity": 48}, {"category": "diapers", "quantity": 30}],
+        [
+            {"resource_type_id": "water_bottled", "quantity": 48},
+            {"resource_type_id": "diapers", "quantity": 30},
+        ],
         "",
     ),
 )
@@ -192,25 +277,94 @@ async def seed_demo_data() -> dict[str, str | None]:
 
 
 async def seed_hubs() -> int:
-    """Insert demo hubs and their supplies; existing hubs are left unchanged. Returns hubs created."""
-    await initialize_database()
+    """Insert demo hubs, depots, and shelter needs into the Tampa scenario; existing rows are left
+    unchanged. Returns the number of hubs created.
+
+    Seeds the Tampa scenario first because every organization belongs to its disaster.
+    """
+    await seed_tampa_scenario()
     created = 0
+    stamp = timestamp(now())
     async with connect() as connection:
         async with connection:
-            for hub_id, name, kind, address, lat, lng, capacity, supplies in DEMO_HUBS:
+            for hub_id, name, site_type, address, lat, lng, capacity, supplies in DEMO_HUBS:
                 await connection.execute(
-                    "INSERT INTO hubs (id, name, type, address, latitude, longitude, capacity_pct, updated_at) "
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING",
-                    (hub_id, name, kind, address, lat, lng, capacity, timestamp(now())),
+                    "INSERT INTO organizations (id, disaster_id, name, type, services_json, status, "
+                    "address, latitude, longitude, contact_json, coverage_radius_km, notes, "
+                    "site_type, capacity_pct, updated_at) "
+                    "VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, 5, '', ?, ?, ?) "
+                    "ON CONFLICT(id) DO NOTHING",
+                    (
+                        hub_id,
+                        DEMO_DISASTER_ID,
+                        name,
+                        ORG_TYPE_FOR_SITE[site_type],
+                        json.dumps(["distribution"]),
+                        address,
+                        lat,
+                        lng,
+                        json.dumps({"name": None, "phone": None, "email": staff_email(hub_id)}),
+                        site_type,
+                        capacity,
+                        stamp,
+                    ),
                 )
                 if not await connection.changes():
                     continue
                 created += 1
-                for category, (quantity, target) in supplies.items():
+                for resource_type_id, (quantity, target) in supplies.items():
                     await connection.execute(
-                        "INSERT INTO hub_supplies (hub_id, category, quantity, target) VALUES (?, ?, ?, ?)",
-                        (hub_id, category, quantity, target),
+                        "INSERT INTO inventory (organization_id, resource_type_id, quantity, "
+                        "target, updated_at) VALUES (?, ?, ?, ?, ?)",
+                        (hub_id, resource_type_id, quantity, target, stamp),
                     )
+            for org_id, name, kind, services, address, lat, lng, notes, stock in DEMO_DEPOTS:
+                await connection.execute(
+                    "INSERT INTO organizations (id, disaster_id, name, type, services_json, status, "
+                    "address, latitude, longitude, contact_json, coverage_radius_km, notes, "
+                    "updated_at) VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, 25, ?, ?) "
+                    "ON CONFLICT(id) DO NOTHING",
+                    (
+                        org_id,
+                        DEMO_DISASTER_ID,
+                        name,
+                        kind,
+                        json.dumps(services),
+                        address,
+                        lat,
+                        lng,
+                        json.dumps({"name": None, "phone": None, "email": None}),
+                        notes,
+                        stamp,
+                    ),
+                )
+                if not await connection.changes():
+                    continue
+                for resource_type_id, quantity in stock.items():
+                    await connection.execute(
+                        "INSERT INTO inventory (organization_id, resource_type_id, quantity, "
+                        "updated_at) VALUES (?, ?, ?, ?)",
+                        (org_id, resource_type_id, quantity, stamp),
+                    )
+            for need_id, shelter_id, resource_type_id, quantity, priority, notes in DEMO_NEEDS:
+                await connection.execute(
+                    "INSERT INTO needs (id, disaster_id, requester_kind, requester_id, "
+                    "resource_type_id, quantity_needed, quantity_fulfilled, priority, status, "
+                    "needed_by, notes, created_at, updated_at) "
+                    "VALUES (?, ?, 'shelter', ?, ?, ?, 0, ?, 'open', NULL, ?, ?, ?) "
+                    "ON CONFLICT(id) DO NOTHING",
+                    (
+                        need_id,
+                        DEMO_DISASTER_ID,
+                        shelter_id,
+                        resource_type_id,
+                        quantity,
+                        priority,
+                        notes,
+                        stamp,
+                        stamp,
+                    ),
+                )
     return created
 
 
@@ -365,6 +519,7 @@ async def main() -> None:
             print(f"{email}: created; password: {password}")
     await seed_tampa_scenario()
     print("Tampa scenario ready: 20 fictional shelters and 1,000 synthetic families.")
+    print(f"Logistics ready: {len(DEMO_DEPOTS)} depots and {len(DEMO_NEEDS)} open shelter needs.")
     print(
         f"Seeded {len(DEMO_HUBS)} donation hubs, {len(DEMO_REQUESTS)} sample requests, "
         f"{len(DEMO_PLEDGES)} sample pledges."

@@ -43,17 +43,17 @@ class OpenRequest:
     id: str
     latitude: float
     longitude: float
-    items: list[dict]  # [{"category", "quantity"}]
+    items: list[dict]  # [{"resource_type_id", "quantity"}]
 
 
 def evaluate(request: OpenRequest, hub: HubState, remaining: dict[str, int]) -> dict | None:
     """Cost and explanation for serving `request` from `hub`, or None if the hub can't cover every item."""
-    if any(remaining.get(i["category"], 0) < i["quantity"] for i in request.items):
+    if any(remaining.get(i["resource_type_id"], 0) < i["quantity"] for i in request.items):
         return None
     distance = haversine_km(request.latitude, request.longitude, hub.latitude, hub.longitude)
     drawn = below = 0
     for item in request.items:
-        category, quantity = item["category"], item["quantity"]
+        category, quantity = item["resource_type_id"], item["quantity"]
         # Units above this floor are surplus; incoming pledges lower how much the hub must keep.
         floor = max(hub.target.get(category, 0) - hub.pledged.get(category, 0), 0)
         surplus = max(remaining[category] - floor, 0)
@@ -116,7 +116,7 @@ def plan(requests: list[OpenRequest], hubs: list[HubState]) -> dict[str, list[di
         result[request.id] = options[:MAX_OPTIONS]
         chosen = remaining[options[0]["id"]]
         for item in request.items:
-            chosen[item["category"]] -= item["quantity"]
+            chosen[item["resource_type_id"]] -= item["quantity"]
         del pending[request.id]
 
     for request_id in pending:

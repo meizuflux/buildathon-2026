@@ -1,4 +1,4 @@
-"""Donation hubs: lookup, inventory check-ins, and transport pickup dispatch."""
+"""Donation hubs (organizations with a public site): lookup, check-ins, and pickup dispatch."""
 
 from typing import Annotated, Any, Literal
 from uuid import uuid4
@@ -11,7 +11,8 @@ from litestar.params import FromPath, FromQuery, JSONBody, Parameter
 from haven.auth import now, timestamp
 from haven.db import connect
 from haven.donations.common import (
-    Category,
+    ResourceTypeId,
+    catalog,
     error,
     haversine_km,
     hub_exists,
@@ -19,7 +20,7 @@ from haven.donations.common import (
     pledged,
     require_hub_access,
     require_role,
-    reserved,
+    stock,
     write_transaction,
 )
 
@@ -27,14 +28,14 @@ NonNegative = Annotated[int, msgspec.Meta(ge=0, le=1_000_000)]
 
 
 class SupplyIn(msgspec.Struct, forbid_unknown_fields=True):
-    category: Category
+    resource_type_id: ResourceTypeId
     quantity: NonNegative
     target: NonNegative
 
 
 class InventoryUpdate(msgspec.Struct, forbid_unknown_fields=True):
     capacity_pct: Annotated[int, msgspec.Meta(ge=0, le=100)]
-    supplies: Annotated[list[SupplyIn], msgspec.Meta(max_length=5)] = []
+    supplies: Annotated[list[SupplyIn], msgspec.Meta(max_length=50)] = []
 
 
 class PickupCreate(msgspec.Struct, forbid_unknown_fields=True):
@@ -47,7 +48,22 @@ class PickupUpdate(msgspec.Struct, forbid_unknown_fields=True):
     capacity_pct: Annotated[int, msgspec.Meta(ge=0, le=100)] | None = None
 
 
-_HUB_COLUMNS = "id, name, type, address, latitude, longitude, capacity_pct, updated_at"
+_HUB_COLUMNS = (
+    "id, disaster_id, name, site_type, status, address, latitude, longitude, capacity_pct, "
+    "updated_at"
+)
+_HUB_KEYS = (
+    "id",
+    "disaster_id",
+    "name",
+    "type",
+    "status",
+    "address",
+    "latitude",
+    "longitude",
+    "capacity_pct",
+    "updated_at",
+)
 
 
 def pickup_info(row: tuple) -> dict:
@@ -55,39 +71,46 @@ def pickup_info(row: tuple) -> dict:
 
 
 async def load_hubs(
-    connection: apsw.AsyncConnection, where: str = "", params: tuple = ()
+    connection: apsw.AsyncConnection, where: str = "", params: tuple = (), order: str = "name"
 ) -> list[dict]:
-    """Load hubs with supplies, pledge and reservation totals, and any open pickup.
+    """Load hubs with supplies, reservation and pledge totals, and any open pickup.
 
-    Per supply: `available` = quantity not promised to assigned requests;
+    `where` is extra SQL (starting with AND) on the organizations table. Per supply:
+    `available` = on hand minus reserved (shipments and claimed citizen requests);
     `need` = target minus what's on hand and already pledged.
     """
     hubs: dict[str, dict[str, Any]] = {}
-    async for row in await connection.execute(f"SELECT {_HUB_COLUMNS} FROM hubs {where}", params):
-        hubs[str(row[0])] = dict(zip(_HUB_COLUMNS.split(", "), row)) | {
-            "supplies": [],
-            "open_pickup": None,
-        }
+    async for row in await connection.execute(
+        f"SELECT {_HUB_COLUMNS} FROM organizations WHERE site_type IS NOT NULL {where} "
+        f"ORDER BY {order}",
+        params,
+    ):
+        hubs[str(row[0])] = dict(zip(_HUB_KEYS, row)) | {"supplies": [], "open_pickup": None}
     if not hubs:
         return []
     ids = tuple(hubs)
     marks = ",".join("?" * len(ids))
-    pledges, reservations = await pledged(connection, ids), await reserved(connection, ids)
-    async for hub_id, category, quantity, target in await connection.execute(
-        f"SELECT hub_id, category, quantity, target FROM hub_supplies WHERE hub_id IN ({marks}) ORDER BY category",
+    names = await catalog(connection)
+    incoming = await pledged(connection, ids)
+    async for hub_id, resource_type_id, quantity, held, target in await connection.execute(
+        f"SELECT i.organization_id, i.resource_type_id, i.quantity, i.reserved, i.target "
+        f"FROM inventory i JOIN resource_types t ON t.id = i.resource_type_id "
+        f"WHERE i.organization_id IN ({marks}) ORDER BY t.sort_order",
         ids,
     ):
-        incoming = pledges.get(hub_id, {}).get(category, 0)
-        held = reservations.get(hub_id, {}).get(category, 0)
-        hubs[hub_id]["supplies"].append(
+        coming = incoming.get(str(hub_id), {}).get(str(resource_type_id), 0)
+        entry = names.get(str(resource_type_id), {})
+        hubs[str(hub_id)]["supplies"].append(
             {
-                "category": category,
+                "resource_type_id": resource_type_id,
+                "name": entry.get("name", resource_type_id),
+                "unit": entry.get("unit", ""),
                 "quantity": quantity,
                 "target": target,
-                "pledged": incoming,
+                "pledged": coming,
                 "reserved": held,
                 "available": max(quantity - held, 0),
-                "need": max(target - quantity - incoming, 0),
+                "need": max(target - quantity - coming, 0),
             }
         )
     async for row in await connection.execute(
@@ -95,20 +118,21 @@ async def load_hubs(
         f"WHERE status = 'dispatched' AND hub_id IN ({marks})",
         ids,
     ):
-        hubs[row[1]]["open_pickup"] = pickup_info(row)
+        hubs[str(row[1])]["open_pickup"] = pickup_info(row)
     return list(hubs.values())
 
 
 async def load_hub(connection: apsw.AsyncConnection, hub_id: str) -> dict:
-    hubs = await load_hubs(connection, "WHERE id = ?", (hub_id,))
+    hubs = await load_hubs(connection, "AND id = ?", (hub_id,))
     if not hubs:
         raise not_found()
     return hubs[0]
 
 
-def supply(hub: dict, category: str) -> dict:
+def supply(hub: dict, resource_type_id: str) -> dict:
     return next(
-        (s for s in hub["supplies"] if s["category"] == category), {"need": 0, "available": 0}
+        (s for s in hub["supplies"] if s["resource_type_id"] == resource_type_id),
+        {"need": 0, "available": 0},
     )
 
 
@@ -118,15 +142,16 @@ async def nearby_hubs(
     lng: Annotated[float, Parameter(ge=-180, le=180)],
     radius_km: Annotated[float, Parameter(gt=0, le=500)] = 25,
     limit: Annotated[int, Parameter(ge=1, le=100)] = 20,
-    needs: FromQuery[Category | None] = None,
-    has: FromQuery[Category | None] = None,
+    needs: FromQuery[ResourceTypeId | None] = None,
+    has: FromQuery[ResourceTypeId | None] = None,
 ) -> list[dict]:
-    """Hubs within `radius_km` of a point, nearest first.
+    """Active hubs within `radius_km` of a point, nearest first.
 
-    `needs` keeps hubs short on a category (drop-off targets); `has` keeps hubs with some available.
+    `needs` keeps hubs short on a resource type (drop-off targets); `has` keeps hubs with some
+    available.
     """
     async with connect() as connection:
-        hubs = await load_hubs(connection)
+        hubs = await load_hubs(connection, "AND status != 'inactive'")
     for hub in hubs:
         hub["distance_km"] = round(haversine_km(lat, lng, hub["latitude"], hub["longitude"]), 2)
     hubs = [
@@ -144,7 +169,7 @@ async def list_hubs(min_capacity: Annotated[int, Parameter(ge=0, le=100)] = 0) -
     """All hubs at or above `min_capacity` percent full, fullest first."""
     async with connect() as connection:
         return await load_hubs(
-            connection, "WHERE capacity_pct >= ? ORDER BY capacity_pct DESC, name", (min_capacity,)
+            connection, "AND capacity_pct >= ?", (min_capacity,), "capacity_pct DESC, name"
         )
 
 
@@ -158,25 +183,46 @@ async def get_hub(hub_id: FromPath[str]) -> dict:
 async def update_inventory(
     hub_id: FromPath[str], data: JSONBody[InventoryUpdate], request: Request
 ) -> dict:
-    """Hub check-in: set capacity and upsert supply levels (that hub's staff, or an operator)."""
-    categories = [s.category for s in data.supplies]
-    if len(categories) != len(set(categories)):
-        raise error(400, "invalid_request", "Each supply category may appear once.")
+    """Hub check-in: set capacity and on-hand/target levels (that hub's staff, or an operator).
+
+    A quantity can't drop below what is already reserved for shipments and claimed requests.
+    """
+    ids = [s.resource_type_id for s in data.supplies]
+    if len(ids) != len(set(ids)):
+        raise error(400, "invalid_request", "Each resource type may appear once.")
     async with connect() as connection:
         actor = await require_role(request, connection, "operator", "hub_staff")
         require_hub_access(actor, hub_id)
-        async with connection:
-            await connection.execute(
-                "UPDATE hubs SET capacity_pct = ?, updated_at = ? WHERE id = ?",
-                (data.capacity_pct, timestamp(now()), hub_id),
-            )
-            if not await connection.changes():
+        known = await catalog(connection)
+        unknown = [i for i in ids if i not in known]
+        if unknown:
+            raise error(400, "invalid_request", f"Unknown resource type: {unknown[0]}.")
+        async with write_transaction(connection):
+            if not await hub_exists(connection, hub_id):
                 raise not_found()
+            current = await stock(connection, hub_id)
+            for s in data.supplies:
+                held = current.get(s.resource_type_id, (0, 0, 0))[1]
+                if s.quantity < held:
+                    raise error(
+                        409,
+                        "inventory_conflict",
+                        f"{known[s.resource_type_id]['name']}: {held} are reserved for "
+                        f"shipments and citizen requests.",
+                    )
+            stamp = timestamp(now())
+            await connection.execute(
+                "UPDATE organizations SET capacity_pct = ?, updated_at = ? WHERE id = ?",
+                (data.capacity_pct, stamp, hub_id),
+            )
             for s in data.supplies:
                 await connection.execute(
-                    "INSERT INTO hub_supplies (hub_id, category, quantity, target) VALUES (?, ?, ?, ?) "
-                    "ON CONFLICT(hub_id, category) DO UPDATE SET quantity = excluded.quantity, target = excluded.target",
-                    (hub_id, s.category, s.quantity, s.target),
+                    "INSERT INTO inventory (organization_id, resource_type_id, quantity, target, "
+                    "updated_at) VALUES (?, ?, ?, ?, ?) "
+                    "ON CONFLICT(organization_id, resource_type_id) DO UPDATE SET "
+                    "quantity = excluded.quantity, target = excluded.target, "
+                    "updated_at = excluded.updated_at",
+                    (hub_id, s.resource_type_id, s.quantity, s.target, stamp),
                 )
         return await load_hub(connection, hub_id)
 
@@ -203,13 +249,15 @@ async def dispatch_pickup(
                 )
             row = ("pickup_" + uuid4().hex, hub_id, "dispatched", notes, timestamp(now()))
             await connection.execute(
-                "INSERT INTO pickup_requests (id, hub_id, status, notes, created_at, requested_by) VALUES (?, ?, ?, ?, ?, ?)",
+                "INSERT INTO pickup_requests (id, hub_id, status, notes, created_at, "
+                "requested_by) VALUES (?, ?, ?, ?, ?, ?)",
                 (*row, actor.user_id),
             )
     return pickup_info(row)
 
 
 _PICKUP_COLUMNS = "p.id, p.hub_id, p.status, p.notes, p.created_at, h.name"
+_PICKUP_FROM = "FROM pickup_requests p JOIN organizations h ON h.id = p.hub_id"
 
 
 @get("/pickups")
@@ -223,8 +271,8 @@ async def list_pickups(
         await require_role(request, connection, "operator")
         rows = await (
             await connection.execute(
-                f"SELECT {_PICKUP_COLUMNS} FROM pickup_requests p JOIN hubs h ON h.id = p.hub_id "
-                f"{where} ORDER BY p.created_at DESC LIMIT 200",
+                f"SELECT {_PICKUP_COLUMNS} {_PICKUP_FROM} {where} "
+                f"ORDER BY p.created_at DESC LIMIT 200",
                 params,
             )
         ).fetchall()
@@ -241,8 +289,7 @@ async def update_pickup(
         async with write_transaction(connection):
             row = await (
                 await connection.execute(
-                    f"SELECT {_PICKUP_COLUMNS} FROM pickup_requests p JOIN hubs h ON h.id = p.hub_id WHERE p.id = ?",
-                    (pickup_id,),
+                    f"SELECT {_PICKUP_COLUMNS} {_PICKUP_FROM} WHERE p.id = ?", (pickup_id,)
                 )
             ).fetchone()
             if row is None:
@@ -254,7 +301,7 @@ async def update_pickup(
             )
             if data.status == "completed" and data.capacity_pct is not None:
                 await connection.execute(
-                    "UPDATE hubs SET capacity_pct = ?, updated_at = ? WHERE id = ?",
+                    "UPDATE organizations SET capacity_pct = ?, updated_at = ? WHERE id = ?",
                     (data.capacity_pct, timestamp(now()), row[1]),
                 )
     return pickup_info((row[0], row[1], data.status, row[3], row[4])) | {"hub_name": row[5]}

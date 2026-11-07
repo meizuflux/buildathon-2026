@@ -22,7 +22,7 @@ async function request(path, { apiBase = API_BASE, token, method = 'GET', body }
   return data;
 }
 
-// filter: { needs: category } for hubs that want a donation, { has: category } for hubs that can give one.
+// filter: { needs: resource_type_id } for hubs that want a donation, { has: resource_type_id } for hubs that can give one.
 export function fetchNearbyHubs(lat, lng, { radiusKm = 25, needs, has, ...options } = {}) {
   const params = new URLSearchParams({ lat: String(lat), lng: String(lng), radius_km: String(radiusKm) });
   if (needs) params.set('needs', needs);
@@ -30,7 +30,7 @@ export function fetchNearbyHubs(lat, lng, { radiusKm = 25, needs, has, ...option
   return request(`/api/hubs/nearby?${params}`, options);
 }
 
-// items: [{ category, quantity }]
+// items: [{ resource_type_id, quantity }]
 export const createRequest = ({ items, latitude, longitude, address = '', notes = '' }, options) =>
   request('/api/requests', { ...options, method: 'POST', body: { items, latitude, longitude, address, notes } });
 
@@ -47,5 +47,5 @@ export const myPledges = (options) => request('/api/pledges/mine', options);
 export const cancelPledge = (id, options) =>
   request(`/api/pledges/${encodeURIComponent(id)}/cancel`, { ...options, method: 'POST' });
 
-// { active, base_cap, categories: { [category]: { cap, level, pressure } } }
+// { active, base_cap, resource_types: { [resource_type_id]: { cap, level, pressure } } }
 export const requestLimits = (options) => request('/api/requests/limits', options);

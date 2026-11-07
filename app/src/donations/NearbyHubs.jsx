@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { API_BASE, DEMO_CENTER, fetchNearbyHubs } from './api';
-import { CATEGORIES, Chip, FULL_PCT, HUB_TYPES, LABELS, colors } from './shared';
+import { CITIZEN_RESOURCES, Chip, FULL_PCT, HUB_TYPES, LABELS, colors } from './shared';
 
 function capacityColor(pct) {
   if (pct >= FULL_PCT) return colors.danger;
@@ -40,9 +40,9 @@ function HubCard({ hub, onPress, actionLabel }) {
         <View style={styles.chips}>
           <Text style={styles.label}>Needs:</Text>
           {needs.map((s) => (
-            <View key={s.category} style={styles.needChip}>
+            <View key={s.resource_type_id} style={styles.needChip}>
               <Text style={styles.needText}>
-                {LABELS[s.category] ?? s.category} ({s.need})
+                {s.name} ({s.need})
               </Text>
             </View>
           ))}
@@ -51,7 +51,7 @@ function HubCard({ hub, onPress, actionLabel }) {
       {available.length > 0 && (
         <Text style={styles.meta}>
           <Text style={styles.label}>Has: </Text>
-          {available.map((s) => `${LABELS[s.category] ?? s.category} ${s.available}`).join(' · ')}
+          {available.map((s) => `${s.name} ${s.available}`).join(' · ')}
         </Text>
       )}
       {actionLabel && !full && <Text style={styles.action}>{actionLabel} ›</Text>}
@@ -73,7 +73,7 @@ export default function NearbyHubs({
   lat = DEMO_CENTER.lat, lng = DEMO_CENTER.lng, apiBase = API_BASE, radiusKm = 25, onSelectHub, actionLabel,
 }) {
   const [mode, setMode] = useState('all');
-  const [category, setCategory] = useState('water');
+  const [category, setCategory] = useState('water_bottled');
   const [hubs, setHubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -110,7 +110,7 @@ export default function NearbyHubs({
       </ScrollView>
       {mode !== 'all' && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-          {CATEGORIES.map(([key, label]) => (
+          {CITIZEN_RESOURCES.map(([key, label]) => (
             <Chip key={key} label={label} active={category === key} onPress={() => setCategory(key)} />
           ))}
         </ScrollView>

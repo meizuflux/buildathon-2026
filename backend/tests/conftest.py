@@ -46,12 +46,21 @@ def hub_client(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "donations.sqlite3"))
     with TestClient(app=app) as client:
         with closing(sqlite3.connect(database_path())) as connection, connection:
-            connection.executemany(
-                "INSERT INTO hubs (id, name, type, address, latitude, longitude, capacity_pct, updated_at) "
-                "VALUES (?, ?, ?, '1 Main St', ?, ?, ?, '2026-01-01T00:00:00Z')",
-                HUBS,
+            connection.execute(
+                "INSERT INTO disasters VALUES ('disaster_test', 'hurricane', 'Test', 'active', "
+                "'Test area', '2026-01-01T00:00:00Z')"
             )
-            connection.execute("INSERT INTO hub_supplies VALUES ('hub_near', 'water', 10, 50)")
+            connection.executemany(
+                "INSERT INTO organizations (id, disaster_id, name, type, services_json, status, "
+                "address, latitude, longitude, contact_json, site_type, capacity_pct, updated_at) "
+                "VALUES (?, 'disaster_test', ?, 'nonprofit', '[]', 'active', '1 Main St', ?, ?, "
+                "'{}', ?, ?, '2026-01-01T00:00:00Z')",
+                [(i, n, lat, lng, site, cap) for i, n, site, lat, lng, cap in HUBS],
+            )
+            connection.execute(
+                "INSERT INTO inventory (organization_id, resource_type_id, quantity, target, "
+                "updated_at) VALUES ('hub_near', 'water_bottled', 10, 50, '2026-01-01T00:00:00Z')"
+            )
         insert_user("op@example.com", "operator")
         insert_user("op2@example.com", "operator")
         insert_user("family@example.com", "family")
