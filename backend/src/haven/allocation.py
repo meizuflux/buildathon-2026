@@ -22,38 +22,18 @@ from haven.allocation_policy import (
 )
 from haven.auth import now, timestamp
 from haven.openapi import Plan
+from haven.rows import (
+    ALLOCATION_FAMILY_COLUMNS,
+    ALLOCATION_SHELTER_COLUMNS,
+    allocation_family_from_row,
+    allocation_shelter_from_row,
+    projection,
+    row_mapping,
+)
 
 
 def _loads(value: str) -> dict[str, Any]:
     return json.loads(value)
-
-
-def _family(row: tuple) -> dict[str, Any]:
-    return {
-        "id": row[0],
-        "disaster_id": row[1],
-        "adults": row[2],
-        "children": row[3],
-        "location": {"latitude": row[4], "longitude": row[5]},
-        "needs": _loads(row[6]),
-        "resources": _loads(row[7]),
-        "created_at": row[8],
-    }
-
-
-def _shelter(row: tuple, allocation_budget: int) -> dict[str, Any]:
-    return {
-        "id": row[0],
-        "disaster_id": row[1],
-        "name": row[2],
-        "address": row[3],
-        "location": {"latitude": row[4], "longitude": row[5]},
-        "status": row[6],
-        "capacity": _loads(row[7]),
-        "capabilities": _loads(row[8]),
-        "resources": _loads(row[9]),
-        "allocation_budget": allocation_budget,
-    }
 
 
 async def set_shelter_allocation_budget(
@@ -301,32 +281,31 @@ async def recompute_disasters(
 
     family_rows = await (
         await connection.execute(
-            f"SELECT id, disaster_id, adults, children, latitude, longitude, needs_json, resources_json, created_at "
+            f"SELECT {projection(ALLOCATION_FAMILY_COLUMNS)} "
             f"FROM families WHERE disaster_id IN ({marks}) ORDER BY disaster_id, created_at, id",
             ids,
         )
     ).fetchall()
     families_by_disaster: dict[str, list[dict[str, Any]]] = {disaster_id: [] for disaster_id in ids}
     for row in family_rows:
-        row = cast(tuple[str, str, int, int, float, float, str, str, str], row)
-        family = _family(row)
+        family = allocation_family_from_row(row)
         families_by_disaster[family["disaster_id"]].append(family)
 
     shelter_rows = await (
         await connection.execute(
-            f"SELECT id, disaster_id, name, address, latitude, longitude, status, capacity_json, "
-            f"capabilities_json, resources_json FROM shelters WHERE disaster_id IN ({marks}) ORDER BY disaster_id, id",
+            f"SELECT {projection(ALLOCATION_SHELTER_COLUMNS)} "
+            f"FROM shelters WHERE disaster_id IN ({marks}) ORDER BY disaster_id, id",
             ids,
         )
     ).fetchall()
     shelters_by_disaster: dict[str, list[dict[str, Any]]] = {disaster_id: [] for disaster_id in ids}
     for row in shelter_rows:
-        row = cast(tuple[str, str, str, str, float, float, str, str, str, str], row)
-        raw_capacity = _loads(row[7])
+        values = row_mapping(row, ALLOCATION_SHELTER_COLUMNS)
+        raw_capacity = _loads(values["capacity_json"])
         budget_row = await (
             await connection.execute(
                 "SELECT allocation_budget FROM shelter_capacity_budgets WHERE shelter_id = ?",
-                (row[0],),
+                (values["id"],),
             )
         ).fetchone()
         budget = int(budget_row[0]) if budget_row else int(raw_capacity["available_people"])
@@ -334,9 +313,9 @@ async def recompute_disasters(
         await connection.execute(
             "INSERT INTO shelter_capacity_budgets (shelter_id, allocation_budget) VALUES (?, ?) "
             "ON CONFLICT(shelter_id) DO UPDATE SET allocation_budget = excluded.allocation_budget",
-            (row[0], budget),
+            (values["id"], budget),
         )
-        shelters_by_disaster[row[1]].append(_shelter(row, budget))
+        shelters_by_disaster[values["disaster_id"]].append(allocation_shelter_from_row(row, budget))
 
     latest: dict[str, tuple[int, dict[str, Any]]] = {}
     for family in [family for pool in families_by_disaster.values() for family in pool]:

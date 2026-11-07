@@ -15,13 +15,21 @@ from haven.auth import now, operator_guard, timestamp
 from haven.db import connect
 from haven.openapi import (
     BEARER,
-    Disaster,
     DisasterList,
     Shelter,
     ShelterList,
     Update,
     UpdateList,
     errors,
+)
+from haven.rows import (
+    DISASTER_COLUMNS,
+    SHELTER_COLUMNS,
+    UPDATE_COLUMNS,
+    disaster_from_row,
+    projection,
+    shelter_from_row,
+    update_from_row,
 )
 
 NonNegative = Annotated[int, msgspec.Meta(ge=0)]
@@ -108,21 +116,6 @@ class UpdateCreate(msgspec.Struct, forbid_unknown_fields=True):
     severity: Literal["info", "warning", "critical"]
 
 
-def shelter_from_row(row: tuple) -> Shelter:
-    return {
-        "id": row[0],
-        "disaster_id": row[1],
-        "name": row[2],
-        "address": row[3],
-        "location": {"latitude": row[4], "longitude": row[5]},
-        "status": row[6],
-        "capacity": json.loads(row[7]),
-        "capabilities": json.loads(row[8]),
-        "resources": json.loads(row[9]),
-        "updated_at": row[10],
-    }
-
-
 def validate_shelter(
     shelter: Mapping[str, Any], *, allow_derived_capacity_overflow: bool = False
 ) -> None:
@@ -136,23 +129,16 @@ def validate_shelter(
         error(400, "invalid_request", "Shelter name and address must not be blank.")
 
 
-def update_from_row(row: tuple) -> Update:
-    return cast(
-        Update,
-        dict(zip(("id", "disaster_id", "title", "message", "severity", "published_at"), row)),
-    )
-
-
 @get("/disasters", tags=["Disasters"], responses=errors(500), description="List active disasters.")
 async def list_disasters() -> DisasterList:
     async with connect() as connection:
         rows = await (
             await connection.execute(
-                "SELECT * FROM disasters WHERE status = 'active' ORDER BY updated_at DESC, id"
+                f"SELECT {projection(DISASTER_COLUMNS)} FROM disasters "
+                "WHERE status = 'active' ORDER BY updated_at DESC, id"
             )
         ).fetchall()
-    fields = ("id", "type", "name", "status", "affected_area", "updated_at")
-    return {"disasters": [cast(Disaster, dict(zip(fields, row))) for row in rows]}
+    return {"disasters": [disaster_from_row(row) for row in rows]}
 
 
 @get(
@@ -166,7 +152,9 @@ async def list_shelters(disaster_id: FromQuery[str]) -> ShelterList:
         await require_disaster(connection, disaster_id)
         rows = await (
             await connection.execute(
-                "SELECT * FROM shelters WHERE disaster_id = ? ORDER BY name, id", (disaster_id,)
+                f"SELECT {projection(SHELTER_COLUMNS)} FROM shelters "
+                "WHERE disaster_id = ? ORDER BY name, id",
+                (disaster_id,),
             )
         ).fetchall()
     return {"shelters": [shelter_from_row(row) for row in rows]}
@@ -189,7 +177,9 @@ async def create_shelter(data: JSONBody[ShelterCreate]) -> Shelter:
             validate_shelter(shelter)
             shelter.update(id="shelter_" + uuid4().hex, updated_at=timestamp(now()))
             await connection.execute(
-                "INSERT INTO shelters VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO shelters (id, disaster_id, name, address, latitude, longitude, status, "
+                "capacity_json, capabilities_json, resources_json, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     shelter["id"],
                     data.disaster_id,
@@ -206,7 +196,10 @@ async def create_shelter(data: JSONBody[ShelterCreate]) -> Shelter:
             )
             await recompute_disasters(connection, (data.disaster_id,))
             row = await (
-                await connection.execute("SELECT * FROM shelters WHERE id = ?", (shelter["id"],))
+                await connection.execute(
+                    f"SELECT {projection(SHELTER_COLUMNS)} FROM shelters WHERE id = ?",
+                    (shelter["id"],),
+                )
             ).fetchone()
             shelter = shelter_from_row(row)
             await connection.execute("COMMIT")
@@ -229,7 +222,10 @@ async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch]
         await connection.execute("BEGIN IMMEDIATE")
         try:
             row = await (
-                await connection.execute("SELECT * FROM shelters WHERE id = ?", (shelter_id,))
+                await connection.execute(
+                    f"SELECT {projection(SHELTER_COLUMNS)} FROM shelters WHERE id = ?",
+                    (shelter_id,),
+                )
             ).fetchone()
             if row is None:
                 error(404, "shelter_not_found", "Shelter not found.")
@@ -296,7 +292,10 @@ async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch]
                     connection, sorted({old_disaster_id, shelter["disaster_id"]})
                 )
                 updated_row = await (
-                    await connection.execute("SELECT * FROM shelters WHERE id = ?", (shelter_id,))
+                    await connection.execute(
+                        f"SELECT {projection(SHELTER_COLUMNS)} FROM shelters WHERE id = ?",
+                        (shelter_id,),
+                    )
                 ).fetchone()
                 shelter = shelter_from_row(updated_row)
             await connection.execute("COMMIT")
@@ -312,7 +311,8 @@ async def list_updates(disaster_id: FromPath[str]) -> UpdateList:
         await require_disaster(connection, disaster_id)
         rows = await (
             await connection.execute(
-                "SELECT * FROM disaster_updates WHERE disaster_id = ? ORDER BY published_at DESC, id",
+                f"SELECT {projection(UPDATE_COLUMNS)} FROM disaster_updates "
+                "WHERE disaster_id = ? ORDER BY published_at DESC, id",
                 (disaster_id,),
             )
         ).fetchall()
@@ -342,7 +342,16 @@ async def publish_update(disaster_id: FromPath[str], data: JSONBody[UpdateCreate
             },
         )
         await connection.execute(
-            "INSERT INTO disaster_updates VALUES (?, ?, ?, ?, ?, ?)", tuple(result.values())
+            "INSERT INTO disaster_updates (id, disaster_id, title, message, severity, published_at) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                result["id"],
+                result["disaster_id"],
+                result["title"],
+                result["message"],
+                result["severity"],
+                result["published_at"],
+            ),
         )
     return result
 
