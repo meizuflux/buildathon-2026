@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { MapPin, Users } from 'lucide-react'
 import { useData } from '../data.jsx'
+import { api } from '../api/index.js'
 import { PageHeader, Segmented, Empty } from '../components/ui.jsx'
 import TargetPicker from '../components/TargetPicker.jsx'
 import { AUDIENCE_NEEDS, BROADCAST_TEMPLATES, SEVERITIES } from '../lib/constants.js'
@@ -16,9 +17,21 @@ export default function Broadcasts() {
   const [sent, setSent] = useState(null)
   const [filter, setFilter] = useState('all')
   const [templateId, setTemplateId] = useState('')
+  const [reach, setReach] = useState(null)
+  const [reachError, setReachError] = useState(false)
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }))
 
   const target = f.target
+
+  useEffect(() => {
+    let current = true
+    setReach(null)
+    setReachError(false)
+    if (d.disasterId) api.previewUpdate(d.disasterId, { target })
+      .then((result) => { if (current) setReach(result.recipient_count) })
+      .catch(() => { if (current) setReachError(true) })
+    return () => { current = false }
+  }, [d.disasterId, target])
 
   const applyTemplate = (id) => {
     const t = BROADCAST_TEMPLATES.find((x) => x.id === id)
@@ -99,7 +112,7 @@ export default function Broadcasts() {
           {error && <p className="error" role="alert">{error}</p>}
           {sent && <p className="success" role="status">Published "{sent.title}".</p>}
           <div className="form-actions">
-            <span className="reach-est"><Users size={15} /> <strong>—</strong> recipient count unavailable</span>
+            <span className="reach-est"><Users size={15} /> {reach === null ? (reachError ? 'Recipient count unavailable' : 'Counting families…') : <><strong>{reach.toLocaleString()}</strong> {reach === 1 ? 'family' : 'families'} currently match</>}</span>
             <button className={`btn ${f.severity === 'critical' ? 'btn-danger' : 'btn-primary'}`} disabled={busy || !f.title.trim() || !f.message.trim()}>
               {busy ? 'Sending…' : `Send ${f.severity} broadcast`}
             </button>

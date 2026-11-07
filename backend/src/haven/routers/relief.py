@@ -2,7 +2,7 @@
 
 import json
 from collections.abc import Mapping
-from typing import Annotated, Any, Literal, cast
+from typing import Annotated, Any, Literal, TypedDict, cast
 from uuid import uuid4
 
 import msgspec
@@ -123,6 +123,14 @@ class UpdateCreate(msgspec.Struct, forbid_unknown_fields=True):
     target: UpdateTarget | None = None
 
 
+class UpdatePreview(msgspec.Struct, forbid_unknown_fields=True):
+    target: UpdateTarget
+
+
+class RecipientCount(TypedDict):
+    recipient_count: int
+
+
 def validate_shelter(
     shelter: Mapping[str, Any], *, allow_derived_capacity_overflow: bool = False
 ) -> None:
@@ -165,6 +173,50 @@ async def list_shelters(disaster_id: FromQuery[str]) -> ShelterList:
             )
         ).fetchall()
     return {"shelters": [shelter_from_row(row) for row in rows]}
+
+
+@post(
+    "/disasters/{disaster_id:str}/updates/preview",
+    tags=["Updates"],
+    security=BEARER,
+    guards=[operator_guard],
+    status_code=200,
+    responses=errors(400, 401, 403, 404, 500),
+    description="Count family profiles currently matching an update target.",
+)
+async def preview_update(
+    disaster_id: FromPath[str], data: JSONBody[UpdatePreview]
+) -> RecipientCount:
+    target = data.target
+    if (target.type == "all" and target.shelter_id is not None) or (
+        target.type == "shelter" and target.shelter_id is None
+    ):
+        error(400, "invalid_request", "Target fields do not match target type.")
+    async with connect() as connection:
+        await require_disaster(connection, disaster_id)
+        if target.type == "shelter":
+            shelter = await (
+                await connection.execute(
+                    "SELECT 1 FROM shelters WHERE id = ? AND disaster_id = ?",
+                    (target.shelter_id, disaster_id),
+                )
+            ).fetchone()
+            if shelter is None:
+                error(404, "shelter_not_found", "Shelter not found in this disaster.")
+            row = await (
+                await connection.execute(
+                    "SELECT COUNT(*) FROM families f JOIN current_assignments a ON a.family_id = f.id "
+                    "WHERE f.disaster_id = ? AND a.shelter_id = ?",
+                    (disaster_id, target.shelter_id),
+                )
+            ).fetchone()
+        else:
+            row = await (
+                await connection.execute(
+                    "SELECT COUNT(*) FROM families WHERE disaster_id = ?", (disaster_id,)
+                )
+            ).fetchone()
+    return {"recipient_count": row[0]}
 
 
 @post(
@@ -461,6 +513,7 @@ router = Router(
         create_shelter,
         update_shelter,
         list_updates,
+        preview_update,
         publish_update,
     ],
 )

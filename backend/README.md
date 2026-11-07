@@ -52,6 +52,7 @@ All paths below start with `/api`. Handlers are grouped in `haven/routers`, with
 | POST | `/families/{family_id}/plan/generate` | Reallocate the affected disaster and retrieve this family's plan; unchanged plans retain their version. |
 | GET | `/families/{family_id}/plan` | Retrieve the latest persisted plan, generated automatically when the profile is created. |
 | GET, POST | `/disasters/{disaster_id}/updates` | Read official updates or publish one as an operator. |
+| POST | `/disasters/{disaster_id}/updates/preview` | Count family profiles currently matching an update target (operator only). |
 | POST | `/families/{family_id}/reports` | Submit an idempotent family report. |
 | GET | `/disasters/{disaster_id}/reports` | List family reports as an operator. |
 | GET | `/disasters/{disaster_id}/activity` | Operator timeline of recorded actions, newest first; optional `limit` (1–1000, default 50). |
@@ -75,6 +76,11 @@ Omit the target or use `{"type": "all"}` for a general update. Operators see all
 updates; anonymous visitors see general updates; authenticated families also see
 updates for their current assignment. Reassignment changes which targeted updates
 are visible. The shelter must belong to the same disaster.
+
+To preview the current number of matching family profiles, post
+`{"target": {"type": "all"}}` or a shelter target to the updates preview
+endpoint. It returns `{"recipient_count": 0}`; the count is a snapshot of
+current assignments, not a delivery or read count.
 
 ## Coordinated allocation and plan changes
 
