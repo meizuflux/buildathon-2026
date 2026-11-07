@@ -100,18 +100,6 @@ export default function OrganizationDetail() {
             </div>
             {org.notes && <><h2 className="mt">Notes</h2><p className="small">{org.notes}</p></>}
           </section>
-          <section className="card-panel">
-            <h2>Citizen assistance (unavailable)</h2>
-            <label className="check">
-              <input type="checkbox" disabled checked={!!org.citizen_assistance} onChange={(e) => d.mutate((api) => api.updateOrganization(org.id, { citizen_assistance: e.target.checked })).catch((err) => alert(err.message))} />
-              Approved to help households directly
-            </label>
-            <p className="hint">When on, this organization sees consented citizen requests within {org.coverage_radius_km} km (approximate location only) and can accept them, which reveals the household's contact details. Every acceptance is logged.</p>
-            {(() => {
-              const mine = d.assistance.filter((a) => a.assigned_to?.id === org.id)
-              return mine.length > 0 && <p className="small"><Link to="/citizens">{mine.filter((a) => ['claimed', 'en_route'].includes(a.status)).length} active · {mine.filter((a) => a.status === 'completed').length} completed</Link></p>
-            })()}
-          </section>
           <section className="card-panel"><h2>Partner portal</h2><p className="muted">Unavailable with the current server.</p></section>
           <section className="card-panel flush mini-map">
             <MapContainer center={[org.location.latitude, org.location.longitude]} zoom={11} className="map" scrollWheelZoom={false}>

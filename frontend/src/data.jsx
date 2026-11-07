@@ -20,7 +20,7 @@ const COLLECTIONS = {
 }
 // These interfaces are retained for unavailable features, but the backend has
 // no corresponding collections to poll yet.
-const EMPTY = { ...Object.fromEntries(Object.keys(COLLECTIONS).map((k) => [k, []])), alerts: null, conversations: [], partnerAccounts: [], assistance: [] }
+const EMPTY = { ...Object.fromEntries(Object.keys(COLLECTIONS).map((k) => [k, []])), alerts: null, conversations: [], partnerAccounts: [] }
 
 export function DataProvider({ children }) {
   const { expire } = useAuth()

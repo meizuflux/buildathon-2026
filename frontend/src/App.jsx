@@ -27,7 +27,6 @@ export default function App() {
           <Route path="families" element={<Families />} />
           <Route path="families/:id" element={<FamilyDetail />} />
           <Route path="map" element={<MapPage />} />
-          <Route path="citizens" element={<Unavailable name="Citizen assistance" />} />
           <Route path="comms" element={<Navigate to="/comms/broadcasts" replace />} />
           <Route path="comms/broadcasts" element={<Broadcasts />} />
           <Route path="logistics" element={<Navigate to="/logistics/needs" replace />} />

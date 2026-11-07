@@ -95,10 +95,6 @@ export const liveApi = {
   listActivity: (disasterId) => request('GET', `/disasters/${e(disasterId)}/activity?limit=50`).then((d) => d.activity),
   listAlerts: (disasterId) => request('GET', `/disasters/${e(disasterId)}/alerts?limit=1000`),
 
-  // Citizen assistance (Part 2 §11)
-  listAssistanceRequests: (disasterId) => request('GET', `/assistance-requests${q({ disaster_id: disasterId })}`).then((d) => d.requests),
-  updateAssistanceRequest: (id, patch) => request('PATCH', `/assistance-requests/${e(id)}`, patch),
-
   // Partner portal accounts (Part 2 §10)
   listPartnerAccounts: (disasterId) => request('GET', `/partner-accounts${q({ disaster_id: disasterId })}`).then((d) => d.accounts),
   createPartnerAccount: (body) => request('POST', '/partner-accounts', body),

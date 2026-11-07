@@ -13,7 +13,6 @@ const REF_LINK = {
   shipment: () => '/logistics/dispatch',
   update: () => '/comms/broadcasts',
   report: (id) => `/map?report=${id}`,
-  assistance: (id) => `/citizens?request=${id}`,
 }
 
 export default function CommandCenter() {
