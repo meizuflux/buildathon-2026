@@ -3,6 +3,7 @@ import { useData } from '../data.jsx'
 import { Modal, Segmented } from './ui.jsx'
 import { ORG_SERVICES, ORG_STATUSES, ORG_TYPES, emptyOrganization } from '../lib/constants.js'
 import { cap } from '../lib/format.js'
+import { CredentialsDialog, createLogin } from './PortalAccess.jsx'
 
 export default function OrgDialog({ org, onClose, onSaved }) {
   const d = useData()
@@ -13,6 +14,8 @@ export default function OrgDialog({ org, onClose, onSaved }) {
   })
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [portal, setPortal] = useState({ enabled: !org, email: '' })
+  const [creds, setCreds] = useState(null)
 
   const set = (k, v) => setDraft((x) => ({ ...x, [k]: v }))
   const setNested = (k, sub, v) => setDraft((x) => ({ ...x, [k]: { ...x[k], [sub]: v } }))
@@ -25,12 +28,23 @@ export default function OrgDialog({ org, onClose, onSaved }) {
     try {
       const saved = await d.mutate((api) => (org ? api.updateOrganization(org.id, draft) : api.createOrganization(draft)))
       onSaved?.(saved)
+      const loginEmail = (portal.email || draft.contact.email).trim()
+      if (!org && portal.enabled && loginEmail) {
+        try {
+          setCreds(await createLogin(d, { kind: 'organization', id: saved.id }, loginEmail, draft.contact.name))
+          return
+        } catch (err) {
+          alert(`Organization added, but the portal login failed: ${err.message}`)
+        }
+      }
       onClose()
     } catch (err) {
       setError(err.message)
       setBusy(false)
     }
   }
+
+  if (creds) return <CredentialsDialog creds={creds} onClose={onClose} />
 
   return (
     <Modal title={org ? `Edit ${org.name}` : 'Add organization'} onClose={onClose} wide>
@@ -89,10 +103,26 @@ export default function OrgDialog({ org, onClose, onSaved }) {
           <span>Notes</span>
           <textarea rows={2} value={draft.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Vehicles, hours, special capabilities" />
         </label>
+        {!org && (
+          <fieldset className="portal-opt">
+            <label className="check">
+              <input type="checkbox" checked={portal.enabled} onChange={(e) => setPortal((p) => ({ ...p, enabled: e.target.checked }))} />
+              Create a partner portal login for this organization
+            </label>
+            {portal.enabled && (
+              <label className="field" style={{ marginTop: 8 }}>
+                <span>Login email</span>
+                <input type="email" value={portal.email} placeholder={draft.contact.email || 'ops@partner.example'}
+                  onChange={(e) => setPortal((p) => ({ ...p, email: e.target.value }))} required={!draft.contact.email} />
+              </label>
+            )}
+            <p className="hint">They can then update their own status and stock, confirm deliveries, offer supplies and message you.</p>
+          </fieldset>
+        )}
         {error && <p className="error" role="alert">{error}</p>}
         <div className="form-actions">
           <button type="button" className="btn" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" disabled={busy}>{busy ? 'Saving…' : org ? 'Save changes' : 'Add organization'}</button>
+          <button className="btn btn-primary" disabled={busy}>{busy ? 'Saving…' : org ? 'Save changes' : portal.enabled ? 'Add & create login' : 'Add organization'}</button>
         </div>
       </form>
     </Modal>

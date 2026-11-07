@@ -17,6 +17,8 @@ const COLLECTIONS = {
   shipments: (d) => api.listShipments(d),
   conversations: (d) => api.listConversations(d),
   activity: (d) => api.listActivity(d),
+  partnerAccounts: (d) => api.listPartnerAccounts(d),
+  assistance: (d) => api.listAssistanceRequests(d),
 }
 const EMPTY = Object.fromEntries(Object.keys(COLLECTIONS).map((k) => [k, []]))
 

@@ -11,7 +11,7 @@ Part 1 conventions still apply:
 - the shared `{"error": {"code", "message"}}` shape
 - `Authorization: Bearer <token>`
 
-**Permissions:** every endpoint in Part 2 is **operator-only** unless marked otherwise. Return `403` with code `not_permitted` for other roles.
+**Permissions:** every endpoint in Part 2 is **operator-only** unless marked otherwise. Return `403` with code `not_permitted` for other roles. §10 adds a `partner` role for shelter and organization logins, and lists exactly what partners may do.
 
 **Suggested build order:**
 1. Organizations
@@ -21,8 +21,13 @@ Part 1 conventions still apply:
 5. Broadcast targeting
 6. Conversations
 7. Activity
+8. Partner accounts and partner permissions (§10)
 
-The dashboard already works against an in-browser mock of all of these (`frontend/src/api/mock.js`). That file is a runnable reference for the side effects described below.
+Both frontends already work against a mock of all of these:
+- `frontend/src/api/mock.js` holds the logic.
+- `frontend/mock-server/handler.js` serves it over HTTP, including auth and partner scoping.
+
+Together they are a runnable reference for the side effects described below.
 
 ---
 
@@ -549,4 +554,302 @@ Write an entry whenever one of these happens:
 | 409 | `insufficient_inventory` | shipment creation or approval exceeds available stock |
 | 409 | `inventory_conflict` | inventory set below reserved |
 | 409 | `invalid_transition` | disallowed shipment status change |
-| 403 | `not_permitted` | non-operator calls an operator endpoint |
+| 403 | `not_permitted` | non-operator calls an operator endpoint, or a partner acts outside its own site |
+| 403 | `account_disabled` | login attempt with a disabled partner account (requests with an existing token get `401`) |
+| 409 | `email_in_use` | partner account email already belongs to a user |
+| 400 | `invalid_credentials` | wrong current password on change-password |
+
+---
+
+## 10. Partner accounts and the partner portal
+
+Shelters and relief organizations sign in to their own portal (the `3rdparty` branch) and manage their own data. Operators create these logins from the dashboard; there is **no public sign-up** for partners.
+
+### Data model
+
+- Add `'partner'` to the `users.role` check.
+- Add a `must_change_password` flag to `users` (default false).
+- New table:
+
+```
+partner_accounts
+  user_id PK → users.id
+  site_kind ('shelter' | 'organization')
+  site_id
+  contact_name
+  status ('active' | 'disabled')
+  created_by → users.id
+  created_at
+  last_login_at
+```
+
+One site can have several logins. Each login belongs to exactly one site.
+
+### Login and /me for partners
+
+`POST /auth/login` and `GET /me` are unchanged for operators and families. For a partner, `user` gains `site` and `must_change_password`:
+
+```json
+{
+  "id": "user_7f3a",
+  "role": "partner",
+  "family_id": null,
+  "email": "dispatch@medserve.example",
+  "must_change_password": true,
+  "site": { "kind": "organization", "id": "org_004", "name": "MedServe Mobile Clinic" }
+}
+```
+
+- A disabled account gets `403 account_disabled` on login.
+- Tokens that already exist for a disabled account get `401`.
+- Update `last_login_at` on every successful login.
+
+### POST /auth/change-password
+
+Any signed-in user.
+
+```json
+{ "current_password": "harbor-cedar-4821", "new_password": "at-least-8-chars" }
+```
+
+- `204` on success. Clears `must_change_password`.
+- `400 invalid_credentials` if the current password is wrong.
+- `400 invalid_request` if the new password is under 8 characters.
+
+The portal blocks every other screen until a partner with `must_change_password: true` has changed it.
+
+### Operator endpoints for managing logins
+
+**`GET /partner-accounts?disaster_id=disaster_001`** — logins for shelters and organizations in that disaster.
+
+```json
+{
+  "accounts": [
+    {
+      "id": "user_7f3a",
+      "email": "dispatch@medserve.example",
+      "contact_name": "Dr. Lee Chen",
+      "site": { "kind": "organization", "id": "org_004", "name": "MedServe Mobile Clinic" },
+      "status": "active",
+      "created_at": "2026-11-07T21:30:00Z",
+      "last_login_at": "2026-11-07T21:34:00Z"
+    }
+  ]
+}
+```
+
+**`POST /partner-accounts`**
+
+```json
+{ "site": { "kind": "organization", "id": "org_004" }, "email": "dispatch@medserve.example", "contact_name": "Dr. Lee Chen" }
+```
+
+Response — `201 Created`:
+
+```json
+{ "account": { "...": "as above" }, "temporary_password": "harbor-cedar-4821" }
+```
+
+- The server generates the temporary password with `secrets`, stores only its Argon2id hash, and sets `must_change_password: true`.
+- The temporary password appears in **this response only**.
+- `409 email_in_use` if any user already has that email.
+
+**`PATCH /partner-accounts/{user_id}`**
+
+```json
+{ "status": "disabled" }
+```
+
+`contact_name` can also be changed. Disabling revokes all of that user's sessions immediately.
+
+**`POST /partner-accounts/{user_id}/reset-password`**
+
+```json
+{ "temporary_password": "summit-river-1177" }
+```
+
+Revokes the user's sessions and sets `must_change_password: true`.
+
+Write activity entries (§8) of type `partner_account_created` / `partner_account_updated` with `ref` pointing at the site.
+
+### What partners may do
+
+Everything is scoped to the partner's own site (`site.kind` + `site.id`). Anything not listed is `403 not_permitted`, including:
+- reports, activity, families, plans and the alerts feed
+- creating shelters or organizations
+- broadcasts
+- partner account management
+
+| Endpoint | Partner access |
+|---|---|
+| `GET /disasters`, `/resource-types`, `/shelters`, `/organizations`, `/needs` | Read. Partners see open needs everywhere so they can offer help. |
+| `PATCH /shelters/{id}` | Own shelter only. Fields: `status`, `capacity`, `resources`, `capabilities`. **Extends Part 1**, where shelter edits are operator-only. |
+| `PATCH /organizations/{id}` | Own organization only. Fields: `status`, `contact`, `notes`, `services`, `address`, `location`, `coverage_radius_km`. |
+| `GET /inventory` | Own holder rows only. |
+| `PATCH /organizations/{id}/inventory` | Own organization only. |
+| `POST /needs` | `requester` is forced to the partner's own site. |
+| `PATCH /needs/{id}` | Own needs only. Fields: `quantity_needed`, `notes`, `needed_by`, `priority`. `status` may only be set to `cancelled`. |
+| `GET /shipments` | Only shipments where `from` or `to` is the partner's site. |
+| `POST /shipments` | Organization partners only, and `from` must be their own organization. Partner shipments are **offers** and are created with `status: "requested"`. Stock is checked (`409 insufficient_inventory`) but not reserved until an operator approves. |
+| `PATCH /shipments/{id}` | The sender may move `approved → in_transit` ("departed"), withdraw its own offer (`requested → cancelled`), and edit `eta` / `notes`. The receiver may move `in_transit → delivered`. All other changes are `403`. |
+| `GET /disasters/{id}/updates` | `published` updates only, in the operator shape. |
+| `GET /conversations`, `POST /conversations` | Only threads whose `participant` is the partner's site. On create, `participant` is forced to their site. |
+| `GET` / `POST /conversations/{id}/messages` | Own threads only. Partner messages have `sender: {kind: <site kind>, id: <site id>}`. |
+| `POST /conversations/{id}/read` | Own threads. **Read state is per side.** Track operator and partner read times separately. `unread_count` counts the other side's messages since the caller's side last read the thread. |
+| `/assistance-requests` (§11) | Approved organizations only. Redacted view of open, consented, in-range requests; full view of the ones they accepted; accept, update and release as described in §11. |
+
+Partner writes appear in the activity feed with `actor: {kind: <site kind>, id, name}`, so operators can see who changed what.
+
+---
+
+## 11. Citizen assistance (households who can't reach aid)
+
+Some households can't get to a shelter or distribution point: flooded streets, no car, a wheelchair user, someone on home oxygen. Citizen assistance lets them ask for help where they are, and lets **approved partner organizations** respond directly while government keeps oversight.
+
+### Privacy rules (the backend must enforce these, not just the UI)
+
+Household locations and care needs are sensitive. People in disasters are targeted by scams and worse. Part 1 says family data is visible only to the family and operators. This section opens a narrow, consented exception:
+
+1. **Consent.** Partners only ever see requests where the household set `consent_to_share: true`. Without consent, only operators can see or act on a request.
+2. **Approved organizations only.** Only organizations with `citizen_assistance: true` (set by an operator) see any citizen requests. Shelters don't.
+3. **Coverage.** A partner only sees open requests within its organization's `coverage_radius_km`.
+4. **Approximate until accepted.** Before accepting, partners get a **redacted** view: rounded location (2 decimal places, about 1 km), distance, request type, items, priority and household *flags*. Name, phone, address, exact location, the free-text message and care notes are **withheld** until the partner accepts the request.
+5. **Logged reveals.** Accepting writes an activity entry (`citizen_request_claimed`) saying that contact details were released, and to whom.
+6. **Release on exit.** If a partner releases a request, it loses access to the full details.
+
+Retention: delete or anonymize a request's contact and care details a set period after it closes (for example 30 days). Agree the period with whoever owns the data.
+
+### Organization flag
+
+Organizations gain `citizen_assistance` (boolean, default false). **Only operators** may change it. Partner `PATCH /organizations/{id}` must ignore it.
+
+### Request shape (operator view)
+
+```json
+{
+  "id": "assist_002",
+  "disaster_id": "disaster_001",
+  "family_id": "family_014",
+  "source_report_id": "report_004",
+  "kind": "medical",
+  "priority": "critical",
+  "status": "open",
+  "message": "Elderly parent on oxygen, power is out. Need transport.",
+  "items": [{ "resource_type_id": "oxygen", "quantity": 1 }],
+  "cannot_travel": true,
+  "location": { "latitude": 27.942, "longitude": -82.49 },
+  "address": "4120 Cypress Ave, Example City",
+  "contact": { "name": "Linh Nguyen", "phone": "+1-555-0142" },
+  "household": {
+    "adults": 2, "children": 0, "pets": false, "immediate_medication": true,
+    "medical_notes": "COPD, on home oxygen 24/7.", "accessibility_notes": null,
+    "other_special_care": null, "has_car": false
+  },
+  "consent_to_share": true,
+  "assigned_to": null,
+  "eta": null,
+  "partner_note": null,
+  "resolution_note": null,
+  "operator_notes": "",
+  "history": [{ "status": "open", "at": "2026-11-07T15:20:00Z", "by": { "kind": "family", "id": "family_014", "name": "Household" } }],
+  "created_at": "2026-11-07T15:20:00Z",
+  "updated_at": "2026-11-07T15:20:00Z"
+}
+```
+
+| Field | Values |
+|---|---|
+| `kind` | `delivery`, `transport`, `medical`, `welfare_check`, `other` |
+| `status` | `open`, `claimed` (accepted), `en_route`, `completed`, `cancelled` |
+| `priority` | as in §0 |
+
+- **`household`** is a snapshot of the family profile (Part 1 §2) at request time. Pre-fill it from the profile so the family doesn't retype it.
+- **`partner_note`** and **`eta`** are what the responding organization tells the household. The family app should show them.
+- **`operator_notes`** are never shown to partners or families.
+
+### Family side (for the family app)
+
+**`POST /families/{family_id}/assistance-requests`** (owning family). Idempotent on `client_request_id`, like reports.
+
+```json
+{
+  "kind": "delivery",
+  "message": "Street is flooded and we can't drive out.",
+  "items": [{ "resource_type_id": "water_bottled", "quantity": 2 }],
+  "location": { "latitude": 27.95, "longitude": -82.46 },
+  "address": "123 Palmetto St, Example City",
+  "contact_phone": "+1-555-0100",
+  "consent_to_share": true,
+  "client_request_id": "2c1f..."
+}
+```
+
+- The server copies the household snapshot from the family profile.
+- It sets `priority` from simple rules: `critical` when `kind` is `medical` and `immediate_medication` is true; `high` for `transport`, or when there are children or accessibility needs; `medium` otherwise. Operators can override it.
+- The consent prompt should be explicit, for example: *"Share my request, address and phone with approved aid organizations so they can help me directly."*
+
+**`GET /families/{family_id}/assistance-requests`** lists the family's own requests. Include `status`, `eta`, `partner_note`, and `assigned_to.name` (the organization helping them). It never includes `operator_notes`.
+
+**`PATCH /families/{family_id}/assistance-requests/{id}`** with `{"status": "cancelled"}` lets the family cancel ("we got help").
+
+### Operator endpoints
+
+**`GET /assistance-requests?disaster_id=…`** returns every request with full details, as `{"requests": [...]}`.
+
+**`PATCH /assistance-requests/{id}`**:
+- `assigned_to: {kind: "organization", id}` assigns the request and moves `open → claimed`. Returns `409 consent_required` if `consent_to_share` is false.
+- `assigned_to: null` unassigns it and moves `claimed`/`en_route → open`.
+- `status` can be any value (close, cancel, reopen).
+- `priority`, `operator_notes`, `eta` and `partner_note` can be changed.
+
+### Partner endpoints
+
+**`GET /assistance-requests?disaster_id=…`** returns two kinds of entries. Shelters and unapproved organizations get `{"requests": []}`.
+
+1. **Requests assigned to this partner's organization:** the full shape plus `redacted: false` and `distance_km`.
+2. **Open, consented requests within coverage:** the redacted shape.
+
+```json
+{
+  "id": "assist_011", "disaster_id": "disaster_001", "kind": "delivery", "priority": "high", "status": "open",
+  "redacted": true,
+  "items": [{ "resource_type_id": "food_canned", "quantity": 1 }],
+  "cannot_travel": true,
+  "approx_location": { "latitude": 27.96, "longitude": -82.47 },
+  "distance_km": 2.5,
+  "household": { "people": 2, "children": 0, "pets": false, "immediate_medication": false, "accessibility": true, "has_car": false },
+  "created_at": "…", "updated_at": "…"
+}
+```
+
+**`POST /assistance-requests/{id}/claim`**
+
+```json
+{ "eta": "2026-11-07T16:00:00Z", "partner_note": "We're bringing your supplies." }
+```
+
+Returns `200` with the full request.
+
+| Error | When |
+|---|---|
+| `409 already_claimed` | Someone else accepted it first. Do this check atomically: compare-and-set on `status = 'open' AND assigned_to IS NULL`. |
+| `403 not_permitted` | The organization isn't approved. |
+| `404` | No consent, or outside the organization's coverage. Don't reveal that the request exists. |
+
+**`PATCH /assistance-requests/{id}`** is for the assigned organization only (`404` otherwise).
+
+| Change | Effect |
+|---|---|
+| `{"status": "en_route", "eta"?, "partner_note"?}` | From `claimed`. |
+| `{"status": "completed", "resolution_note", "deduct_inventory"?}` | From `claimed` or `en_route`. `deduct_inventory: true` subtracts the request's `items` from the organization's inventory, never below `reserved`. |
+| `{"status": "released", "note"}` | Gives the request up. It returns to `status: open`, `assigned_to: null`, and the household's `eta`/`partner_note` are cleared. `released` is recorded in `history` but is not a stored status. |
+
+The response is the updated request, or `{id, status, released: true}` after a release.
+
+### Activity types
+
+`citizen_request_claimed`, `citizen_request_status`, `citizen_request_released` with `ref: {kind: "assistance", id}`.
+
+### Error codes
+
+`409 already_claimed`, `409 consent_required`, `404 request_not_found`.

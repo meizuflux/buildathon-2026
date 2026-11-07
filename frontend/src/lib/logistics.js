@@ -73,7 +73,7 @@ export function coverageByResource({ needs, inventory, shipments }) {
 }
 
 // The Command Center's "needs attention" queue.
-export function attentionItems({ shelters, reports, needs, shipments, conversations, rt }) {
+export function attentionItems({ shelters, reports, needs, shipments, conversations, rt, assistance = [] }) {
   const out = []
   const mins = (iso) => (Date.now() - new Date(iso).getTime()) / 60_000
   for (const r of reports) {
@@ -104,6 +104,12 @@ export function attentionItems({ shelters, reports, needs, shipments, conversati
     }
     if (mins(s.updated_at) > 120) {
       out.push({ id: `${s.id}-stale`, level: 'info', title: `No update from ${s.name} in ${Math.round(mins(s.updated_at) / 60)}h`, detail: 'Status may be out of date', at: s.updated_at, to: `/map?shelter=${s.id}`, action: 'Open' })
+    }
+  }
+  for (const a of assistance) {
+    if (a.status === 'open' && ['critical', 'high'].includes(a.priority) && mins(a.created_at) > 10) {
+      const people = a.household.adults + a.household.children
+      out.push({ id: a.id, level: a.priority === 'critical' ? 'critical' : 'warning', title: `Citizen ${a.kind.replace('_', ' ')} request unassigned (${people} ${people === 1 ? 'person' : 'people'})`, detail: a.message, at: a.created_at, to: `/citizens?request=${a.id}`, action: 'Assign' })
     }
   }
   for (const c of conversations) {

@@ -14,6 +14,7 @@ const REF_LINK = {
   update: () => '/comms/broadcasts',
   conversation: (id) => `/comms/messages/${id}`,
   report: (id) => `/map?report=${id}`,
+  assistance: (id) => `/citizens?request=${id}`,
 }
 
 export default function CommandCenter() {

@@ -5,12 +5,11 @@
 
 import { ApiError } from './live.js'
 
-const KEY = 'haven-mock-db-v2'
+const KEY = 'haven-mock-db-v3'
 const D = 'disaster_001'
 const now = () => new Date().toISOString()
 const ago = (m) => new Date(Date.now() - m * 60_000).toISOString()
 const fromNow = (m) => new Date(Date.now() + m * 60_000).toISOString()
-const wait = (ms = 120) => new Promise((r) => setTimeout(r, ms))
 const uid = (p) => `${p}_${Math.random().toString(36).slice(2, 10)}`
 const clone = (v) => structuredClone(v)
 const OPERATOR = { id: 'user_mock_operator', role: 'operator', family_id: null }
@@ -223,6 +222,11 @@ function seed() {
       { id: 'msg_006', conversation_id: 'conv_004', sender: { kind: 'organization', id: 'org_006' }, body: 'We can deliver 2 generators + 100 gal fuel to Westside within 2 hours. Logged as a shipment request.', created_at: ago(16) },
     ],
     activity: [],
+    // Portal logins for shelters / organizations (credentials live in the mock server, not here).
+    partner_accounts: [
+      { id: 'user_partner_bayside', email: 'bayside@demo.example', contact_name: 'Dana Ruiz', site: { kind: 'organization', id: 'org_002' }, status: 'active', created_at: ago(400), last_login_at: null },
+      { id: 'user_partner_stluke', email: 'stluke@demo.example', contact_name: 'Charge nurse on duty', site: { kind: 'shelter', id: 'shelter_003' }, status: 'active', created_at: ago(380), last_login_at: null },
+    ],
   }
 
   const act = (type, summary, ref, createdAgo, actor = { kind: 'system', id: 'system', name: 'System' }) =>
@@ -244,14 +248,107 @@ function seed() {
   act('message_received', 'St. Luke Medical Annex: "Thank you. Can they also bring water?"', { kind: 'conversation', id: 'conv_001' }, 19)
   act('shipment_created', 'Northside Supply Co. offered generators + fuel for Westside', { kind: 'shipment', id: 'shipment_004' }, 15)
   act('report_received', 'Help request from family_031', { kind: 'report', id: 'report_005' }, 9)
-  return db
+  return migrate(db)
 }
 
+// ---------- citizen assistance (Part 2 §11) ----------
+// Requests from households who can't get to an aid location. All people,
+// names, phone numbers and addresses here are synthetic.
+const CITIZEN_APPROVED = { org_001: true, org_002: true, org_003: true, org_004: true, org_005: true, org_007: true }
+const FIRST = ['Maria', 'James', 'Aisha', 'Tom', 'Linh', 'Carlos', 'Grace', 'Omar', 'Priya', 'Daniel', 'Rosa', 'Kevin', 'Mei', 'Andre', 'Fatima', 'Luis', 'Hannah', 'Samuel', 'Yara', 'Ethan']
+const LAST = ['Alvarez', 'Brooks', 'Chen', 'Diaz', 'Evans', 'Foster', 'Garcia', 'Hughes', 'Ibrahim', 'Jensen', 'Kim', 'Lopez', 'Morgan', 'Nguyen', 'Okafor', 'Patel', 'Reyes', 'Singh', 'Torres', 'Walker']
+const STREETS = ['Bayview Dr', 'Palmetto St', 'Cypress Ave', 'Harbor Ln', 'Magnolia Ct', 'Sunset Blvd', 'Oak Hollow Rd', 'Gulf Breeze Way', 'Mangrove Pl', 'Pelican St']
+const SCENARIOS = [
+  { kind: 'delivery', priority: 'high', items: [['water_bottled', 2], ['food_mre', 12]], message: "Street is flooded and we can't drive out. Need drinking water and food for the family.", hh: { children: 2 } },
+  { kind: 'medical', priority: 'critical', items: [['insulin', 2]], message: "Insulin is running out and the fridge has no power. Can't get to a clinic.", hh: { immediate_medication: true, medical_notes: 'Type 1 diabetic adult; needs refrigerated insulin.' } },
+  { kind: 'transport', priority: 'high', items: [], message: 'Need wheelchair-accessible transport to a shelter. Regular vans cannot take the chair.', hh: { accessibility_notes: 'Power wheelchair user.' } },
+  { kind: 'medical', priority: 'critical', items: [['oxygen', 1]], message: 'Oxygen concentrator needs power. Backup tank is low.', hh: { immediate_medication: true, medical_notes: 'COPD, on home oxygen 24/7.', adults: 2 } },
+  { kind: 'delivery', priority: 'high', items: [['baby_formula', 4], ['diapers', 2]], message: 'Two infants at home and we are out of formula. Bridge to the store is closed.', hh: { children: 2 } },
+  { kind: 'welfare_check', priority: 'high', items: [], message: "My elderly mother lives alone and hasn't answered her phone since last night. I'm out of state.", hh: { adults: 1, accessibility_notes: 'Uses a walker; hard of hearing.' } },
+  { kind: 'transport', priority: 'high', items: [], message: 'No car and three kids. Need a ride to the shelter in our plan.', hh: { children: 3 } },
+  { kind: 'delivery', priority: 'medium', items: [['rx_refills', 1]], message: 'Left blood pressure medication behind when we evacuated to a relative.', hh: { immediate_medication: true, medical_notes: 'Hypertension; daily medication.' } },
+  { kind: 'delivery', priority: 'medium', items: [['blankets', 4], ['hygiene_kit', 2]], message: 'Roof damage, house is cold and wet. Need blankets and hygiene kits.', hh: {} },
+  { kind: 'transport', priority: 'medium', items: [], message: "We can't take our two dogs on the evacuation bus. Need a pet-friendly ride.", hh: { pets: true } },
+  { kind: 'delivery', priority: 'high', items: [['food_canned', 1], ['water_gallon', 4]], message: "Elderly couple, no food left. Can't stand in line at the distribution point.", hh: { adults: 2, accessibility_notes: 'Both over 80; one uses a cane.' } },
+  { kind: 'other', priority: 'low', items: [['clothing', 2]], message: 'Lost most of our clothes in the flooding. Kids need dry clothes for school shelter.', hh: { children: 2 } },
+]
+
+function seedAssistance(state) {
+  const r = rng(7)
+  const out = []
+  const make = (k, fam, sc, extra = {}) => {
+    const first = FIRST[Math.floor(r() * FIRST.length)]
+    const last = LAST[Math.floor(r() * LAST.length)]
+    const hh = sc.hh
+    const adults = hh.adults ?? 1 + Math.floor(r() * 2)
+    const children = hh.children ?? (fam.flags.children ? 1 + Math.floor(r() * 2) : 0)
+    const createdAgo = extra.createdAgo ?? 4 + ((k * 17) % 200)
+    out.push({
+      id: `assist_${String(k + 1).padStart(3, '0')}`, disaster_id: D, family_id: fam.id, source_report_id: extra.report || null,
+      kind: sc.kind, priority: sc.priority, status: 'open', message: extra.message || sc.message,
+      items: sc.items.map(([resource_type_id, quantity]) => ({ resource_type_id, quantity })), cannot_travel: true,
+      location: { latitude: +fam.location.latitude.toFixed(5), longitude: +fam.location.longitude.toFixed(5) },
+      address: `${100 + Math.floor(r() * 8800)} ${STREETS[Math.floor(r() * STREETS.length)]}, Example City`,
+      contact: { name: `${first} ${last}`, phone: `+1-555-01${String(10 + Math.floor(r() * 89))}` },
+      household: {
+        adults, children, pets: hh.pets ?? fam.flags.pets, immediate_medication: hh.immediate_medication ?? false,
+        medical_notes: hh.medical_notes || null, accessibility_notes: hh.accessibility_notes || null, other_special_care: null, has_car: false,
+      },
+      consent_to_share: extra.consent ?? k % 7 !== 3,
+      assigned_to: null, eta: null, partner_note: null, resolution_note: null, operator_notes: '',
+      history: [{ status: 'open', at: ago(createdAgo), by: { kind: 'family', id: fam.id, name: 'Household' } }],
+      created_at: ago(createdAgo), updated_at: ago(createdAgo),
+    })
+  }
+  // Two requests continue seeded family reports, at the same locations.
+  const fromReport = (id) => state.reports.find((x) => x.id === id)
+  const r5 = fromReport('report_005')
+  const r4 = fromReport('report_004')
+  if (r5) make(0, { id: r5.family_id, location: r5.location, flags: { children: true, pets: true } }, { kind: 'transport', priority: 'critical', items: [], hh: { children: 2, pets: true } }, { report: r5.id, message: r5.message, createdAgo: 9, consent: true })
+  if (r4) make(1, { id: r4.family_id, location: r4.location, flags: {} }, SCENARIOS[3], { report: r4.id, message: r4.message, createdAgo: 27, consent: true })
+  for (let k = 2; k < 30; k++) make(k, FAMILIES[(k * 157) % FAMILIES.length], SCENARIOS[k % SCENARIOS.length])
+
+  // A few already in progress, so the demo shows every state.
+  const assign = (id, orgId, status, minsAgo, note) => {
+    const a = out.find((x) => x.id === id)
+    if (!a || !a.consent_to_share) return
+    const by = { kind: 'organization', id: orgId, name: state.organizations.find((o) => o.id === orgId)?.name || orgId }
+    a.assigned_to = { kind: 'organization', id: orgId }
+    a.status = status
+    a.eta = status === 'completed' ? null : fromNow(25)
+    a.partner_note = note
+    a.history.push({ status: 'claimed', at: ago(minsAgo), by })
+    if (status !== 'claimed') a.history.push({ status, at: ago(Math.max(1, minsAgo - 10)), by })
+    if (status === 'completed') a.resolution_note = 'Delivered and checked on the family. All OK.'
+    a.updated_at = ago(Math.max(1, minsAgo - 10))
+  }
+  assign('assist_007', 'org_005', 'claimed', 30, 'A volunteer van will pick you up. Please be ready with documents and medication.')
+  assign('assist_009', 'org_002', 'en_route', 40, 'Bringing water and meals now.')
+  assign('assist_015', 'org_007', 'completed', 120, 'Hot meals and water on the way.')
+  assign('assist_016', 'org_004', 'claimed', 18, 'Our nurse will call you before arriving.')
+  return out
+}
+
+
 // ---------- persistence ----------
+// Browser: localStorage. Mock server: a JSON file (see mock-server/handler.js).
+let storage = {
+  load: () => JSON.parse(localStorage.getItem(KEY)),
+  save: (state) => localStorage.setItem(KEY, JSON.stringify(state)),
+}
+let latency = 1
+
+function migrate(state) {
+  state.partner_accounts ||= []
+  for (const c of state.conversations) if (!('partner_read_at' in c)) c.partner_read_at = null
+  for (const o of state.organizations) if (o.citizen_assistance === undefined) o.citizen_assistance = !!CITIZEN_APPROVED[o.id]
+  state.assistance_requests ||= seedAssistance(state)
+  return state
+}
 function load() {
   try {
-    const raw = localStorage.getItem(KEY)
-    if (raw) return JSON.parse(raw)
+    const state = storage.load()
+    if (state?.shelters) return migrate(state)
   } catch {
     /* fall through */
   }
@@ -261,16 +358,39 @@ function load() {
 }
 function save(state) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(state))
+    storage.save(state)
   } catch {
     /* page-lifetime only */
   }
 }
 let db = load()
+
+export function configureMock(options) {
+  if (options.storage) storage = options.storage
+  if (options.latency !== undefined) latency = options.latency
+  db = load()
+}
 export function resetMockData() {
   db = seed()
   save(db)
 }
+
+// ---------- viewers ----------
+// Every method takes an optional last argument `as`: who is calling.
+// Operators see and may change everything; partners (shelter / organization
+// portal accounts) are scoped to their own site, per Part 2 §10.
+export const OPERATOR_VIEW = { role: 'operator', user_id: OPERATOR.id, name: 'Operator' }
+const isPartner = (as) => as?.role === 'partner'
+const owns = (as, ref) => isPartner(as) && ref && as.site.kind === ref.kind && as.site.id === ref.id
+const forbid = (msg = 'Not permitted for this account.') => new ApiError(403, 'not_permitted', msg)
+function requireOperator(as) {
+  if (isPartner(as)) throw forbid()
+}
+function actorOf(as = OPERATOR_VIEW) {
+  return isPartner(as) ? { kind: as.site.kind, id: as.site.id, name: nameOf(as.site.kind, as.site.id) } : { kind: 'operator', id: as.user_id, name: as.name || 'Operator' }
+}
+const pick = (obj, keys) => Object.fromEntries(Object.entries(obj).filter(([k]) => keys.includes(k)))
+const wait = () => new Promise((r) => setTimeout(r, latency ? 40 + Math.random() * 100 : 0))
 
 // ---------- helpers ----------
 function merge(target, patch) {
@@ -292,9 +412,10 @@ function nameOf(kind, id) {
 }
 const named = (ref) => ref && { ...ref, name: nameOf(ref.kind, ref.id) }
 const rtName = (id) => RESOURCE_TYPES.find((r) => r.id === id)?.name ?? id
+const SYSTEM = { kind: 'system', id: 'system', name: 'System' }
 
-function log(type, summary, ref, actor = OPERATOR_ACTOR) {
-  db.activity.push({ id: uid('act'), disaster_id: D, type, summary, ref, actor, created_at: now() })
+function log(type, summary, ref, actor) {
+  db.activity.push({ id: uid('act'), disaster_id: D, type, summary, ref, actor: actor || actorOf(), created_at: now() })
 }
 
 function invRow(holderId, rt, create = false) {
@@ -306,7 +427,7 @@ function invRow(holderId, rt, create = false) {
   return row
 }
 
-function reserve(shipment) {
+function checkStock(shipment) {
   for (const it of shipment.items) {
     const row = invRow(shipment.from.id, it.resource_type_id)
     const avail = row ? row.quantity - row.reserved : 0
@@ -314,6 +435,9 @@ function reserve(shipment) {
       throw new ApiError(409, 'insufficient_inventory', `${nameOf('organization', shipment.from.id)} has only ${avail} ${rtName(it.resource_type_id)} available.`)
     }
   }
+}
+function reserve(shipment) {
+  checkStock(shipment)
   for (const it of shipment.items) {
     const row = invRow(shipment.from.id, it.resource_type_id)
     row.reserved += it.quantity
@@ -343,15 +467,19 @@ function viewUpdate(u) {
   return { ...clone(u), status, published_at, read_count }
 }
 
-function viewConversation(c) {
+function viewConversation(c, as) {
   const msgs = db.messages.filter((m) => m.conversation_id === c.id)
   const last = msgs.at(-1)
-  const unread = msgs.filter((m) => m.sender.kind !== 'operator' && (!c.read_at || m.created_at > c.read_at)).length
+  const partner = isPartner(as)
+  const readAt = partner ? c.partner_read_at : c.read_at
+  const unread = msgs.filter((m) => (partner ? m.sender.kind === 'operator' : m.sender.kind !== 'operator') && (!readAt || m.created_at > readAt)).length
   return {
     id: c.id, disaster_id: c.disaster_id, participant: named(c.participant), subject: c.subject, created_at: c.created_at,
     last_message_at: last?.created_at ?? c.created_at, last_message_preview: last?.body ?? '', unread_count: unread,
   }
 }
+
+const hasPortal = (ref) => db.partner_accounts.some((a) => a.status === 'active' && a.site.kind === ref.kind && a.site.id === ref.id)
 
 const CANNED = {
   shelter: [
@@ -368,15 +496,48 @@ const CANNED = {
   ],
 }
 
+// Sites without a portal login get a simulated reply so demos feel live.
+// Sites with a login answer for themselves from the partner portal.
 function scheduleReply(conv) {
-  if (!['shelter', 'organization'].includes(conv.participant.kind)) return
+  if (!['shelter', 'organization'].includes(conv.participant.kind) || hasPortal(conv.participant)) return
   setTimeout(() => {
     const lines = CANNED[conv.participant.kind]
     const body = lines[Math.floor(Math.random() * lines.length)]
     db.messages.push({ id: uid('msg'), conversation_id: conv.id, sender: { ...conv.participant }, body, created_at: now() })
-    log('message_received', `${nameOf(conv.participant.kind, conv.participant.id)}: "${body.slice(0, 40)}…"`, { kind: 'conversation', id: conv.id }, { kind: 'system', id: 'system', name: 'System' })
+    log('message_received', `${nameOf(conv.participant.kind, conv.participant.id)}: "${body.slice(0, 40)}…"`, { kind: 'conversation', id: conv.id }, SYSTEM)
     save(db)
   }, 3500 + Math.random() * 3000)
+}
+
+const viewAccount = (a) => ({ ...clone(a), site: named(a.site) })
+
+// What a partner organization may see of one citizen request (Part 2 §11):
+// full details once they've accepted it; otherwise, for consented open requests
+// inside their coverage area, an approximate location and a household summary.
+function viewAssistanceForPartner(a, org) {
+  if (a.assigned_to?.kind === 'organization' && a.assigned_to.id === org.id) {
+    return { ...clone(a), assigned_to: named(a.assigned_to), redacted: false, distance_km: +km(org.location, a.location).toFixed(1) }
+  }
+  if (a.status !== 'open' || a.assigned_to || !a.consent_to_share) return null
+  const dist = km(org.location, a.location)
+  if (dist > (org.coverage_radius_km || 15)) return null
+  const h = a.household
+  return {
+    id: a.id, disaster_id: a.disaster_id, kind: a.kind, priority: a.priority, status: a.status, redacted: true,
+    items: clone(a.items), cannot_travel: a.cannot_travel,
+    approx_location: { latitude: Math.round(a.location.latitude * 100) / 100, longitude: Math.round(a.location.longitude * 100) / 100 },
+    distance_km: Math.round(dist * 2) / 2,
+    household: {
+      people: h.adults + h.children, children: h.children, pets: !!h.pets, immediate_medication: !!h.immediate_medication,
+      accessibility: !!h.accessibility_notes, has_car: !!h.has_car,
+    },
+    created_at: a.created_at, updated_at: a.updated_at,
+  }
+}
+const tempPassword = () => {
+  const words = ['harbor', 'cedar', 'beacon', 'summit', 'meadow', 'river', 'falcon', 'anchor', 'willow', 'signal']
+  const w = () => words[Math.floor(Math.random() * words.length)]
+  return `${w()}-${w()}-${Math.floor(1000 + Math.random() * 9000)}`
 }
 
 // ---------- API ----------
@@ -386,48 +547,59 @@ export const mockApi = {
     if (!email || !password) throw bad('Enter an email and password.')
     return { access_token: 'mock-token', token_type: 'Bearer', expires_at: new Date(Date.now() + 864e5).toISOString(), user: OPERATOR }
   },
-  async logout() { await wait(30); return null },
-  async me() { await wait(30); return OPERATOR },
+  async logout() { await wait(); return null },
+  async me() { await wait(); return OPERATOR },
 
   async listDisasters() { await wait(); return clone(db.disasters) },
 
-  // Shelters (Part 1)
+  // Shelters (Part 1; partners may edit their own shelter's live fields)
   async listShelters(disasterId) {
     await wait()
     return clone(db.shelters.filter((s) => !disasterId || s.disaster_id === disasterId))
   },
-  async createShelter(body) {
+  async createShelter(body, as) {
     await wait()
+    requireOperator(as)
     const created = { ...clone(body), id: uid('shelter'), updated_at: now() }
     db.shelters.push(created)
-    log('shelter_created', `Relief location "${created.name}" added`, { kind: 'shelter', id: created.id })
+    log('shelter_created', `Relief location "${created.name}" added`, { kind: 'shelter', id: created.id }, actorOf(as))
     save(db)
     return clone(created)
   },
-  async updateShelter(id, patch) {
+  async updateShelter(id, patch, as) {
     await wait()
     const i = db.shelters.findIndex((s) => s.id === id)
     if (i < 0) throw notFound('shelter')
+    if (isPartner(as)) {
+      if (!owns(as, { kind: 'shelter', id })) throw forbid()
+      patch = pick(patch, ['status', 'capacity', 'resources', 'capabilities'])
+    }
     const before = db.shelters[i]
     db.shelters[i] = { ...merge(before, patch), updated_at: now() }
     const after = db.shelters[i]
-    const detail = before.status !== after.status ? `marked ${after.status}` : 'updated'
-    log('shelter_updated', `${after.name} ${detail}`, { kind: 'shelter', id })
+    const changes = []
+    if (before.status !== after.status) changes.push(`marked ${after.status}`)
+    if (before.capacity.available_people !== after.capacity.available_people) changes.push(`${after.capacity.available_people} spaces free`)
+    if (JSON.stringify(before.resources) !== JSON.stringify(after.resources)) changes.push('supplies updated')
+    log('shelter_updated', `${after.name} ${changes.join(', ') || 'updated'}`, { kind: 'shelter', id }, actorOf(as))
     save(db)
     return clone(after)
   },
 
   // Updates / broadcasts (Part 1 §5 + Part 2 §6)
-  async listUpdates(disasterId) {
+  async listUpdates(disasterId, as) {
     await wait()
-    return db.updates.filter((u) => u.disaster_id === disasterId).map(viewUpdate)
+    const list = db.updates.filter((u) => u.disaster_id === disasterId).map(viewUpdate)
+    return isPartner(as) ? list.filter((u) => u.status === 'published') : list
   },
-  async previewUpdate(disasterId, { target, audience }) {
-    await wait(60)
+  async previewUpdate(disasterId, { target, audience }, as) {
+    await wait()
+    requireOperator(as)
     return { recipient_count: countRecipients(disasterId, target, audience) }
   },
-  async publishUpdate(disasterId, body) {
+  async publishUpdate(disasterId, body, as) {
     await wait()
+    requireOperator(as)
     if (!body.title?.trim() || !body.message?.trim()) throw bad('Title and message are required.')
     const target = body.target || { type: 'all' }
     const audience = body.audience || { needs: [] }
@@ -440,60 +612,70 @@ export const mockApi = {
     }
     db.updates.unshift(created)
     const where = target.type === 'radius' ? (target.label || `${target.radius_km} km area`) : 'all families'
-    log('update_published', `${scheduled ? 'Scheduled' : 'Sent'} ${created.severity} broadcast "${created.title}" to ${where} (${created.recipient_count})`, { kind: 'update', id: created.id })
+    log('update_published', `${scheduled ? 'Scheduled' : 'Sent'} ${created.severity} broadcast "${created.title}" to ${where} (${created.recipient_count})`, { kind: 'update', id: created.id }, actorOf(as))
     save(db)
     return viewUpdate(created)
   },
-  async retractUpdate(id) {
+  async retractUpdate(id, as) {
     await wait()
+    requireOperator(as)
     const u = db.updates.find((x) => x.id === id)
     if (!u) throw notFound('update')
     u.status = 'retracted'
-    log('update_retracted', `Broadcast "${u.title}" retracted`, { kind: 'update', id })
+    log('update_retracted', `Broadcast "${u.title}" retracted`, { kind: 'update', id }, actorOf(as))
     save(db)
     return viewUpdate(u)
   },
 
   // Reports (Part 1 §6)
-  async listReports(disasterId) {
+  async listReports(disasterId, as) {
     await wait()
+    requireOperator(as)
     return disasterId === D ? clone(db.reports) : []
   },
 
   // Part 2
-  async listResourceTypes() { await wait(30); return clone(RESOURCE_TYPES) },
+  async listResourceTypes() { await wait(); return clone(RESOURCE_TYPES) },
 
   async listOrganizations(disasterId) {
     await wait()
     return clone(db.organizations.filter((o) => o.disaster_id === disasterId))
   },
-  async createOrganization(body) {
+  async createOrganization(body, as) {
     await wait()
+    requireOperator(as)
     if (!body.name?.trim()) throw bad('Name is required.')
     const created = { ...clone(body), id: uid('org'), updated_at: now() }
     db.organizations.push(created)
-    log('org_created', `Organization "${created.name}" added`, { kind: 'organization', id: created.id })
+    log('org_created', `Organization "${created.name}" added`, { kind: 'organization', id: created.id }, actorOf(as))
     save(db)
     return clone(created)
   },
-  async updateOrganization(id, patch) {
+  async updateOrganization(id, patch, as) {
     await wait()
     const i = db.organizations.findIndex((o) => o.id === id)
     if (i < 0) throw notFound('organization')
+    if (isPartner(as)) {
+      if (!owns(as, { kind: 'organization', id })) throw forbid()
+      patch = pick(patch, ['status', 'contact', 'notes', 'services', 'address', 'location', 'coverage_radius_km'])
+    }
     db.organizations[i] = { ...merge(db.organizations[i], patch), updated_at: now() }
-    log('org_updated', `${db.organizations[i].name} updated${patch.status ? ` (now ${patch.status})` : ''}`, { kind: 'organization', id })
+    log('org_updated', `${db.organizations[i].name} updated${patch.status ? ` (now ${patch.status})` : ''}`, { kind: 'organization', id }, actorOf(as))
     save(db)
     return clone(db.organizations[i])
   },
 
-  async listInventory(disasterId) {
+  async listInventory(disasterId, as) {
     await wait()
     const orgIds = new Set(db.organizations.filter((o) => o.disaster_id === disasterId).map((o) => o.id))
-    return db.inventory.filter((r) => orgIds.has(r.holder.id)).map((r) => ({ ...clone(r), holder: named(r.holder) }))
+    return db.inventory
+      .filter((r) => orgIds.has(r.holder.id) && (!isPartner(as) || owns(as, r.holder)))
+      .map((r) => ({ ...clone(r), holder: named(r.holder) }))
   },
-  async setInventory(orgId, items) {
+  async setInventory(orgId, items, as) {
     await wait()
     if (!db.organizations.some((o) => o.id === orgId)) throw notFound('organization')
+    if (isPartner(as) && !owns(as, { kind: 'organization', id: orgId })) throw forbid()
     for (const it of items) {
       const row = invRow(orgId, it.resource_type_id)
       if (row && it.quantity < row.reserved) {
@@ -505,7 +687,7 @@ export const mockApi = {
       row.quantity = Math.max(0, Math.round(it.quantity))
       row.updated_at = now()
     }
-    log('inventory_updated', `${nameOf('organization', orgId)} inventory updated (${items.length} item${items.length === 1 ? '' : 's'})`, { kind: 'organization', id: orgId })
+    log('inventory_updated', `${nameOf('organization', orgId)} inventory updated (${items.length} item${items.length === 1 ? '' : 's'})`, { kind: 'organization', id: orgId }, actorOf(as))
     save(db)
     return db.inventory.filter((r) => r.holder.id === orgId).map((r) => ({ ...clone(r), holder: named(r.holder) }))
   },
@@ -514,56 +696,84 @@ export const mockApi = {
     await wait()
     return db.needs.filter((n) => n.disaster_id === disasterId).map((n) => ({ ...clone(n), requester: named(n.requester) }))
   },
-  async createNeed(body) {
+  async createNeed(body, as) {
     await wait()
-    if (!body.requester?.id || !body.resource_type_id || !(body.quantity_needed > 0)) throw bad('Requester, resource and a positive quantity are required.')
+    const requester = isPartner(as) ? { ...as.site } : body.requester
+    if (!requester?.id || !body.resource_type_id || !(body.quantity_needed > 0)) throw bad('Requester, resource and a positive quantity are required.')
     const created = {
-      id: uid('need'), disaster_id: body.disaster_id, requester: { kind: body.requester.kind, id: body.requester.id },
+      id: uid('need'), disaster_id: body.disaster_id, requester: { kind: requester.kind, id: requester.id },
       resource_type_id: body.resource_type_id, quantity_needed: body.quantity_needed, quantity_fulfilled: 0,
       priority: body.priority || 'medium', status: 'open', needed_by: body.needed_by || null, notes: body.notes || '',
       created_at: now(), updated_at: now(),
     }
     db.needs.push(created)
-    log('need_created', `${created.priority[0].toUpperCase() + created.priority.slice(1)} need: ${created.quantity_needed} ${rtName(created.resource_type_id)} for ${nameOf(created.requester.kind, created.requester.id)}`, { kind: 'need', id: created.id })
+    const who = nameOf(created.requester.kind, created.requester.id)
+    log('need_created', `${isPartner(as) ? `${who} requested` : `${created.priority[0].toUpperCase() + created.priority.slice(1)} need:`} ${created.quantity_needed} ${rtName(created.resource_type_id)}${isPartner(as) ? ` (${created.priority})` : ` for ${who}`}`, { kind: 'need', id: created.id }, actorOf(as))
     save(db)
     return { ...clone(created), requester: named(created.requester) }
   },
-  async updateNeed(id, patch) {
+  async updateNeed(id, patch, as) {
     await wait()
     const n = db.needs.find((x) => x.id === id)
     if (!n) throw notFound('need')
+    if (isPartner(as)) {
+      if (!owns(as, n.requester)) throw forbid()
+      patch = pick(patch, ['quantity_needed', 'notes', 'needed_by', 'status', 'priority'])
+      if (patch.status && patch.status !== 'cancelled') throw forbid('Partners can only cancel their own requests.')
+    }
     Object.assign(n, patch, { updated_at: now() })
     if (patch.status === undefined && n.status === 'open' && n.quantity_fulfilled >= n.quantity_needed) n.status = 'fulfilled'
-    log('need_updated', `Need for ${rtName(n.resource_type_id)} at ${nameOf(n.requester.kind, n.requester.id)} ${patch.status ? `marked ${patch.status}` : 'updated'}`, { kind: 'need', id })
+    log('need_updated', `Need for ${rtName(n.resource_type_id)} at ${nameOf(n.requester.kind, n.requester.id)} ${patch.status ? `marked ${patch.status}` : 'updated'}`, { kind: 'need', id }, actorOf(as))
     save(db)
     return { ...clone(n), requester: named(n.requester) }
   },
 
-  async listShipments(disasterId) {
+  async listShipments(disasterId, as) {
     await wait()
-    return db.shipments.filter((s) => s.disaster_id === disasterId).map((s) => ({ ...clone(s), from: named(s.from), to: named(s.to) }))
+    return db.shipments
+      .filter((s) => s.disaster_id === disasterId && (!isPartner(as) || owns(as, s.from) || owns(as, s.to)))
+      .map((s) => ({ ...clone(s), from: named(s.from), to: named(s.to) }))
   },
-  async createShipment(body) {
+  // Operators create approved shipments. Partner organizations create *offers*
+  // from their own stock (status "requested") for an operator to approve.
+  async createShipment(body, as) {
     await wait()
+    const partner = isPartner(as)
+    if (partner && (as.site.kind !== 'organization' || body.from?.id !== as.site.id)) throw forbid('Offers must come from your own organization.')
     if (body.from?.kind !== 'organization') throw bad('Shipments must come from an organization.')
     if (body.from.id === body.to?.id) throw bad('Source and destination must differ.')
     const items = (body.items || []).filter((i) => i.quantity > 0)
     if (!items.length) throw bad('Add at least one item.')
+    const status = partner ? 'requested' : 'approved'
     const s = {
       id: uid('shipment'), disaster_id: body.disaster_id, from: { kind: 'organization', id: body.from.id }, to: { kind: body.to.kind, id: body.to.id },
-      items, need_ids: body.need_ids || [], priority: body.priority || 'medium', status: 'approved', eta: body.eta || null,
-      notes: body.notes || '', created_at: now(), updated_at: now(), status_history: [{ status: 'approved', at: now() }],
+      items, need_ids: body.need_ids || [], priority: body.priority || 'medium', status, eta: body.eta || null,
+      notes: body.notes || '', created_at: now(), updated_at: now(), status_history: [{ status, at: now() }],
     }
-    reserve(s)
+    if (partner) checkStock(s)
+    else reserve(s)
     db.shipments.push(s)
-    log('shipment_created', `Shipment ${items.map((i) => `${i.quantity} ${rtName(i.resource_type_id)}`).join(', ')} from ${nameOf('organization', s.from.id)} to ${nameOf(s.to.kind, s.to.id)}`, { kind: 'shipment', id: s.id })
+    const what = items.map((i) => `${i.quantity} ${rtName(i.resource_type_id)}`).join(', ')
+    log('shipment_created', partner
+      ? `${nameOf('organization', s.from.id)} offered ${what} for ${nameOf(s.to.kind, s.to.id)}`
+      : `Shipment ${what} from ${nameOf('organization', s.from.id)} to ${nameOf(s.to.kind, s.to.id)}`, { kind: 'shipment', id: s.id }, actorOf(as))
     save(db)
     return { ...clone(s), from: named(s.from), to: named(s.to) }
   },
-  async updateShipment(id, patch) {
+  async updateShipment(id, patch, as) {
     await wait()
     const s = db.shipments.find((x) => x.id === id)
     if (!s) throw notFound('shipment')
+    if (isPartner(as)) {
+      const sender = owns(as, s.from)
+      const receiver = owns(as, s.to)
+      const to = patch.status
+      const ok = !to || to === s.status
+        || (sender && s.status === 'approved' && to === 'in_transit')
+        || (sender && s.status === 'requested' && to === 'cancelled')
+        || (receiver && s.status === 'in_transit' && to === 'delivered')
+      if (!ok || (!sender && !receiver) || ((patch.eta !== undefined || patch.notes !== undefined) && !sender)) throw forbid()
+    }
     if (patch.status && patch.status !== s.status) {
       if (!TRANSITIONS[s.status].includes(patch.status)) throw new ApiError(409, 'invalid_transition', `Can't move a ${s.status} shipment to ${patch.status}.`)
       const to = patch.status
@@ -589,8 +799,8 @@ export const mockApi = {
       }
       s.status = to
       s.status_history.push({ status: to, at: now() })
-      const label = { approved: 'approved', in_transit: 'in transit', delivered: 'delivered', cancelled: 'cancelled' }[to]
-      log('shipment_status', `Shipment to ${nameOf(s.to.kind, s.to.id)} ${label}`, { kind: 'shipment', id })
+      const label = { approved: 'approved', in_transit: 'departed', delivered: 'delivered', cancelled: 'cancelled' }[to]
+      log('shipment_status', `Shipment ${nameOf('organization', s.from.id)} → ${nameOf(s.to.kind, s.to.id)} ${label}`, { kind: 'shipment', id }, actorOf(as))
     }
     if (patch.eta !== undefined) s.eta = patch.eta
     if (patch.notes !== undefined) s.notes = patch.notes
@@ -599,47 +809,218 @@ export const mockApi = {
     return { ...clone(s), from: named(s.from), to: named(s.to) }
   },
 
-  async listConversations(disasterId) {
+  async listConversations(disasterId, as) {
     await wait()
-    return db.conversations.filter((c) => c.disaster_id === disasterId).map(viewConversation)
+    return db.conversations
+      .filter((c) => c.disaster_id === disasterId && (!isPartner(as) || owns(as, c.participant)))
+      .map((c) => viewConversation(c, as))
       .sort((a, b) => b.last_message_at.localeCompare(a.last_message_at))
   },
-  async createConversation(body) {
+  async createConversation(body, as) {
     await wait()
-    if (!body.participant?.id || !body.message?.trim()) throw bad('Recipient and message are required.')
-    const c = { id: uid('conv'), disaster_id: body.disaster_id, participant: { kind: body.participant.kind, id: body.participant.id }, subject: body.subject || '(no subject)', created_at: now(), read_at: now() }
+    const partner = isPartner(as)
+    const participant = partner ? { ...as.site } : body.participant
+    if (!participant?.id || !body.message?.trim()) throw bad('Recipient and message are required.')
+    const c = {
+      id: uid('conv'), disaster_id: body.disaster_id, participant: { kind: participant.kind, id: participant.id },
+      subject: body.subject || '(no subject)', created_at: now(), read_at: partner ? null : now(), partner_read_at: partner ? now() : null,
+    }
     db.conversations.push(c)
-    db.messages.push({ id: uid('msg'), conversation_id: c.id, sender: OPERATOR_ACTOR, body: body.message, created_at: now() })
+    db.messages.push({ id: uid('msg'), conversation_id: c.id, sender: partner ? { ...as.site } : actorOf(as), body: body.message, created_at: now() })
+    if (partner) log('message_received', `${nameOf(participant.kind, participant.id)}: "${body.message.slice(0, 40)}…"`, { kind: 'conversation', id: c.id }, actorOf(as))
     save(db)
-    scheduleReply(c)
-    return viewConversation(c)
+    if (!partner) scheduleReply(c)
+    return viewConversation(c, as)
   },
-  async listMessages(conversationId) {
-    await wait(60)
-    if (!db.conversations.some((c) => c.id === conversationId)) throw notFound('conversation')
+  async listMessages(conversationId, as) {
+    await wait()
+    const c = db.conversations.find((x) => x.id === conversationId)
+    if (!c || (isPartner(as) && !owns(as, c.participant))) throw notFound('conversation')
     return db.messages.filter((m) => m.conversation_id === conversationId).map((m) => ({ ...clone(m), sender: named(m.sender) }))
   },
-  async sendMessage(conversationId, body) {
-    await wait(80)
+  async sendMessage(conversationId, body, as) {
+    await wait()
     const c = db.conversations.find((x) => x.id === conversationId)
-    if (!c) throw notFound('conversation')
+    if (!c || (isPartner(as) && !owns(as, c.participant))) throw notFound('conversation')
     if (!body?.trim()) throw bad('Message is empty.')
-    const m = { id: uid('msg'), conversation_id: c.id, sender: OPERATOR_ACTOR, body, created_at: now() }
+    const partner = isPartner(as)
+    const m = { id: uid('msg'), conversation_id: c.id, sender: partner ? { ...as.site } : actorOf(as), body, created_at: now() }
     db.messages.push(m)
-    c.read_at = now()
+    if (partner) {
+      c.partner_read_at = now()
+      log('message_received', `${nameOf(c.participant.kind, c.participant.id)}: "${body.slice(0, 40)}…"`, { kind: 'conversation', id: c.id }, actorOf(as))
+    } else {
+      c.read_at = now()
+    }
     save(db)
-    scheduleReply(c)
+    if (!partner) scheduleReply(c)
     return { ...clone(m), sender: named(m.sender) }
   },
-  async markConversationRead(conversationId) {
-    await wait(30)
+  async markConversationRead(conversationId, as) {
+    await wait()
     const c = db.conversations.find((x) => x.id === conversationId)
-    if (c) { c.read_at = now(); save(db) }
+    if (!c || (isPartner(as) && !owns(as, c.participant))) throw notFound('conversation')
+    if (isPartner(as)) c.partner_read_at = now()
+    else c.read_at = now()
+    save(db)
     return null
   },
 
-  async listActivity(disasterId) {
+  async listActivity(disasterId, as) {
     await wait()
+    requireOperator(as)
     return db.activity.filter((a) => a.disaster_id === disasterId).sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 60).map(clone)
   },
+
+  // Partner portal accounts (Part 2 §10). The in-browser mock only tracks the
+  // account records; the mock server also stores credentials so logins work.
+  async listPartnerAccounts(disasterId, as) {
+    await wait()
+    requireOperator(as)
+    const inDisaster = (a) => (a.site.kind === 'shelter' ? db.shelters : db.organizations).some((x) => x.id === a.site.id && x.disaster_id === disasterId)
+    return db.partner_accounts.filter(inDisaster).map(viewAccount)
+  },
+  async createPartnerAccount(body, as) {
+    await wait()
+    requireOperator(as)
+    const email = String(body.email || '').trim().toLowerCase()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw bad('Enter a valid email address.')
+    if (!body.site?.id || !['shelter', 'organization'].includes(body.site.kind)) throw bad('Choose the shelter or organization this login belongs to.')
+    if (db.partner_accounts.some((a) => a.email === email) || email === 'government@demo.example') throw new ApiError(409, 'email_in_use', 'An account with this email already exists.')
+    const account = {
+      id: body.id || uid('user'), email, contact_name: body.contact_name || '', site: { kind: body.site.kind, id: body.site.id },
+      status: 'active', created_at: now(), last_login_at: null,
+    }
+    db.partner_accounts.push(account)
+    log('partner_account_created', `Portal login created for ${nameOf(account.site.kind, account.site.id)} (${email})`, { kind: account.site.kind, id: account.site.id }, actorOf(as))
+    save(db)
+    return { account: viewAccount(account), temporary_password: body.temporary_password || tempPassword() }
+  },
+  async updatePartnerAccount(id, patch, as) {
+    await wait()
+    requireOperator(as)
+    const a = db.partner_accounts.find((x) => x.id === id)
+    if (!a) throw notFound('account')
+    if (patch.status && !['active', 'disabled'].includes(patch.status)) throw bad('Status must be active or disabled.')
+    Object.assign(a, pick(patch, ['status', 'contact_name']))
+    if (patch.status) log('partner_account_updated', `Portal login for ${nameOf(a.site.kind, a.site.id)} ${patch.status === 'disabled' ? 'disabled' : 're-enabled'}`, { kind: a.site.kind, id: a.site.id }, actorOf(as))
+    save(db)
+    return viewAccount(a)
+  },
+  async resetPartnerPassword(id, as) {
+    await wait()
+    requireOperator(as)
+    const a = db.partner_accounts.find((x) => x.id === id)
+    if (!a) throw notFound('account')
+    log('partner_account_updated', `Portal password reset for ${nameOf(a.site.kind, a.site.id)}`, { kind: a.site.kind, id: a.site.id }, actorOf(as))
+    save(db)
+    return { temporary_password: tempPassword() }
+  },
+
+  // Citizen assistance (Part 2 §11). Operators see everything. Approved
+  // partner organizations see *consented, open* requests in their coverage
+  // area in redacted form, and full details only for requests they accepted.
+  async listAssistanceRequests(disasterId, as) {
+    await wait()
+    const list = db.assistance_requests.filter((a) => a.disaster_id === disasterId)
+    if (!isPartner(as)) return list.map((a) => ({ ...clone(a), assigned_to: named(a.assigned_to) }))
+    const org = as.site.kind === 'organization' && db.organizations.find((o) => o.id === as.site.id)
+    if (!org?.citizen_assistance) return []
+    return list.map((a) => viewAssistanceForPartner(a, org)).filter(Boolean)
+  },
+  async claimAssistanceRequest(id, body = {}, as) {
+    await wait()
+    const a = db.assistance_requests.find((x) => x.id === id)
+    if (!a) throw notFound('request')
+    const org = isPartner(as) && db.organizations.find((o) => o.id === as.site.id)
+    if (!org || as.site.kind !== 'organization') throw forbid('Only partner organizations can accept citizen requests.')
+    if (!org.citizen_assistance) throw forbid('Your organization is not approved for citizen assistance. Contact the operations center.')
+    if (!a.consent_to_share) throw notFound('request')
+    if (a.status !== 'open' || a.assigned_to) throw new ApiError(409, 'already_claimed', 'Another organization has already accepted this request.')
+    if (!viewAssistanceForPartner(a, org)) throw notFound('request') // outside their coverage area
+    const by = actorOf(as)
+    a.assigned_to = { kind: 'organization', id: org.id }
+    a.status = 'claimed'
+    a.eta = body.eta || null
+    a.partner_note = body.partner_note || null
+    a.history.push({ status: 'claimed', at: now(), by })
+    a.updated_at = now()
+    log('citizen_request_claimed', `${org.name} accepted citizen request ${a.id.replace('assist_', '#')} (${a.kind.replace('_', ' ')}) — household contact details released to them`, { kind: 'assistance', id: a.id }, by)
+    save(db)
+    return { ...clone(a), assigned_to: named(a.assigned_to) }
+  },
+  async updateAssistanceRequest(id, patch, as) {
+    await wait()
+    const a = db.assistance_requests.find((x) => x.id === id)
+    if (!a) throw notFound('request')
+    const by = actorOf(as)
+    const was = a.status
+    if (isPartner(as)) {
+      if (!owns(as, a.assigned_to)) throw notFound('request')
+      const to = patch.status
+      const ok = !to || (to === 'en_route' && was === 'claimed') || (to === 'completed' && ['claimed', 'en_route'].includes(was)) || (to === 'released' && ['claimed', 'en_route'].includes(was))
+      if (!ok) throw new ApiError(409, 'invalid_transition', `Can't move a ${was} request to ${to}.`)
+      if (to === 'released') {
+        a.assigned_to = null
+        a.status = 'open'
+        a.eta = null
+        a.partner_note = null
+        a.history.push({ status: 'released', at: now(), by, note: patch.note || '' })
+        log('citizen_request_released', `${by.name} released citizen request ${a.id.replace('assist_', '#')}${patch.note ? `: "${patch.note}"` : ''}`, { kind: 'assistance', id }, by)
+      } else {
+        if (to) a.status = to
+        if (patch.eta !== undefined) a.eta = patch.eta
+        if (patch.partner_note !== undefined) a.partner_note = patch.partner_note
+        if (to === 'completed') {
+          a.resolution_note = patch.resolution_note || ''
+          if (patch.deduct_inventory) {
+            for (const it of a.items) {
+              const row = invRow(as.site.id, it.resource_type_id)
+              if (row) row.quantity = Math.max(row.reserved, row.quantity - it.quantity)
+            }
+          }
+        }
+        if (to) {
+          a.history.push({ status: to, at: now(), by, note: patch.resolution_note || patch.partner_note || '' })
+          log('citizen_request_status', `Citizen request ${a.id.replace('assist_', '#')} ${to === 'en_route' ? 'en route' : to} (${by.name})`, { kind: 'assistance', id }, by)
+        }
+      }
+    } else {
+      if (patch.assigned_to !== undefined) {
+        if (patch.assigned_to) {
+          const org = db.organizations.find((o) => o.id === patch.assigned_to.id)
+          if (!org) throw notFound('organization')
+          if (!a.consent_to_share) throw new ApiError(409, 'consent_required', "This household didn't consent to sharing with aid organizations. Handle it directly.")
+          a.assigned_to = { kind: 'organization', id: org.id }
+          if (['open', 'released'].includes(a.status)) a.status = 'claimed'
+          a.history.push({ status: 'claimed', at: now(), by, note: `Assigned to ${org.name} by operations` })
+          log('citizen_request_claimed', `Operations assigned citizen request ${a.id.replace('assist_', '#')} to ${org.name}`, { kind: 'assistance', id }, by)
+        } else {
+          a.assigned_to = null
+          if (['claimed', 'en_route'].includes(a.status)) a.status = 'open'
+          a.history.push({ status: 'open', at: now(), by, note: 'Unassigned by operations' })
+        }
+      }
+      if (patch.status && patch.status !== a.status) {
+        a.status = patch.status
+        a.history.push({ status: patch.status, at: now(), by, note: patch.note || '' })
+        log('citizen_request_status', `Citizen request ${a.id.replace('assist_', '#')} marked ${patch.status.replace('_', ' ')} by operations`, { kind: 'assistance', id }, by)
+      }
+      for (const k of ['priority', 'operator_notes', 'eta', 'partner_note']) if (patch[k] !== undefined) a[k] = patch[k]
+    }
+    a.updated_at = now()
+    save(db)
+    return isPartner(as)
+      ? viewAssistanceForPartner(a, db.organizations.find((o) => o.id === as.site.id)) || { id: a.id, status: a.status, released: true }
+      : { ...clone(a), assigned_to: named(a.assigned_to) }
+  },
+
+  // Used by the mock server only.
+  _partnerAccount: (id) => clone(db.partner_accounts.find((a) => a.id === id) || null),
+  _partnerAccountByEmail: (email) => clone(db.partner_accounts.find((a) => a.email === email) || null),
+  _touchLogin(id) {
+    const a = db.partner_accounts.find((x) => x.id === id)
+    if (a) { a.last_login_at = now(); save(db) }
+  },
+  _siteName: (ref) => nameOf(ref.kind, ref.id),
 }

@@ -42,10 +42,10 @@ export default function Organizations() {
       <div className="card-panel flush table-scroll">
         <table className="table">
           <thead>
-            <tr><th>Organization</th><th>Services</th><th>Status</th><th>Contact</th><th className="num">Stock</th><th className="num">Open needs</th><th className="num">Active shipments</th><th>Updated</th></tr>
+            <tr><th>Organization</th><th>Services</th><th>Status</th><th>Contact</th><th>Portal</th><th className="num">Stock</th><th className="num">Open needs</th><th className="num">Active shipments</th><th>Updated</th></tr>
           </thead>
           <tbody>
-            {list.length === 0 && <tr><td colSpan={8}><Empty>No organizations match.</Empty></td></tr>}
+            {list.length === 0 && <tr><td colSpan={9}><Empty>No organizations match.</Empty></td></tr>}
             {list.map((o) => {
               const stock = d.inventory.filter((r) => r.holder.id === o.id)
               const units = stock.reduce((n, r) => n + available(r), 0)
@@ -60,6 +60,14 @@ export default function Organizations() {
                   <td><div className="tags">{o.services.map((s) => <span key={s} className="tag">{ORG_SERVICES[s]}</span>)}</div></td>
                   <td><span className={`badge ost-${o.status}`}>{cap(o.status)}</span></td>
                   <td className="small">{o.contact?.name}<div className="muted">{o.contact?.phone}</div></td>
+                  <td>
+                    {(() => {
+                      const accts = d.partnerAccounts.filter((a) => a.site.kind === 'organization' && a.site.id === o.id && a.status === 'active')
+                      if (!accts.length) return <Link to={`/organizations/${o.id}`} className="muted small">No login</Link>
+                      const seen = accts.map((a) => a.last_login_at).filter(Boolean).sort().at(-1)
+                      return <><span className="badge lvl-ok">Active</span><div className="muted small">{seen ? `seen ${timeAgo(seen)}` : 'not signed in yet'}</div></>
+                    })()}
+                  </td>
                   <td className="num">{stock.length ? <>{units.toLocaleString()}<div className="muted small">{stock.length} items</div></> : <span className="muted">—</span>}</td>
                   <td className="num">{needs || <span className="muted">—</span>}</td>
                   <td className="num">{ships || <span className="muted">—</span>}</td>

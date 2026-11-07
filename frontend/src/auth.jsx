@@ -47,7 +47,9 @@ export function AuthProvider({ children }) {
     if (res.user.role !== 'operator') {
       await api.logout().catch(() => {})
       setToken(null)
-      throw new ApiError(403, 'not_operator', 'This dashboard is for government operators. Family accounts use the Haven mobile app.')
+      throw new ApiError(403, 'not_operator', res.user.role === 'partner'
+        ? 'This is the government dashboard. Shelter and organization logins use the Haven partner portal.'
+        : 'This dashboard is for government operators. Family accounts use the Haven mobile app.')
     }
     try {
       sessionStorage.setItem(KEY, JSON.stringify(res))

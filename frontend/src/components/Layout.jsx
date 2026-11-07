@@ -1,8 +1,8 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Building2, LayoutDashboard, Map, Megaphone, MessagesSquare, PackageSearch, RefreshCw, Truck, Warehouse } from 'lucide-react'
+import { Building2, HandHeart, KeyRound, LayoutDashboard, Map, Megaphone, MessagesSquare, PackageSearch, RefreshCw, Truck, Warehouse } from 'lucide-react'
 import { useAuth } from '../auth.jsx'
 import { useData } from '../data.jsx'
-import { USE_MOCK, resetMockData } from '../api/index.js'
+import { USE_MOCK, SHARED_MOCK, resetDemoData } from '../api/index.js'
 import { DISASTER_TYPES } from '../lib/constants.js'
 import { timeAgo } from '../lib/format.js'
 import { isLate, needProgress } from '../lib/logistics.js'
@@ -15,12 +15,14 @@ export default function Layout() {
   const criticalNeeds = d.needs.filter((n) => n.status === 'open' && n.priority === 'critical' && needProgress(n, d.shipments).uncovered > 0).length
   const late = d.shipments.filter(isLate).length
   const pendingApproval = d.shipments.filter((s) => s.status === 'requested').length
+  const citizenCritical = d.assistance.filter((a) => a.status === 'open' && ['critical', 'high'].includes(a.priority)).length
   const helpOpen = d.reports.filter((r) => r.type === 'need_help' && r.status === 'received').length
 
   const nav = [
     { section: null, items: [
       { to: '/', label: 'Command Center', icon: LayoutDashboard, end: true },
       { to: '/map', label: 'Operations Map', icon: Map, badge: helpOpen, tone: 'alert' },
+      { to: '/citizens', label: 'Citizen requests', icon: HandHeart, badge: citizenCritical, tone: 'alert' },
     ] },
     { section: 'Communications', items: [
       { to: '/comms/broadcasts', label: 'Broadcasts', icon: Megaphone },
@@ -33,6 +35,7 @@ export default function Layout() {
     ] },
     { section: 'Network', items: [
       { to: '/organizations', label: 'Organizations', icon: Building2 },
+      { to: '/partners', label: 'Portal access', icon: KeyRound },
     ] },
   ]
 
@@ -76,9 +79,15 @@ export default function Layout() {
             {d.disaster?.status === 'active' && <span className="live-dot" title="Active incident">Active</span>}
           </div>
           <div className="topbar-right">
-            {USE_MOCK && (
-              <button className="badge badge-mock" title="Reset all mock data to the demo seed" onClick={() => { if (confirm('Reset all mock data?')) { resetMockData(); d.refresh() } }}>
-                Mock data ↺
+            {(USE_MOCK || SHARED_MOCK) && (
+              <button className="badge badge-mock" title={SHARED_MOCK ? 'Shared mock API (also used by the partner portal). Click to reset to the demo seed.' : 'Browser-only mock data. Click to reset.'}
+                onClick={async () => {
+                  if (!confirm(SHARED_MOCK ? 'Reset all demo data for the dashboard AND partner portal? Portal logins you created will be removed and everyone is signed out.' : 'Reset all mock data?')) return
+                  try { await resetDemoData() } catch (e) { alert(e.message) }
+                  if (SHARED_MOCK) logout()
+                  else d.refresh()
+                }}>
+                {SHARED_MOCK ? 'Shared demo data ↺' : 'Mock data ↺'}
               </button>
             )}
             <button className="sync" onClick={d.refresh} title="Refresh now">

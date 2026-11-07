@@ -105,6 +105,11 @@ export const BROADCAST_TEMPLATES = [
   },
 ]
 
+// Citizen assistance (Part 2 §11)
+export const ASSIST_KINDS = { delivery: 'Supply delivery', transport: 'Transport', medical: 'Medical', welfare_check: 'Welfare check', other: 'Other' }
+export const ASSIST_STATUS = { open: 'Open', claimed: 'Accepted', en_route: 'En route', completed: 'Completed', cancelled: 'Cancelled' }
+export const ASSIST_COLOR = { open: '#d64545', claimed: '#2563eb', en_route: '#7c3aed', completed: '#1f9d55', cancelled: '#8a8f98' }
+
 // Default map centre (Example County demo area).
 export const DEFAULT_CENTER = [27.9506, -82.4572]
 

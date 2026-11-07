@@ -12,6 +12,8 @@ import Dispatch from './pages/Dispatch.jsx'
 import Inventory from './pages/Inventory.jsx'
 import Organizations from './pages/Organizations.jsx'
 import OrganizationDetail from './pages/OrganizationDetail.jsx'
+import Partners from './pages/Partners.jsx'
+import Citizens from './pages/Citizens.jsx'
 
 export default function App() {
   const { user } = useAuth()
@@ -22,6 +24,7 @@ export default function App() {
         <Route element={<Layout />}>
           <Route index element={<CommandCenter />} />
           <Route path="map" element={<MapPage />} />
+          <Route path="citizens" element={<Citizens />} />
           <Route path="comms" element={<Navigate to="/comms/broadcasts" replace />} />
           <Route path="comms/broadcasts" element={<Broadcasts />} />
           <Route path="comms/messages" element={<Messages />} />
@@ -32,6 +35,7 @@ export default function App() {
           <Route path="logistics/inventory" element={<Inventory />} />
           <Route path="organizations" element={<Organizations />} />
           <Route path="organizations/:id" element={<OrganizationDetail />} />
+          <Route path="partners" element={<Partners />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

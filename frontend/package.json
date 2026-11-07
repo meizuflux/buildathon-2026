@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "mock-api": "node mock-server/standalone.js",
     "build": "vite build",
     "preview": "vite preview"
   },
