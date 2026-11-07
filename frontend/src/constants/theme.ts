@@ -1,0 +1,2 @@
+export const colors = { ink: '#173D38', text: '#293F3B', muted: '#63736C', green: '#205D4E', greenLight: '#E9F1EA', cream: '#F7F8F2', white: '#FFFFFF', border: '#DFE5DB', amber: '#8A5519', amberLight: '#FFF2DB', red: '#A13932', redLight: '#FBECE6', blue: '#3A6086', blueLight: '#EBF1F6' };
+export const shadow = { shadowColor: '#173D38', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.035, shadowRadius: 16, elevation: 1 };

@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Haven",
+    "slug": "haven-response",
+    "scheme": "haven",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": { "supportsTablet": true, "bundleIdentifier": "org.haven.response" },
+    "android": { "package": "org.haven.response" },
+    "web": { "bundler": "metro", "output": "single", "name": "Haven — A little clarity when it matters" },
+    "plugins": ["expo-router", "expo-sqlite", "expo-secure-store", ["expo-location", { "locationWhenInUsePermission": "Optionally share your location with Haven to include it in your household profile." }]]
+  }
+}
