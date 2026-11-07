@@ -44,14 +44,28 @@ All paths below start with `/api`. Handlers are grouped in `haven/routers`, with
 | GET | `/shelters?disaster_id=...` | List shelters for a disaster. |
 | POST | `/shelters` | Create a shelter as an operator. |
 | PATCH | `/shelters/{shelter_id}` | Merge shelter changes as an operator. |
-| POST | `/families/{family_id}/plan/generate` | Generate and persist a new recommendation version. |
-| GET | `/families/{family_id}/plan` | Retrieve the latest persisted plan; 404 `plan_not_found` before generation. |
+| POST | `/families/{family_id}/plan/generate` | Reallocate the affected disaster and retrieve this family's plan; unchanged plans retain their version. |
+| GET | `/families/{family_id}/plan` | Retrieve the latest persisted plan, generated automatically when the profile is created. |
 | GET, POST | `/disasters/{disaster_id}/updates` | Read official updates or publish one as an operator. |
 | POST | `/families/{family_id}/reports` | Submit an idempotent family report. |
 | GET | `/disasters/{disaster_id}/reports` | List family reports as an operator. |
 
 PATCH requests merge supplied nested fields, preserving omitted fields. Nullable notes may be cleared with `null`. Coordinates, counts, capacities, and enumerated values are validated. Errors use `{"error":{"code":"...","message":"..."}}` consistently.
 
-Recommendations never reserve capacity. They select an eligible open shelter in the same disaster with enough available places and compatible capabilities, then rank eligible shelters by distance. Matching uses capability flags: accessibility notes require wheelchair access, medical needs require staff, immediate medication additionally requires available or limited medication, and special care notes require a shelter with special care notes. Free-text care requirements are not interpreted. Each generation persists a new version, including an explicit `no_match` result when appropriate. Existing plans remain snapshots; regenerate after profile or shelter changes.
+## Coordinated allocation and plan changes
+
+Family creation and relevant profile or shelter edits recompute assignments for the affected disaster in the same database transaction as the edit. Moving a family or shelter to another disaster recomputes both pools. Assignments reserve shelter spaces for the whole household. Reassignment releases the former reservation atomically; repeating a request does not reserve more places.
+
+`capacity.available_people` is the currently unreserved capacity in both reads and writes. An internal capacity budget preserves the operator's capacity accounting while allocations change the free count. Setting available capacity to zero stops additional allocations without cancelling existing reservations; closing a shelter or reducing `total_people` can force reassignment. Reading capacity and writing it back unchanged does not consume more places. A closed shelter can report physically free places, but its status excludes it from allocation.
+
+The allocator uses the existing profile fields and shelter capability/resource labels. Car ownership influences distance preference: families without a car receive stronger preference for nearby shelters, while families with cars can be placed farther away. Geographic distance is an allocation preference, not a verified route or a transportation booking. Free-text needs continue to use the existing broad capability flags; the backend does not verify a particular medication or interpret clinical notes.
+
+Allocation is deterministic: immediate-medication needs are considered first, followed by families with fewer compatible destinations, families without a car, larger households, and stable creation-time/ID ordering. A family initially receives its nearest compatible shelter with enough remaining places. Bounded relocation and exchange passes can move already allocated households to fit waiting families without dropping any existing household. This is a coordinated heuristic, not a globally optimal solver. Existing broad matching rules remain in effect, including child-friendly shelters for households with children.
+
+Food, water, medication, and clothes remain availability labels. Immediate-medication matching requires an available or limited medication label alongside medical staff. Other labels are included in the selected shelter's plan snapshot; labels do not represent quantities or reserved inventory.
+
+Plans are persisted snapshots, including the selected shelter's capabilities and resources. Relevant family or selected-shelter changes automatically publish a new version even when the destination stays the same; unchanged results keep their existing version and timestamp. Derived free-space changes alone do not churn a family's plan. The explicit generation endpoint uses the same coordinated allocator. Startup reconciles existing profiles and legacy recommendations with the allocation ledger. Internal input fingerprints are stored for version comparison and omitted from API responses.
 
 Plan retrieval supports `?after_version=1&wait_seconds=25` (0–25 seconds). It returns a newer plan with 200 or an empty 204 when unchanged at timeout, rechecking authorization during the wait. Family report retries reuse `client_request_id`; an identical retry returns the stored report, while a changed payload with the same key returns 409.
+
+Clients can read the initial plan after profile creation, then repeat long polls using the last received version. Replace the cached plan on a newer 200 response; retain it and poll again after 204. Updates use this existing long-polling contract rather than a separate push channel.
