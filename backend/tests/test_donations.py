@@ -1,48 +1,11 @@
-import sqlite3
-from contextlib import closing
-
 import pytest
-from litestar.testing import TestClient
 
-from haven.app import app
-from haven.auth import hash_password
-from haven.db import database_path
-
-CENTER = (29.7604, -95.3698)
-HUBS = [
-    ("hub_near", "Near Church", "church", 29.7610, -95.3700, 95),
-    ("hub_mid", "Mid Fire Station", "fire_station", 29.8000, -95.4000, 40),
-    ("hub_far", "Far School", "school", 30.5000, -96.5000, 10),
-]
-
-
-def insert_user(email: str, role: str) -> None:
-    with closing(sqlite3.connect(database_path())) as connection, connection:
-        connection.execute(
-            "INSERT INTO users (id, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, '2026-01-01T00:00:00Z')",
-            ("user_" + role, email, hash_password("correct-password"), role),
-        )
-
-
-def headers_for(client, email: str) -> dict:
-    token = client.post("/api/auth/login", json={"email": email, "password": "correct-password"}).json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+from conftest import CENTER, headers_for
 
 
 @pytest.fixture
-def client(tmp_path, monkeypatch):
-    monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "donations.sqlite3"))
-    with TestClient(app=app) as client:
-        with closing(sqlite3.connect(database_path())) as connection, connection:
-            connection.executemany(
-                "INSERT INTO hubs (id, name, type, address, latitude, longitude, capacity_pct, updated_at) "
-                "VALUES (?, ?, ?, '1 Main St', ?, ?, ?, '2026-01-01T00:00:00Z')",
-                HUBS,
-            )
-            connection.execute("INSERT INTO hub_supplies VALUES ('hub_near', 'water', 10, 50)")
-        insert_user("op@example.com", "operator")
-        insert_user("family@example.com", "family")
-        yield client
+def client(hub_client):
+    return hub_client
 
 
 def test_nearby_hubs_sorted_and_filtered_by_radius(client):
@@ -51,7 +14,7 @@ def test_nearby_hubs_sorted_and_filtered_by_radius(client):
     body = response.json()
     assert [hub["id"] for hub in body] == ["hub_near", "hub_mid"]
     assert body[0]["distance_km"] < body[1]["distance_km"]
-    assert body[0]["supplies"] == [{"category": "water", "quantity": 10, "target": 50, "need": 40}]
+    assert body[0]["supplies"] == [{"category": "water", "quantity": 10, "target": 50, "pledged": 0, "reserved": 0, "available": 10, "need": 40}]
     assert body[0]["open_pickup"] is None
 
 

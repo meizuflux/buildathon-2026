@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     email TEXT NOT NULL COLLATE NOCASE UNIQUE,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('family', 'operator')),
+    role TEXT NOT NULL CHECK (role IN ('family', 'operator', 'hub_staff')),
     created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS sessions (
@@ -109,3 +109,40 @@ CREATE TABLE IF NOT EXISTS pickup_requests (
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS pickup_requests_hub_idx ON pickup_requests(hub_id, status);
+-- Hub staff accounts manage exactly one hub.
+CREATE TABLE IF NOT EXISTS hub_staff (
+    user_id TEXT PRIMARY KEY REFERENCES users(id),
+    hub_id TEXT NOT NULL REFERENCES hubs(id)
+);
+-- Citizen requests for goods; an operator claims one, picks a source hub and delivery method, and fulfills it.
+-- items_json: [{"category": ..., "quantity": ...}]
+CREATE TABLE IF NOT EXISTS supply_requests (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    items_json TEXT NOT NULL,
+    latitude REAL NOT NULL CHECK (latitude BETWEEN -90 AND 90),
+    longitude REAL NOT NULL CHECK (longitude BETWEEN -180 AND 180),
+    address TEXT NOT NULL DEFAULT '',
+    notes TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL CHECK (status IN ('open', 'assigned', 'fulfilled', 'cancelled')),
+    hub_id TEXT REFERENCES hubs(id),
+    method TEXT CHECK (method IN ('delivery', 'pickup')),
+    assigned_to TEXT REFERENCES users(id),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS supply_requests_status_idx ON supply_requests(status, created_at);
+CREATE INDEX IF NOT EXISTS supply_requests_user_idx ON supply_requests(user_id);
+-- Citizen pledges to drop goods off at a hub; staff confirm receipt, which adds the items to inventory.
+CREATE TABLE IF NOT EXISTS pledges (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    hub_id TEXT NOT NULL REFERENCES hubs(id),
+    items_json TEXT NOT NULL,
+    notes TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL CHECK (status IN ('pending', 'received', 'no_show', 'cancelled')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS pledges_hub_idx ON pledges(hub_id, status);
+CREATE INDEX IF NOT EXISTS pledges_user_idx ON pledges(user_id);

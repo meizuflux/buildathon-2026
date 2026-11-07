@@ -71,7 +71,8 @@ def require_password(password: str, *, registration: bool = False) -> None:
 
 async def user_info(connection: apsw.AsyncConnection, user: tuple) -> dict:
     family = await (await connection.execute("SELECT id FROM families WHERE owner_user_id = ?", (user[0],))).fetchone()
-    return {"id": user[0], "role": user[1], "family_id": family[0] if family else None}
+    hub = await (await connection.execute("SELECT hub_id FROM hub_staff WHERE user_id = ?", (user[0],))).fetchone()
+    return {"id": user[0], "role": user[1], "family_id": family[0] if family else None, "hub_id": hub[0] if hub else None}
 
 
 def token_hash(token: str) -> str:
