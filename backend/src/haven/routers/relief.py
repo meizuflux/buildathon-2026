@@ -6,12 +6,13 @@ from typing import Annotated, Any, Literal, cast
 from uuid import uuid4
 
 import msgspec
-from litestar import Router, get, patch, post
+from litestar import Request, Router, get, patch, post
 from litestar.params import FromPath, FromQuery, JSONBody
 
+from haven.activity import record_activity
 from haven.allocation import recompute_disasters, set_shelter_allocation_budget
 from haven.api_common import error, require_disaster
-from haven.auth import now, operator_guard, timestamp
+from haven.auth import AuthenticatedUser, get_authenticated_user, now, operator_guard, timestamp
 from haven.db import connect
 from haven.openapi import (
     BEARER,
@@ -110,10 +111,16 @@ class ShelterPatch(msgspec.Struct, forbid_unknown_fields=True):
     resources: ResourcesPatch | msgspec.UnsetType = msgspec.UNSET
 
 
+class UpdateTarget(msgspec.Struct, forbid_unknown_fields=True):
+    type: Literal["all", "shelter"]
+    shelter_id: Text | None = None
+
+
 class UpdateCreate(msgspec.Struct, forbid_unknown_fields=True):
     title: Text
     message: Text
     severity: Literal["info", "warning", "critical"]
+    target: UpdateTarget | None = None
 
 
 def validate_shelter(
@@ -168,7 +175,7 @@ async def list_shelters(disaster_id: FromQuery[str]) -> ShelterList:
     responses=errors(400, 401, 403, 404, 500),
     description="Operator only. Creating a shelter triggers reallocation.",
 )
-async def create_shelter(data: JSONBody[ShelterCreate]) -> Shelter:
+async def create_shelter(data: JSONBody[ShelterCreate], request: Request) -> Shelter:
     shelter = msgspec.to_builtins(data)
     async with connect() as connection:
         await connection.execute("BEGIN IMMEDIATE")
@@ -195,6 +202,15 @@ async def create_shelter(data: JSONBody[ShelterCreate]) -> Shelter:
                 ),
             )
             await recompute_disasters(connection, (data.disaster_id,))
+            await record_activity(
+                connection,
+                disaster_id=data.disaster_id,
+                event_type="shelter_created",
+                summary=f"Shelter {data.name} created",
+                ref_kind="shelter",
+                ref_id=shelter["id"],
+                user=get_authenticated_user(request),
+            )
             row = await (
                 await connection.execute(
                     f"SELECT {projection(SHELTER_COLUMNS)} FROM shelters WHERE id = ?",
@@ -217,7 +233,9 @@ async def create_shelter(data: JSONBody[ShelterCreate]) -> Shelter:
     responses=errors(400, 401, 403, 404, 500),
     description="Operator only. Nested fields merge and relevant changes trigger reallocation.",
 )
-async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch]) -> Shelter:
+async def update_shelter(
+    shelter_id: FromPath[str], data: JSONBody[ShelterPatch], request: Request
+) -> Shelter:
     async with connect() as connection:
         await connection.execute("BEGIN IMMEDIATE")
         try:
@@ -291,6 +309,15 @@ async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch]
                 await recompute_disasters(
                     connection, sorted({old_disaster_id, shelter["disaster_id"]})
                 )
+                await record_activity(
+                    connection,
+                    disaster_id=shelter["disaster_id"],
+                    event_type="shelter_updated",
+                    summary=f"Shelter {shelter['name']} updated",
+                    ref_kind="shelter",
+                    ref_id=shelter_id,
+                    user=get_authenticated_user(request),
+                )
                 updated_row = await (
                     await connection.execute(
                         f"SELECT {projection(SHELTER_COLUMNS)} FROM shelters WHERE id = ?",
@@ -305,18 +332,46 @@ async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch]
     return shelter
 
 
-@get("/disasters/{disaster_id:str}/updates", tags=["Updates"], responses=errors(400, 404, 500))
-async def list_updates(disaster_id: FromPath[str]) -> UpdateList:
+@get("/disasters/{disaster_id:str}/updates", tags=["Updates"], responses=errors(400, 401, 404, 500))
+async def list_updates(disaster_id: FromPath[str], request: Request) -> UpdateList:
+    """Public updates are visible to everyone; targeted updates require a matching family."""
     async with connect() as connection:
         await require_disaster(connection, disaster_id)
+        user = request.user
+        assigned_shelter = None
+        if isinstance(user, AuthenticatedUser) and user.role == "family":
+            assigned_shelter = await (
+                await connection.execute(
+                    "SELECT s.id FROM families f "
+                    "JOIN current_assignments a ON a.family_id = f.id "
+                    "JOIN shelters s ON s.id = a.shelter_id AND s.disaster_id = f.disaster_id "
+                    "WHERE f.owner_user_id = ? AND f.disaster_id = ?",
+                    (user.id, disaster_id),
+                )
+            ).fetchone()
+        columns = ", ".join("u." + name for name in UPDATE_COLUMNS)
         rows = await (
             await connection.execute(
-                f"SELECT {projection(UPDATE_COLUMNS)} FROM disaster_updates "
-                "WHERE disaster_id = ? ORDER BY published_at DESC, id",
+                f"SELECT {columns}, t.target_json FROM disaster_updates u "
+                "LEFT JOIN broadcast_targets t ON t.update_id = u.id "
+                "WHERE u.disaster_id = ? ORDER BY u.published_at DESC, u.id",
                 (disaster_id,),
             )
         ).fetchall()
-    return {"updates": [update_from_row(row) for row in rows]}
+    updates = []
+    for row in rows:
+        target = json.loads(row[-1]) if row[-1] else None
+        operator = isinstance(user, AuthenticatedUser) and user.role == "operator"
+        matches = target is None or target["type"] == "all"
+        if target and assigned_shelter:
+            if target["type"] == "shelter":
+                matches = assigned_shelter[0] == target["shelter_id"]
+        if operator or matches:
+            update = update_from_row(row[:-1])
+            if operator and target:
+                update["target"] = target
+            updates.append(update)
+    return {"updates": updates}
 
 
 @post(
@@ -325,34 +380,76 @@ async def list_updates(disaster_id: FromPath[str]) -> UpdateList:
     security=BEARER,
     guards=[operator_guard],
     responses=errors(400, 401, 403, 404, 500),
-    description="Operator only. Publish an official update.",
+    description="Operator only. Publish globally or target families by assigned shelter.",
 )
-async def publish_update(disaster_id: FromPath[str], data: JSONBody[UpdateCreate]) -> Update:
+async def publish_update(
+    disaster_id: FromPath[str], data: JSONBody[UpdateCreate], request: Request
+) -> Update:
+    target = msgspec.to_builtins(data.target) if data.target else None
+    if target:
+        kind = target["type"]
+        if (kind == "all" and target["shelter_id"] is not None) or (
+            kind == "shelter" and not target["shelter_id"]
+        ):
+            error(400, "invalid_request", "Target fields do not match target type.")
+        target = {key: value for key, value in target.items() if value is not None}
     async with connect() as connection:
-        await require_disaster(connection, disaster_id)
-        if not data.title.strip() or not data.message.strip():
-            error(400, "invalid_request", "Update title and message must not be blank.")
-        result = cast(
-            Update,
-            {
-                "id": "update_" + uuid4().hex,
-                "disaster_id": disaster_id,
-                **msgspec.to_builtins(data),
-                "published_at": timestamp(now()),
-            },
-        )
-        await connection.execute(
-            "INSERT INTO disaster_updates (id, disaster_id, title, message, severity, published_at) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
-            (
-                result["id"],
-                result["disaster_id"],
-                result["title"],
-                result["message"],
-                result["severity"],
-                result["published_at"],
-            ),
-        )
+        await connection.execute("BEGIN IMMEDIATE")
+        try:
+            await require_disaster(connection, disaster_id)
+            if not data.title.strip() or not data.message.strip():
+                error(400, "invalid_request", "Update title and message must not be blank.")
+            if target and target["type"] == "shelter":
+                shelter = await (
+                    await connection.execute(
+                        "SELECT 1 FROM shelters WHERE id = ? AND disaster_id = ?",
+                        (target["shelter_id"], disaster_id),
+                    )
+                ).fetchone()
+                if shelter is None:
+                    error(404, "shelter_not_found", "Shelter not found in this disaster.")
+            result = cast(
+                Update,
+                {
+                    "id": "update_" + uuid4().hex,
+                    "disaster_id": disaster_id,
+                    "title": data.title,
+                    "message": data.message,
+                    "severity": data.severity,
+                    "published_at": timestamp(now()),
+                },
+            )
+            await connection.execute(
+                "INSERT INTO disaster_updates (id, disaster_id, title, message, severity, published_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    result["id"],
+                    disaster_id,
+                    data.title,
+                    data.message,
+                    data.severity,
+                    result["published_at"],
+                ),
+            )
+            if target:
+                await connection.execute(
+                    "INSERT INTO broadcast_targets (update_id, target_json) VALUES (?, ?)",
+                    (result["id"], json.dumps(target)),
+                )
+                result["target"] = target
+            await record_activity(
+                connection,
+                disaster_id=disaster_id,
+                event_type="update_published",
+                summary=f"Update {data.title} published",
+                ref_kind="update",
+                ref_id=result["id"],
+                user=get_authenticated_user(request),
+            )
+            await connection.execute("COMMIT")
+        except BaseException:
+            await connection.execute("ROLLBACK")
+            raise
     return result
 
 

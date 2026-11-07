@@ -253,3 +253,63 @@ def test_family_to_operator_contract_flow(relief_client):
     assert client.get("/api/disasters/active/reports", headers=headers["operator"]).json()[
         "reports"
     ] == [response.json()]
+
+
+def test_shelter_targeted_updates_follow_current_assignment(relief_client):
+    client, headers = relief_client
+    shelter = client.post("/api/shelters", headers=headers["operator"], json=shelter_data()).json()
+    family = client.post(
+        "/api/families",
+        headers=headers["family"],
+        json={
+            "disaster_id": "active",
+            "adults": 1,
+            "children": 0,
+            "location": {"latitude": 27.95, "longitude": -82.45},
+            "needs": {
+                "pets": False,
+                "immediate_medication": False,
+                "medical_notes": None,
+                "accessibility_notes": None,
+                "other_special_care": None,
+            },
+            "resources": {"has_car": True},
+        },
+    )
+    assert family.status_code == 201, family.text
+    path = "/api/disasters/active/updates"
+    payload = {"title": "Shelter notice", "message": "Water is available.", "severity": "info"}
+    global_update = client.post(path, headers=headers["operator"], json=payload).json()
+    target = {"type": "shelter", "shelter_id": shelter["id"]}
+    response = client.post(path, headers=headers["operator"], json=payload | {"target": target})
+    assert response.status_code == 201, response.text
+    targeted = response.json()
+    assert targeted["target"] == target
+    assert client.get(path).json() == {"updates": [global_update]}
+    family_updates = client.get(path, headers=headers["family"]).json()["updates"]
+    assert {item["id"] for item in family_updates} == {global_update["id"], targeted["id"]}
+    assert all("target" not in item for item in family_updates)
+    operator_updates = client.get(path, headers=headers["operator"]).json()["updates"]
+    assert (
+        next(item for item in operator_updates if item["id"] == targeted["id"])["target"] == target
+    )
+    with sqlite3.connect(database_path()) as connection:
+        connection.execute(
+            "UPDATE current_assignments SET shelter_id = NULL WHERE family_id = ?",
+            (family.json()["id"],),
+        )
+    assert client.get(path, headers=headers["family"]).json() == {"updates": [global_update]}
+    assert (
+        client.post(
+            path,
+            headers=headers["operator"],
+            json=payload | {"target": {"type": "shelter", "shelter_id": "missing"}},
+        ).status_code
+        == 404
+    )
+    assert (
+        client.post(
+            path, headers=headers["operator"], json=payload | {"target": {"type": "shelter"}}
+        ).status_code
+        == 400
+    )
