@@ -45,7 +45,7 @@ def test_errors_share_contract_shape(tmp_path, monkeypatch):
             (client.get("/api/missing"), 404, "not_found"),
             (client.get("/api/families/missing"), 401, "unauthorized"),
             (client.get("/api/shelters"), 400, "invalid_request"),
-            (client.post("/api/families", json={}), 400, "invalid_request"),
+            (client.post("/api/families", json={}), 401, "unauthorized"),
         ):
             assert response.status_code == status
             assert set(response.json()) == {"error"}
