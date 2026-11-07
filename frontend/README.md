@@ -23,7 +23,7 @@ cd frontend
 npm start
 ```
 
-Press `w` for the browser. The API is at `http://127.0.0.1:8000`, its health check is `/health`, and the browser app is at `http://localhost:8081`. The local `.env` is configured for this backend. `backend:start` wraps the unchanged backend with browser CORS support and stores data in `.runtime/haven.sqlite3`. Set `DATABASE_PATH` to choose another database. Only localhost browser origins on port 8081 are allowed by default; `HAVEN_ALLOWED_ORIGINS` accepts a comma-separated override.
+Press `w` for the browser. The API is at `http://127.0.0.1:8000`, its health check is `/health`, and the browser app is at `http://localhost:8081`. The local `.env` is configured for this backend. `backend:start` wraps the unchanged backend with browser CORS support and stores data in `.runtime/haven.sqlite3`. Set `DATABASE_PATH` to choose another database. Loopback browser origins (localhost, 127.0.0.1, and ::1) on any port are allowed by default so Expo can select an available port; `HAVEN_ALLOWED_ORIGINS` accepts a comma-separated override.
 
 Python 3.14 is required by the current master code in practice: earlier Python versions eagerly evaluate APSW type-only annotations. The lockfile and backend source are not changed to address this. The workspace-local uv download is ignored by git.
 
