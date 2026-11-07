@@ -42,3 +42,16 @@ export const cancelPledge = (id, options) =>
 
 // { active, base_cap, resource_types: { [resource_type_id]: { cap, level, pressure } } }
 export const requestLimits = (options) => request('/api/requests/limits', options);
+
+// Custom items outside the catalog, reviewed by a government worker. kind: 'donation' | 'request'
+export const createCustom = ({ kind, description, quantity = 1, latitude, longitude, notes = '' }, options) =>
+  request('/api/custom-submissions', {
+    ...options,
+    method: 'POST',
+    body: { kind, description, quantity, latitude, longitude, notes },
+  });
+
+export const myCustom = (options) => request('/api/custom-submissions/mine', options);
+
+export const cancelCustom = (id, options) =>
+  request(`/api/custom-submissions/${encodeURIComponent(id)}/cancel`, { ...options, method: 'POST' });

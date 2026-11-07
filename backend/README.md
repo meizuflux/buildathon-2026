@@ -150,6 +150,22 @@ Hubs and back-office depots share one stock engine with the supply logistics API
 | `POST /api/pledges/{id}/receive` | that hub's staff, operator | Adds the items to inventory |
 | `POST /api/pledges/{id}/no-show` | that hub's staff, operator | Closes the pledge without changing inventory |
 
+### Custom items
+
+For things outside the catalog (a wheelchair, a crib, phone chargers). A government worker reviews each one: approving it picks a hub and sends the citizen instructions; declining sends a reason. Each citizen can have one submission awaiting review at a time. Custom items don't touch tracked inventory.
+
+`pending` → approve → `approved` → complete → `completed`; `pending` → decline → `declined`; the citizen can cancel while it's `pending` or `approved`.
+
+| Endpoint | Auth | Purpose |
+|---|---|---|
+| `POST /api/custom-submissions` | family | `{"kind": "donation" or "request", "description", "quantity", "latitude", "longitude", "notes"}`. 409 `custom_pending` if one is already awaiting review |
+| `GET /api/custom-submissions/mine` | family | The citizen's custom items, with `hub` and the reviewer's `response` |
+| `POST /api/custom-submissions/{id}/cancel` | family (owner) | Cancel while pending or approved |
+| `GET /api/custom-submissions?status=&kind=` | operator | Review queue, oldest first. Pending items include `nearby_hubs` (the three nearest active hubs) |
+| `POST /api/custom-submissions/{id}/approve` | operator | `{"hub_id", "message"}` |
+| `POST /api/custom-submissions/{id}/decline` | operator | `{"message"}` |
+| `POST /api/custom-submissions/{id}/complete` | operator | Mark an approved item as handed over |
+
 ### Supply logistics (API contract part 2)
 
 These implement sections 1 to 5 of the dashboard's `frontend/docs/api-contract-part-2.md` (on the `frontend` branch): resource types, organizations, inventory, needs, and shipments. Everything is operator-only (403 `not_permitted`) except `GET /resource-types`, which any signed-in user may call. Hubs appear here as organizations, so a shipment out of a hub and a citizen request served from it draw on the same stock.

@@ -79,3 +79,24 @@ export const receivePledge = (pledgeId, options) =>
 
 export const noShowPledge = (pledgeId, options) =>
   request(`/api/pledges/${encodeURIComponent(pledgeId)}/no-show`, { ...options, method: 'POST' });
+
+// Custom donations and requests awaiting review.
+export const fetchCustom = (status, options) =>
+  request(`/api/custom-submissions${status ? `?status=${status}` : ''}`, options);
+
+export const approveCustom = (id, hubId, message, options) =>
+  request(`/api/custom-submissions/${encodeURIComponent(id)}/approve`, {
+    ...options,
+    method: 'POST',
+    body: JSON.stringify({ hub_id: hubId, message }),
+  });
+
+export const declineCustom = (id, message, options) =>
+  request(`/api/custom-submissions/${encodeURIComponent(id)}/decline`, {
+    ...options,
+    method: 'POST',
+    body: JSON.stringify({ message }),
+  });
+
+export const completeCustom = (id, options) =>
+  request(`/api/custom-submissions/${encodeURIComponent(id)}/complete`, { ...options, method: 'POST' });

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { API_BASE } from './api';
+import CustomForm from './CustomForm';
 import DonateForm from './DonateForm';
 import MyActivity from './MyActivity';
 import RequestForm from './RequestForm';
@@ -9,12 +10,13 @@ import useDeviceLocation from './useDeviceLocation';
 
 const TABS = [
   ['donate', 'Donate'],
-  ['request', 'Request supplies'],
+  ['request', 'Request'],
+  ['custom', 'Custom'],
   ['activity', 'My activity'],
 ];
 
 /**
- * The citizen donations tab: donate, request supplies, and track both. The system matches every
+ * The citizen donations tab: donate, request supplies, ask for or offer custom items, and track it all. The system matches every
  * donation and request to the best hub; citizens never pick one. Location comes from device GPS.
  * Props: token (family login), apiBase, location ({ lat, lng } to simulate a position instead of GPS).
  */
@@ -33,6 +35,7 @@ export default function CitizenDonations({ token, apiBase = API_BASE, location }
       <View style={styles.body}>
         {tab === 'donate' && <DonateForm token={token} apiBase={apiBase} place={place} onDone={showActivity} />}
         {tab === 'request' && <RequestForm token={token} apiBase={apiBase} place={place} onDone={showActivity} />}
+        {tab === 'custom' && <CustomForm token={token} apiBase={apiBase} place={place} onDone={showActivity} />}
         {tab === 'activity' && <MyActivity token={token} apiBase={apiBase} />}
       </View>
     </View>

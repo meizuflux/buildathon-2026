@@ -31,6 +31,7 @@ def test_startup_creates_schema_and_health_endpoint(tmp_path, monkeypatch):
         "inventory",
         "needs",
         "shipments",
+        "custom_submissions",
         "pickup_requests",
         "hub_staff",
         "supply_requests",

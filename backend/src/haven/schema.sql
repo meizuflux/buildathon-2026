@@ -250,3 +250,25 @@ CREATE TABLE IF NOT EXISTS pledges (
 );
 CREATE INDEX IF NOT EXISTS pledges_hub_idx ON pledges(hub_id, status);
 CREATE INDEX IF NOT EXISTS pledges_user_idx ON pledges(user_id);
+-- Custom donations and requests for items outside the catalog (e.g. a wheelchair). A government
+-- worker reviews each one: approving picks a hub and sends the citizen instructions. These don't
+-- touch tracked inventory.
+CREATE TABLE IF NOT EXISTS custom_submissions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    kind TEXT NOT NULL CHECK (kind IN ('donation', 'request')),
+    description TEXT NOT NULL,
+    quantity INTEGER NOT NULL CHECK (quantity >= 1),
+    latitude REAL NOT NULL CHECK (latitude BETWEEN -90 AND 90),
+    longitude REAL NOT NULL CHECK (longitude BETWEEN -180 AND 180),
+    notes TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'declined', 'completed',
+        'cancelled')),
+    hub_id TEXT REFERENCES organizations(id),
+    response TEXT NOT NULL DEFAULT '',
+    reviewed_by TEXT REFERENCES users(id),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS custom_submissions_status_idx ON custom_submissions(status, created_at);
+CREATE INDEX IF NOT EXISTS custom_submissions_user_idx ON custom_submissions(user_id);
