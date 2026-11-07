@@ -6,18 +6,18 @@ import HubStaffConsole from '../../frontend/src/donations/HubStaffConsole';
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8000';
 
 const STAFF = [
-  ['staff.istiqlal@demo.example', 'Masjid Istiqlal'],
-  ['staff.damkar-tanah-abang@demo.example', 'Pos Damkar Tanah Abang'],
-  ['staff.gor-senen@demo.example', 'GOR Senen'],
-  ['staff.sman-8@demo.example', 'SMA Negeri 8 Jakarta'],
-  ['staff.gereja-kelapa-gading@demo.example', 'Gereja Santo Yakobus'],
-  ['staff.damkar-penjaringan@demo.example', 'Pos Damkar Penjaringan'],
-  ['staff.kampung-melayu@demo.example', 'Balai Warga Kampung Melayu'],
+  ['staff.ybor@demo.example', 'Ybor City Community Church'],
+  ['staff.downtown-fire@demo.example', 'Downtown Fire Station'],
+  ['staff.seminole-heights@demo.example', 'Seminole Heights Community Center'],
+  ['staff.westshore-school@demo.example', 'Westshore Middle School Gym'],
+  ['staff.east-tampa-mosque@demo.example', 'East Tampa Islamic Center'],
+  ['staff.sulphur-springs-fire@demo.example', 'Sulphur Springs Fire Station'],
+  ['staff.palmetto-beach@demo.example', 'Palmetto Beach Rec Center'],
 ];
 
-// A household in Bukit Duri, a flood-prone Jakarta neighbourhood, for demos run outside Jakarta.
-const JAKARTA = { lat: -6.2235, lng: 106.8585 };
-const JAKARTA_LABEL = 'Bukit Duri, Jakarta';
+// A household in Sulphur Springs, inside the fictional Tampa scenario, for demos run elsewhere.
+const DEMO_LOCATION = { lat: 28.0180, lng: -82.4600 };
+const DEMO_LOCATION_LABEL = 'Sulphur Springs, Tampa';
 
 const ROLES = {
   citizen: { label: 'Citizen app', role: 'family', email: 'family@demo.example' },
@@ -112,7 +112,7 @@ function LoginForm({ config, onLogin }) {
 
 export default function App() {
   const [tab, setTab] = useState('citizen');
-  const [simulateJakarta, setSimulateJakarta] = useState(true);
+  const [simulateDemo, setSimulateDemo] = useState(true);
   const [sessions, setSessions] = useState(() => Object.fromEntries(Object.keys(ROLES).map((k) => [k, loadSession(k)])));
   const session = sessions[tab];
 
@@ -130,14 +130,14 @@ export default function App() {
         <div className="flex justify-center gap-2 text-sm">
           <span className="py-1 text-gray-600">Phone location:</span>
           {[
-            [true, `Simulated (${JAKARTA_LABEL})`],
+            [true, `Simulated (${DEMO_LOCATION_LABEL})`],
             [false, 'Real device GPS'],
           ].map(([value, label]) => (
             <button
               key={label}
               type="button"
-              onClick={() => setSimulateJakarta(value)}
-              className={`rounded-md px-3 py-1 ${simulateJakarta === value ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 ring-1 ring-gray-200'}`}
+              onClick={() => setSimulateDemo(value)}
+              className={`rounded-md px-3 py-1 ${simulateDemo === value ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 ring-1 ring-gray-200'}`}
             >
               {label}
             </button>
@@ -145,10 +145,10 @@ export default function App() {
         </div>
         <div className="phone mx-auto flex h-[760px] w-[390px] overflow-hidden rounded-[2.5rem] border-[10px] border-gray-900 bg-white shadow-xl">
           <CitizenDonations
-            key={String(simulateJakarta)}
+            key={String(simulateDemo)}
             token={session.token}
             apiBase={API_BASE}
-            location={simulateJakarta ? JAKARTA : undefined}
+            location={simulateDemo ? DEMO_LOCATION : undefined}
           />
         </div>
       </div>

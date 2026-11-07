@@ -84,7 +84,7 @@ def test_shared_demo_password_and_sample_activity(tmp_path, monkeypatch):
             for p in client.get(f"/api/hubs/{hub_id}/pledges", headers=headers).json()
         ]
         assert len(pending) == len(DEMO_PLEDGES)
-        assert staff_email("hub_demo_istiqlal") == "staff.istiqlal@demo.example"
+        assert staff_email("hub_demo_downtown_fire") == "staff.downtown-fire@demo.example"
 
 
 def test_tampa_scenario_is_complete_and_preserves_edits(tmp_path, monkeypatch):
