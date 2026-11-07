@@ -147,11 +147,14 @@ CREATE TABLE IF NOT EXISTS organizations (
     site_type TEXT CHECK (site_type IN ('mosque', 'church', 'fire_station', 'school',
         'community_center', 'other')),
     capacity_pct INTEGER NOT NULL DEFAULT 0 CHECK (capacity_pct BETWEEN 0 AND 100),
+    -- Storage size in units. When set, capacity_pct is derived from stock on hand after every
+    -- stock change; when NULL, capacity_pct is whatever was last set.
+    storage_units INTEGER CHECK (storage_units > 0),
     updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS organizations_disaster_idx ON organizations(disaster_id);
--- Countable stock. reserved = units promised to approved shipments and claimed citizen requests.
--- target = the stock level a hub wants to hold, which drives the needs citizens see.
+-- Countable stock. reserved = units promised to approved shipments and matched citizen requests.
+-- target is not used for hubs: their targets are derived from demand (see donations/targets.py).
 CREATE TABLE IF NOT EXISTS inventory (
     organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     resource_type_id TEXT NOT NULL REFERENCES resource_types(id),

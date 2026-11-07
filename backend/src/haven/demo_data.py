@@ -3,6 +3,7 @@ sample citizen activity."""
 
 import asyncio
 import json
+import math
 import os
 import secrets
 from uuid import uuid4
@@ -10,13 +11,17 @@ from uuid import uuid4
 from haven.allocation import recompute_disasters
 from haven.auth import hash_password, now, timestamp
 from haven.db import connect, initialize_database
+from haven.donations.common import refresh_capacity
 from haven.donations.matching import match_waiting_requests
 
 # Demo region: the fictional Tampa hurricane scenario (see seed_tampa_scenario). Hubs are
 # fictional sites in real Tampa neighbourhoods, inside the scenario's shelter and family area.
 DEMO_CENTER = (27.9506, -82.4572)
 # Public hubs (organizations with a site type).
-# (id, name, site_type, address, lat, lng, capacity_pct, {resource_type_id: (quantity, target)})
+# (id, name, site_type, address, lat, lng, starting % full, {resource_type_id: (quantity, _)}).
+# Each hub's storage size is chosen so its starting stock fills it to that percentage; from then on
+# % full follows stock. Targets come from demand (donations/targets.py); the second number in
+# each supply tuple is unused.
 DEMO_HUBS = (
     (
         "hub_demo_ybor",
@@ -292,8 +297,8 @@ async def seed_hubs() -> int:
                 await connection.execute(
                     "INSERT INTO organizations (id, disaster_id, name, type, services_json, status, "
                     "address, latitude, longitude, contact_json, coverage_radius_km, notes, "
-                    "site_type, capacity_pct, updated_at) "
-                    "VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, 5, '', ?, ?, ?) "
+                    "site_type, capacity_pct, storage_units, updated_at) "
+                    "VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, 5, '', ?, ?, ?, ?) "
                     "ON CONFLICT(id) DO NOTHING",
                     (
                         hub_id,
@@ -307,18 +312,20 @@ async def seed_hubs() -> int:
                         json.dumps({"name": None, "phone": None, "email": staff_email(hub_id)}),
                         site_type,
                         capacity,
+                        math.ceil(sum(q for q, _ in supplies.values()) * 100 / capacity),
                         stamp,
                     ),
                 )
                 if not await connection.changes():
                     continue
                 created += 1
-                for resource_type_id, (quantity, target) in supplies.items():
+                for resource_type_id, (quantity, _) in supplies.items():
                     await connection.execute(
                         "INSERT INTO inventory (organization_id, resource_type_id, quantity, "
-                        "target, updated_at) VALUES (?, ?, ?, ?, ?)",
-                        (hub_id, resource_type_id, quantity, target, stamp),
+                        "updated_at) VALUES (?, ?, ?, ?)",
+                        (hub_id, resource_type_id, quantity, stamp),
                     )
+                await refresh_capacity(connection, hub_id)
             for org_id, name, kind, services, address, lat, lng, notes, stock in DEMO_DEPOTS:
                 await connection.execute(
                     "INSERT INTO organizations (id, disaster_id, name, type, services_json, status, "

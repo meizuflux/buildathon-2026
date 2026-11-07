@@ -6,7 +6,11 @@ Every movement of stock goes through reserve / release / consume / add_stock so 
     reserve   available (quantity - reserved) must cover the items; reserved += q
     release   reserved -= q                         (cancelled shipment, released claim)
     consume   quantity -= q and reserved -= q       (shipment leaves, citizen request fulfilled)
-    add_stock quantity += q, creating the row       (shipment delivered, pledge received)
+    add_stock quantity += q, creating the row       (shipment delivered, pledge or walk-in received)
+    remove_stock quantity -= q (unreserved stock)   (surplus collected by a transport pickup)
+
+Every quantity change refreshes the organization's capacity_pct from its storage size, so a hub's
+"% full" always reflects what is actually on its shelves.
 """
 
 import math
@@ -238,6 +242,17 @@ async def release(
         )
 
 
+async def refresh_capacity(connection: apsw.AsyncConnection, organization_id: str) -> None:
+    """Recompute capacity_pct = units on hand / storage size (capped at 100) when a size is set."""
+    await connection.execute(
+        "UPDATE organizations SET capacity_pct = MIN(100, CAST(ROUND(100.0 * ("
+        "SELECT COALESCE(SUM(quantity), 0) FROM inventory WHERE organization_id = organizations.id"
+        ") / storage_units) AS INTEGER)), updated_at = ? "
+        "WHERE id = ? AND storage_units IS NOT NULL",
+        (timestamp(now()), organization_id),
+    )
+
+
 async def consume(
     connection: apsw.AsyncConnection, organization_id: str, items: list[dict]
 ) -> None:
@@ -254,6 +269,20 @@ async def consume(
                 item["resource_type_id"],
             ),
         )
+    await refresh_capacity(connection, organization_id)
+
+
+async def remove_stock(
+    connection: apsw.AsyncConnection, organization_id: str, items: list[dict]
+) -> None:
+    """Remove unreserved items from stock. Callers must not exceed quantity - reserved."""
+    for item in items:
+        await connection.execute(
+            "UPDATE inventory SET quantity = quantity - ?, updated_at = ? "
+            "WHERE organization_id = ? AND resource_type_id = ?",
+            (item["quantity"], timestamp(now()), organization_id, item["resource_type_id"]),
+        )
+    await refresh_capacity(connection, organization_id)
 
 
 async def add_stock(
@@ -266,6 +295,7 @@ async def add_stock(
             "DO UPDATE SET quantity = quantity + excluded.quantity, updated_at = excluded.updated_at",
             (organization_id, item["resource_type_id"], item["quantity"], timestamp(now())),
         )
+    await refresh_capacity(connection, organization_id)
 
 
 async def pledged(connection: apsw.AsyncConnection, hub_ids: tuple[str, ...]) -> dict:

@@ -101,7 +101,11 @@ Community hubs (churches, fire stations, schools) hold donated supplies. Citizen
 
 Roles: `family` (citizen), `hub_staff` (linked to one hub through the `hub_staff` table), and `operator`. The `users.role` check now includes `hub_staff`, so recreate development databases created before this change.
 
-Hubs and back-office depots share one stock engine with the supply logistics API below: a hub is an organization with a `site_type` (church, fire station, and so on), and its supplies are rows in the shared `inventory` table, keyed by `resource_type_id` from the fixed catalog at `GET /api/resource-types`. Citizens can request and pledge every type except insulin, prescription refills, and oxygen (`citizen_requestable: false`). Each hub supply in a response has `resource_type_id`, `name`, `unit`, `quantity` (on hand), `target`, `pledged` (pending drop-offs), `reserved` (promised to approved shipments and claimed citizen requests), `available = quantity - reserved`, and `need = max(target - quantity - pledged, 0)`. Staff set the capacity percentage by hand in check-ins. Hub responses also include `open_pickup` (the dispatched transport, or `null`).
+Hubs and back-office depots share one stock engine with the supply logistics API below. A hub is an organization with a `site_type` (church, fire station, and so on), and its supplies are rows in the shared `inventory` table, keyed by `resource_type_id` from the fixed catalog at `GET /api/resource-types`. Citizens can request and pledge every type except insulin, prescription refills, and oxygen.
+
+**Nobody types in hub stock.** Quantities change only through app events: pledges received, requests fulfilled, shipments, walk-in donations, and transport pickups. A hub's `capacity_pct` is units on hand divided by its `storage_units` (set once), recalculated after every change. Targets come from demand (`donations/targets.py`): each item's target is `ceil(1.5 × demand) + baseline`. Demand is the last 7 days of citizen requests plus the unfilled part of open shelter needs, each counted at the nearest hub. The baseline is a small standing stock of essentials, such as 20 cases of water and 10 packs of diapers.
+
+Each hub supply in a response has `resource_type_id`, `name`, `unit`, `quantity`, `target`, `pledged`, `reserved` (promised to shipments and matched requests), `available = quantity - reserved`, and `need = max(target - quantity - pledged, 0)`. Hub responses also include `storage_units` and `open_pickup`.
 
 ### Hubs and transport
 
@@ -110,10 +114,10 @@ Hubs and back-office depots share one stock engine with the supply logistics API
 | `GET /api/hubs/nearby?lat=&lng=&radius_km=25&limit=20&needs=&has=` | public | Hubs within the radius, nearest first, with `distance_km`. `needs=<resource_type_id>` keeps hubs short on it; `has=<resource_type_id>` keeps hubs with some available |
 | `GET /api/hubs?min_capacity=0` | public | Hubs at or above a capacity percentage, fullest first |
 | `GET /api/hubs/{hub_id}` | public | One hub |
-| `PUT /api/hubs/{hub_id}/inventory` | that hub's staff, operator | `{"capacity_pct": 0-100, "supplies": [{"resource_type_id","quantity","target"}]}`. 409 `inventory_conflict` if a quantity would drop below what is reserved |
+| `POST /api/hubs/{hub_id}/walk-ins` | that hub's staff, operator | `{"items": [{"resource_type_id", "quantity"}]}` logs goods that arrived without a pledge; may match waiting requests |
 | `POST /api/hubs/{hub_id}/pickups` | operator | Dispatches transport; 409 `pickup_already_open` if one is already dispatched |
 | `GET /api/pickups?status=` | operator | Pickups, newest first, with `hub_name` |
-| `PATCH /api/pickups/{pickup_id}` | operator | `{"status": "completed" or "cancelled", "capacity_pct": 25}`; capacity applies only when completed |
+| `PATCH /api/pickups/{pickup_id}` | operator | `{"status": "completed" or "cancelled"}`. Completing moves the hub's surplus (stock above its targets that isn't reserved) to the nearest depot and returns it as `moved` |
 
 ### Citizen requests
 
@@ -173,7 +177,7 @@ These implement sections 1 to 5 of the dashboard's `frontend/docs/api-contract-p
 | Endpoint | Purpose |
 |---|---|
 | `GET /api/resource-types` | The 16-item catalog: `id`, `name`, `category`, `unit`, `citizen_requestable` |
-| `GET, POST /api/organizations?disaster_id=` | List or create organizations; hubs carry `site_type` and `capacity_pct` |
+| `GET, POST /api/organizations?disaster_id=` | List or create organizations; hubs carry `site_type` and `storage_units`, from which `capacity_pct` is derived |
 | `GET, PATCH /api/organizations/{id}` | Read or nested-merge an organization (`location` and `contact` merge key by key) |
 | `GET /api/inventory?disaster_id=&holder_kind=organization&holder_id=` | Stock rows with `holder`, `quantity`, `reserved`, `target` |
 | `PATCH /api/organizations/{id}/inventory` | `{"items": [{"resource_type_id", "quantity"}]}` sets absolute quantities; 409 `inventory_conflict` below `reserved` |

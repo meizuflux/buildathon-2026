@@ -15,6 +15,7 @@ import msgspec
 from haven.auth import now, timestamp
 from haven.donations.common import parse_items, pledged, reserve
 from haven.donations.planner import HubState, OpenRequest, best_drop_off, plan
+from haven.donations.targets import hub_targets
 
 
 async def hub_states(connection: apsw.AsyncConnection) -> list[HubState]:
@@ -32,20 +33,18 @@ async def hub_states(connection: apsw.AsyncConnection) -> list[HubState]:
     incoming = await pledged(connection, ids)
     free: dict[str, dict[str, int]] = {}
     held: dict[str, dict[str, int]] = {}
-    targets: dict[str, dict[str, int]] = {}
+    targets = await hub_targets(connection)
     stock_rows = cast(
-        list[tuple[str, str, int, int, int]],
+        list[tuple[str, str, int, int]],
         await (
             await connection.execute(
-                "SELECT organization_id, resource_type_id, quantity, reserved, target "
-                "FROM inventory"
+                "SELECT organization_id, resource_type_id, quantity, reserved FROM inventory"
             )
         ).fetchall(),
     )
-    for hub_id, item, quantity, reserved, target in stock_rows:
+    for hub_id, item, quantity, reserved in stock_rows:
         free.setdefault(hub_id, {})[item] = quantity - reserved
         held.setdefault(hub_id, {})[item] = reserved
-        targets.setdefault(hub_id, {})[item] = target
     return [
         HubState(
             id=hub_id,

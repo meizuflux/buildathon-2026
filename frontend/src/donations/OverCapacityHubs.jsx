@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { API_BASE, closePickup, dispatchPickup, fetchHubs } from './api';
+import { RESOURCE_LABELS } from './format';
 
 const THRESHOLDS = [70, 80, 90];
 const TYPES = {
@@ -24,9 +25,10 @@ function formatTime(iso) {
 /**
  * Government view: hubs at or above a capacity threshold, with a dispatch action.
  * Props: token (operator bearer token, needed to dispatch), apiBase, pollMs,
- * clearedCapacityPct (hub capacity recorded when a pickup is marked cleared).
+ * Marking a pickup cleared moves the hub's surplus to the nearest depot; % full updates by itself.
  */
-export default function OverCapacityHubs({ token, apiBase = API_BASE, pollMs = 30000, clearedCapacityPct = 25 }) {
+export default function OverCapacityHubs({ token, apiBase = API_BASE, pollMs = 30000 }) {
+  const [notice, setNotice] = useState(null);
   const [threshold, setThreshold] = useState(90);
   const [hubs, setHubs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,7 +79,13 @@ export default function OverCapacityHubs({ token, apiBase = API_BASE, pollMs = 3
 
   const markCleared = (hub) =>
     run(hub, async () => {
-      await closePickup(hub.open_pickup.id, 'completed', clearedCapacityPct, { apiBase, token });
+      const { moved } = await closePickup(hub.open_pickup.id, 'completed', { apiBase, token });
+      const what = moved.items.map((i) => `${i.quantity} ${RESOURCE_LABELS[i.resource_type_id] ?? i.resource_type_id}`);
+      setNotice(
+        what.length
+          ? `${hub.name}: moved ${what.join(', ')} to ${moved.to?.name ?? 'storage off-site'}.`
+          : `${hub.name}: nothing above its targets to move.`,
+      );
       await load();
     });
 
@@ -106,6 +114,7 @@ export default function OverCapacityHubs({ token, apiBase = API_BASE, pollMs = 3
       </header>
 
       {error && <p className="px-4 py-3 text-sm text-red-700">Couldn't load hubs: {error}</p>}
+      {notice && <p className="bg-green-50 px-4 py-2 text-sm text-green-800">{notice}</p>}
 
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">

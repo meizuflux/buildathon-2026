@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import CustomReview from './CustomReview';
-import HubInventoryEditor from './HubInventoryEditor';
 import HubMap from './HubMap';
 import MyAssignments from './MyAssignments';
 import OverCapacityHubs from './OverCapacityHubs';
@@ -10,12 +9,11 @@ const VIEWS = [
   ['hubs', 'Hubs & transport'],
   ['requests', 'Citizen requests'],
   ['custom', 'Custom items'],
-  ['inventory', 'Edit a hub'],
 ];
 
 /**
  * Government donations tab: hub map and over-capacity dispatch, the citizen request queue
- * with the worker's own assignments, custom item review, and a hub inventory editor.
+ * with the worker's own assignments, and custom item review. Hub stock updates itself.
  * Props: token (operator bearer token), apiBase.
  */
 export default function DonationsTab({ token, apiBase }) {
@@ -53,7 +51,6 @@ export default function DonationsTab({ token, apiBase }) {
         </div>
       )}
       {view === 'custom' && <CustomReview token={token} apiBase={apiBase} />}
-      {view === 'inventory' && <HubInventoryEditor token={token} apiBase={apiBase} onSaved={bump} />}
     </div>
   );
 }

@@ -30,19 +30,21 @@ export const dispatchPickup = (hubId, notes = '', options) =>
   });
 
 // status: 'completed' | 'cancelled'. capacityPct resets the hub's capacity when completed.
-export const closePickup = (pickupId, status, capacityPct, options) =>
+// status: 'completed' | 'cancelled'. Completing moves the hub's surplus to the nearest depot;
+// the response's `moved` says what went where.
+export const closePickup = (pickupId, status, options) =>
   request(`/api/pickups/${encodeURIComponent(pickupId)}`, {
     ...options,
     method: 'PATCH',
-    body: JSON.stringify(capacityPct == null ? { status } : { status, capacity_pct: capacityPct }),
+    body: JSON.stringify({ status }),
   });
 
-// supplies: [{ resource_type_id, quantity, target }]
-export const updateInventory = (hubId, capacityPct, supplies, options) =>
-  request(`/api/hubs/${encodeURIComponent(hubId)}/inventory`, {
+// Log an unannounced drop-off. items: [{ resource_type_id, quantity }]
+export const logWalkIn = (hubId, items, options) =>
+  request(`/api/hubs/${encodeURIComponent(hubId)}/walk-ins`, {
     ...options,
-    method: 'PUT',
-    body: JSON.stringify({ capacity_pct: capacityPct, supplies }),
+    method: 'POST',
+    body: JSON.stringify({ items }),
   });
 
 // Citizen supply requests (operator workflow).

@@ -35,6 +35,7 @@ from haven.donations.common import (
     not_found,
     organization_exists,
     parse_items,
+    refresh_capacity,
     release,
     require_role,
     reserve,
@@ -101,6 +102,7 @@ class OrganizationCreate(msgspec.Struct, forbid_unknown_fields=True):
     notes: LongText = ""
     site_type: SiteType | None = None
     capacity_pct: Percent = 0
+    storage_units: Annotated[int, msgspec.Meta(gt=0, le=100_000_000)] | None = None
 
 
 class OrganizationPatch(msgspec.Struct, forbid_unknown_fields=True):
@@ -115,6 +117,9 @@ class OrganizationPatch(msgspec.Struct, forbid_unknown_fields=True):
     notes: LongText | msgspec.UnsetType = msgspec.UNSET
     site_type: SiteType | None | msgspec.UnsetType = msgspec.UNSET
     capacity_pct: Percent | msgspec.UnsetType = msgspec.UNSET
+    storage_units: Annotated[int, msgspec.Meta(gt=0, le=100_000_000)] | None | msgspec.UnsetType = (
+        msgspec.UNSET
+    )
 
 
 class InventoryItem(msgspec.Struct, forbid_unknown_fields=True):
@@ -217,7 +222,7 @@ async def list_resource_types(request: Request) -> dict:
 
 _ORG_COLUMNS = (
     "id, disaster_id, name, type, services_json, status, address, latitude, longitude, "
-    "contact_json, coverage_radius_km, notes, site_type, capacity_pct, updated_at"
+    "contact_json, coverage_radius_km, notes, site_type, capacity_pct, storage_units, updated_at"
 )
 
 
@@ -236,7 +241,8 @@ def organization_from_row(row: tuple) -> dict:
         "notes": row[11],
         "site_type": row[12],
         "capacity_pct": row[13],
-        "updated_at": row[14],
+        "storage_units": row[14],
+        "updated_at": row[15],
     }
 
 
@@ -257,13 +263,14 @@ async def save_organization(connection: apsw.AsyncConnection, org: dict) -> None
     await connection.execute(
         "INSERT INTO organizations (id, disaster_id, name, type, services_json, status, address, "
         "latitude, longitude, contact_json, coverage_radius_km, notes, site_type, capacity_pct, "
-        "updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+        "storage_units, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
         "ON CONFLICT(id) DO UPDATE SET name = excluded.name, type = excluded.type, "
         "services_json = excluded.services_json, status = excluded.status, "
         "address = excluded.address, latitude = excluded.latitude, longitude = excluded.longitude, "
         "contact_json = excluded.contact_json, coverage_radius_km = excluded.coverage_radius_km, "
         "notes = excluded.notes, site_type = excluded.site_type, "
-        "capacity_pct = excluded.capacity_pct, updated_at = excluded.updated_at",
+        "capacity_pct = excluded.capacity_pct, storage_units = excluded.storage_units, "
+        "updated_at = excluded.updated_at",
         (
             org["id"],
             org["disaster_id"],
@@ -279,9 +286,11 @@ async def save_organization(connection: apsw.AsyncConnection, org: dict) -> None
             org["notes"],
             org["site_type"],
             org["capacity_pct"],
+            org["storage_units"],
             org["updated_at"],
         ),
     )
+    await refresh_capacity(connection, org["id"])
 
 
 @get("/organizations")
@@ -419,6 +428,7 @@ async def set_inventory(
                     "quantity = excluded.quantity, updated_at = excluded.updated_at",
                     (organization_id, item.resource_type_id, item.quantity, stamp),
                 )
+            await refresh_capacity(connection, organization_id)
             await match_waiting_requests(connection)
         return {
             "items": await inventory_rows(

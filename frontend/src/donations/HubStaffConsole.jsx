@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { API_BASE, fetchHub } from './api';
 import { HUB_TYPES, capacityHex } from './format';
-import HubInventoryEditor from './HubInventoryEditor';
+import WalkInForm from './WalkInForm';
 import PledgeInbox from './PledgeInbox';
 
 function HubSummary({ hub }) {
@@ -14,9 +14,12 @@ function HubSummary({ hub }) {
             {HUB_TYPES[hub.type] ?? 'Hub'} · {hub.address}
           </p>
         </div>
-        <span className="text-2xl font-bold tabular-nums" style={{ color: capacityHex(hub.capacity_pct) }}>
-          {hub.capacity_pct}%
-        </span>
+        <div className="text-right">
+          <span className="text-2xl font-bold tabular-nums" style={{ color: capacityHex(hub.capacity_pct) }}>
+            {hub.capacity_pct}%
+          </span>
+          <div className="text-xs text-gray-500">full{hub.storage_units ? ` of ${hub.storage_units} units` : ''}</div>
+        </div>
       </div>
       {hub.open_pickup && (
         <p className="mt-2 rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
@@ -30,6 +33,7 @@ function HubSummary({ hub }) {
             <th className="py-1 text-right">On hand</th>
             <th className="py-1 text-right">Promised out</th>
             <th className="py-1 text-right">Incoming</th>
+            <th className="py-1 text-right">Target</th>
             <th className="py-1 text-right">Still needed</th>
           </tr>
         </thead>
@@ -40,17 +44,23 @@ function HubSummary({ hub }) {
               <td className="py-1 text-right tabular-nums">{s.quantity}</td>
               <td className="py-1 text-right tabular-nums text-gray-600">{s.reserved}</td>
               <td className="py-1 text-right tabular-nums text-gray-600">{s.pledged}</td>
+              <td className="py-1 text-right tabular-nums text-gray-600">{s.target}</td>
               <td className={`py-1 text-right tabular-nums ${s.need ? 'font-semibold text-blue-700' : 'text-gray-400'}`}>{s.need}</td>
             </tr>
           ))}
         </tbody>
       </table>
+      <p className="mt-2 text-xs text-gray-500">
+        Stock, % full, and targets update automatically from donations, deliveries, and shipments. Targets follow what
+        people near this hub have asked for.
+      </p>
     </section>
   );
 }
 
 /**
- * Hub staff view for one hub: live summary, incoming pledges, and the check-in form.
+ * Hub staff view for one hub: live stock (updated automatically), incoming pledges, and a quick
+ * form to log walk-in donations.
  * Props: hubId (from the staff user's /api/me), token, apiBase.
  */
 export default function HubStaffConsole({ hubId, token, apiBase = API_BASE }) {
@@ -80,7 +90,7 @@ export default function HubStaffConsole({ hubId, token, apiBase = API_BASE }) {
         <HubSummary hub={hub} />
         <PledgeInbox hubId={hubId} token={token} apiBase={apiBase} onChange={refresh} />
       </div>
-      <HubInventoryEditor key={version} hubId={hubId} token={token} apiBase={apiBase} onSaved={refresh} />
+      <WalkInForm hubId={hubId} token={token} apiBase={apiBase} onSaved={refresh} />
     </div>
   );
 }
