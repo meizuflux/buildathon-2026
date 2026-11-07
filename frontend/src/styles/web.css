@@ -1,0 +1,71 @@
+:root {
+  --color-focus: #2e7d7a;
+  --color-selection: #dce9e7;
+  --color-ink: #1d2b3a;
+  --color-paper: #eaeff0;
+  --color-control: #71858c;
+  --color-disabled: #526471;
+}
+
+html, body {
+  overflow-x: clip;
+}
+
+[role="button"]:focus-visible,
+[role="checkbox"]:focus-visible,
+[role="tab"]:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+[role="button"]:hover:not([aria-disabled="true"]),
+[role="checkbox"]:hover,
+[role="tab"]:hover,
+a:hover {
+  filter: brightness(0.95);
+}
+
+[role="button"]:active,
+[role="checkbox"]:active,
+[role="tab"]:active,
+a:active {
+  opacity: 0.75;
+}
+
+:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+[aria-busy="true"] {
+  cursor: progress;
+}
+
+input, textarea {
+  caret-color: var(--color-focus);
+}
+
+::selection {
+  color: var(--color-ink);
+  background: var(--color-selection);
+}
+
+* {
+  scrollbar-color: var(--color-control) var(--color-paper);
+}
+
+[role="heading"] {
+  min-width: 0;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html, body { scroll-behavior: auto; }
+}
+
+html, body, #root { background: #EAEFF0; }

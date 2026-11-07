@@ -1,0 +1,15 @@
+{
+  "scanned": "2026-11-07",
+  "scope": "app",
+  "depth": "polish",
+  "findings": {
+    "framework": "Expo React Native, Expo Router, StyleSheet (frontend/package.json:10; frontend/src/app/_layout.tsx:1)",
+    "palette": "Existing green, cream, and semantic status colors (frontend/src/constants/theme.ts:1)",
+    "fonts": "System face, 9–36px text, four weights (frontend/src/components/common/ui.tsx:56)",
+    "copy": "Figurative page headings, reassurance slogans, repeated uppercase labels (frontend/src/app/(tabs)/index.tsx:13; frontend/src/app/(tabs)/_layout.tsx:13)",
+    "surface": "Repeated 18px rounded bordered cards with shadow; saturated plan panel (frontend/src/components/common/ui.tsx:58; frontend/src/app/(tabs)/index.tsx:17)",
+    "motion": "No authored animation; button opacity on press"
+  },
+  "preserve": ["Green palette", "Screen composition", "Five navigation destinations", "All form fields, routes, handlers, API and storage logic", "Source attribution and resource statuses", "Safety, privacy, consent and offline notices"],
+  "introduce": ["Task-based headings", "Sentence-case metadata", "Readable type scale", "Neutral compact panels", "Shared native color tokens", "Web focus-visible, active, disabled and hover styling"]
+}

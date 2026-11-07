@@ -61,6 +61,16 @@ npx expo install --check
 npm run build:web
 ```
 
+For the design smoke test, start Expo first, then run `npm run design:audit` in another terminal. It uses an isolated headless Chrome profile and fictional demo fixtures to check all nine screens at mobile and desktop widths, plus assistance submission and report receipt. Set `CHROME_PATH` if Chrome is installed somewhere other than the default Windows location; set `HAVEN_AUDIT_URL` if Expo uses a different port. Captures and results are written to `.hallmark/screens/` at the repository root.
+
 Tests cover household creation/editing/restoration, all demo event payloads, submission status semantics, idempotency, version history, unavailable shelters, long-poll wake/cursor/deduplication/cancellation, persisted snapshots, HTTP auth/errors/validation/cancellation/timeouts. Native permission dialogs and device SQLite behavior still require an iOS/Android device smoke test.
 
 The app does not independently recommend routes, generate evacuation instructions, assign resources, or call government APIs. Consult official emergency services in immediate danger; Haven is not dispatch.
+
+## Survey map mobile design
+
+The mobile interface uses Contour Paper, Deep Survey Ink, Strata Teal, Ember Orange, and Silt tokens in `src/constants/theme.ts`, with bundled IBM Plex Sans and IBM Plex Mono fonts. Layouts remain a single mobile column, including browser previews.
+
+Nearby sorts alerts by severity, then update time, with filters for storms, floods, fire, and earthquakes. Filters show only alerts returned by the configured adapter; empty results do not establish safety. Mark myself safe opens the report review and submission flow. Its receipt and last submitted status come from the existing reports service.
+
+The area illustration is explicitly a schematic, not a geographic map. It has no live boundaries, device-location marker, distances, or navigation routes. Production alerts still require the backend integration described above; push notifications and a geographic hazard feed are not included.
