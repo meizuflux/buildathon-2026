@@ -15,3 +15,16 @@ def test_startup_creates_schema_and_health_endpoint(tmp_path, monkeypatch):
     with sqlite3.connect(database) as connection:
         tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
     assert {"users", "sessions", "disasters", "families", "shelters", "plans", "disaster_updates", "reports"} <= tables
+
+
+def test_openapi_docs_and_schema(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "schema.sqlite3"))
+    with TestClient(app=app) as client:
+        docs = client.get("/schema")
+        assert docs.status_code == 200
+        assert "SwaggerUIBundle" in docs.text
+        assert "redoc.standalone.js" not in docs.text
+        schema = client.get("/schema/openapi.json")
+        assert schema.status_code == 200
+        assert schema.json()["info"]["title"] == "Haven API"
+        assert {"/api/auth/login", "/api/me"} <= schema.json()["paths"].keys()

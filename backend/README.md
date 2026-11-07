@@ -8,7 +8,7 @@ uv sync
 just dev
 ```
 
-The API listens on `http://127.0.0.1:8000`. Check `GET /health` or visit `/schema` for the generated API documentation. Run tests with `just test`.
+The API listens on `http://127.0.0.1:8000`. Check `GET /health` or visit `/schema` for Swagger UI or `/schema/openapi.json` for the generated OpenAPI document. The Swagger UI loads its assets from a CDN and needs internet access. Run tests with `just test`.
 
 Use `just prod` to run without reload (configure `HOST`, `PORT`, and `WEB_CONCURRENCY` through environment variables). Run `just schema` to create missing tables without starting the server. Run `just` to list all recipes.
 
