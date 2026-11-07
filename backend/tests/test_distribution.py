@@ -344,3 +344,18 @@ def test_received_donation_matches_a_waiting_request(client, h):
     client.post(f"/api/pledges/{pledge_id}/receive", headers=h["op"])
     mine = client.get("/api/requests/mine", headers=h["family2"]).json()[0]
     assert (mine["status"], mine["hub"]["id"]) == ("matched", "hub_mid")
+
+
+def test_items_no_hub_stocks_keep_the_normal_cap(client, h):
+    # Nobody has generators, so asking for one isn't competing with anyone: normal cap of 3.
+    assert new_request(client, h["family"], water_bottled=1).json()["status"] == "matched"
+    waiting = new_request(client, h["family"], generator=1)
+    assert (waiting.status_code, waiting.json()["status"]) == (201, "open")
+    limits = client.get("/api/requests/limits", headers=h["family"]).json()
+    assert limits["resource_types"]["generator"] == {
+        "cap": 3,
+        "level": "unavailable",
+        "pressure": None,
+    }
+    assert new_request(client, h["family"], generator=1).status_code == 201
+    assert new_request(client, h["family"], generator=1).status_code == 409  # 3 active now
