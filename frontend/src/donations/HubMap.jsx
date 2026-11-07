@@ -4,7 +4,7 @@ import { CircleMarker, MapContainer, Popup, TileLayer, Tooltip } from 'react-lea
 import { API_BASE, dispatchPickup, fetchHubs, fetchRequests } from './api';
 import { CATEGORY_LABELS, authMessage, capacityHex, itemsText } from './format';
 
-const DEFAULT_CENTER = [29.7604, -95.3698];
+const DEFAULT_CENTER = [-6.19, 106.835]; // Jakarta demo region
 
 function HubPopup({ hub, onDispatch, busy, error }) {
   return (

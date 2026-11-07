@@ -20,7 +20,7 @@ Set `VITE_API_BASE` if the API isn't at `http://127.0.0.1:8000`.
 
 ## Demo walkthrough
 
-1. **Citizen app** (`family@demo.example`): filter hubs with "I want to donate" → Formula, open Heights Community Center, and pledge. Then go to **Request supplies** and send a request.
-2. **Hub staff** (Heights Community Center): the pledge shows under Expected drop-offs. Click **Received** and watch On hand go up and Still needed go down.
+1. **Citizen app** (`family@demo.example`): filter hubs with "I want to donate" → Formula, open GOR Senen, and pledge. Then go to **Request supplies** and send a request.
+2. **Hub staff** (GOR Senen): the pledge shows under Expected drop-offs. Click **Received** and watch On hand go up and Still needed go down.
 3. **Government dashboard** (`government@demo.example`): check the map and the over-capacity table, and dispatch a pickup. Under **Citizen requests**, claim the new request from a suggested hub, then **Mark delivered** under My assignments.
 4. **Citizen app → My activity**: the request shows Done and the pledge shows Received.

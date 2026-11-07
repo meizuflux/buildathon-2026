@@ -9,6 +9,7 @@ export const CATEGORIES = [
 ];
 export const LABELS = Object.fromEntries(CATEGORIES);
 export const HUB_TYPES = {
+  mosque: 'Mosque',
   church: 'Church',
   fire_station: 'Fire station',
   school: 'School',

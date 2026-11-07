@@ -56,4 +56,4 @@ def test_shared_demo_password_and_sample_activity(tmp_path, monkeypatch):
         pending = [p for _, hub_id, _, _ in DEMO_PLEDGES
                    for p in client.get(f"/api/hubs/{hub_id}/pledges", headers=headers).json()]
         assert len(pending) == len(DEMO_PLEDGES)
-        assert staff_email("hub_demo_station_8") == "staff.station-8@demo.example"
+        assert staff_email("hub_demo_istiqlal") == "staff.istiqlal@demo.example"

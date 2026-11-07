@@ -28,7 +28,7 @@ Existing accounts created with the earlier scrypt implementation cannot sign in;
 
 ## Demo data
 
-Run `just demo-data` to create seven donation hubs around a placeholder demo center (Houston, TX; `DEMO_CENTER` in `demo_data.py`), a family account (`family@demo.example`), a government operator (`government@demo.example`), one hub staff account per hub (for example `staff.station-8@demo.example`), and a few sample requests and pledges. The script generates a separate password for each account and prints it once when the account is created; set `DEMO_PASSWORD` to give every new account that password instead. Re-running the script leaves existing accounts, passwords, and rows unchanged. These accounts are intended for demo databases.
+Run `just demo-data` to create seven donation hubs around Jakarta (`DEMO_CENTER` in `demo_data.py`), a family account (`family@demo.example`), a government operator (`government@demo.example`), one hub staff account per hub (for example `staff.istiqlal@demo.example`), and a few sample requests and pledges. The script generates a separate password for each account and prints it once when the account is created; set `DEMO_PASSWORD` to give every new account that password instead. Re-running the script leaves existing accounts, passwords, and rows unchanged. These accounts are intended for demo databases.
 
 Region-specific resources will be added once a region is selected and their API routes exist.
 

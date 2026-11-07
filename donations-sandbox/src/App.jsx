@@ -6,13 +6,13 @@ import HubStaffConsole from '../../frontend/src/donations/HubStaffConsole';
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8000';
 
 const STAFF = [
-  ['staff.st-marks@demo.example', "St. Mark's Church"],
-  ['staff.station-8@demo.example', 'Fire Station 8'],
-  ['staff.heights-cc@demo.example', 'Heights Community Center'],
-  ['staff.lamar-hs@demo.example', 'Lamar High School Gym'],
-  ['staff.grace@demo.example', 'Grace Fellowship'],
-  ['staff.station-26@demo.example', 'Fire Station 26'],
-  ['staff.eastwood@demo.example', 'Eastwood Rec Center'],
+  ['staff.istiqlal@demo.example', 'Masjid Istiqlal'],
+  ['staff.damkar-tanah-abang@demo.example', 'Pos Damkar Tanah Abang'],
+  ['staff.gor-senen@demo.example', 'GOR Senen'],
+  ['staff.sman-8@demo.example', 'SMA Negeri 8 Jakarta'],
+  ['staff.gereja-kelapa-gading@demo.example', 'Gereja Santo Yakobus'],
+  ['staff.damkar-penjaringan@demo.example', 'Pos Damkar Penjaringan'],
+  ['staff.kampung-melayu@demo.example', 'Balai Warga Kampung Melayu'],
 ];
 
 const ROLES = {

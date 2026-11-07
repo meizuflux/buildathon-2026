@@ -1,8 +1,8 @@
 // Haven donation API client for the citizen app.
 // On a physical device, 127.0.0.1 is the phone itself: pass your machine's LAN IP as apiBase.
 export const API_BASE = 'http://127.0.0.1:8000';
-// Placeholder demo region (Houston, TX); matches DEMO_CENTER in backend/src/haven/demo_data.py.
-export const DEMO_CENTER = { lat: 29.7604, lng: -95.3698 };
+// Demo region (Jakarta); matches DEMO_CENTER in backend/src/haven/demo_data.py. Used only when GPS is unavailable.
+export const DEMO_CENTER = { lat: -6.19, lng: 106.835 };
 
 export class ApiError extends Error {
   constructor(status, code, message) {

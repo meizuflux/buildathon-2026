@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS login_attempts (
 CREATE TABLE IF NOT EXISTS hubs (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    type TEXT NOT NULL CHECK (type IN ('church', 'fire_station', 'school', 'community_center', 'other')),
+    type TEXT NOT NULL CHECK (type IN ('mosque', 'church', 'fire_station', 'school', 'community_center', 'other')),
     address TEXT NOT NULL,
     latitude REAL NOT NULL CHECK (latitude BETWEEN -90 AND 90),
     longitude REAL NOT NULL CHECK (longitude BETWEEN -180 AND 180),

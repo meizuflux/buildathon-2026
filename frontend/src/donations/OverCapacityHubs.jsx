@@ -3,6 +3,7 @@ import { API_BASE, closePickup, dispatchPickup, fetchHubs } from './api';
 
 const THRESHOLDS = [70, 80, 90];
 const TYPES = {
+  mosque: 'Mosque',
   church: 'Church',
   fire_station: 'Fire station',
   school: 'School',

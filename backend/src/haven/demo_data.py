@@ -9,24 +9,24 @@ from uuid import uuid4
 from haven.auth import hash_password, now, timestamp
 from haven.db import connect, initialize_database
 
-# Placeholder demo region (Houston, TX); change once the team picks a region.
-DEMO_CENTER = (29.7604, -95.3698)
+# Demo region: Jakarta, Indonesia (flood response). Hub locations are approximate.
+DEMO_CENTER = (-6.1900, 106.8350)
 # (id, name, type, address, lat, lng, capacity_pct, {category: (quantity, target)})
 DEMO_HUBS = (
-    ("hub_demo_st_marks", "St. Mark's Church", "church", "3815 Bellaire Blvd", 29.7058, -95.4300, 96,
+    ("hub_demo_istiqlal", "Masjid Istiqlal", "mosque", "Jl. Taman Wijaya Kusuma, Pasar Baru", -6.1702, 106.8310, 96,
      {"water": (900, 400), "canned_goods": (650, 300), "blankets": (80, 150), "diapers": (40, 200), "formula": (10, 60)}),
-    ("hub_demo_station_8", "Fire Station 8", "fire_station", "1919 Elgin St", 29.7340, -95.3700, 92,
-     {"water": (1200, 500), "blankets": (300, 120), "canned_goods": (90, 200)}),
-    ("hub_demo_heights_cc", "Heights Community Center", "community_center", "1200 Yale St", 29.7920, -95.3990, 74,
+    ("hub_demo_damkar_tanah_abang", "Pos Damkar Tanah Abang", "fire_station", "Jl. K.H. Mas Mansyur, Tanah Abang",
+     -6.2006, 106.8150, 92, {"water": (1200, 500), "blankets": (300, 120), "canned_goods": (90, 200)}),
+    ("hub_demo_gor_senen", "GOR Senen", "community_center", "Jl. Kramat Raya, Senen", -6.1830, 106.8430, 74,
      {"water": (250, 300), "diapers": (180, 150), "formula": (35, 80), "canned_goods": (210, 250)}),
-    ("hub_demo_lamar_hs", "Lamar High School Gym", "school", "3325 Westheimer Rd", 29.7420, -95.4290, 55,
+    ("hub_demo_sman_8", "SMA Negeri 8 Jakarta", "school", "Jl. Taman Bukit Duri, Tebet", -6.2266, 106.8551, 55,
      {"water": (150, 400), "blankets": (60, 200), "canned_goods": (120, 300)}),
-    ("hub_demo_grace", "Grace Fellowship", "church", "6200 Gulf Fwy", 29.6980, -95.2990, 91,
-     {"canned_goods": (800, 300), "diapers": (500, 200), "water": (100, 300)}),
-    ("hub_demo_station_26", "Fire Station 26", "fire_station", "4511 Aldine Mail Rd", 29.8740, -95.3560, 30,
-     {"water": (60, 300), "formula": (5, 50), "diapers": (20, 100)}),
-    ("hub_demo_eastwood", "Eastwood Rec Center", "community_center", "5000 Harrisburg Blvd", 29.7300, -95.3330, 18,
-     {"water": (40, 250), "blankets": (10, 100), "canned_goods": (30, 200)}),
+    ("hub_demo_gereja_kelapa_gading", "Gereja Santo Yakobus", "church", "Jl. Boulevard Bukit Gading Raya, Kelapa Gading",
+     -6.1580, 106.9060, 91, {"canned_goods": (800, 300), "diapers": (500, 200), "water": (100, 300)}),
+    ("hub_demo_damkar_penjaringan", "Pos Damkar Penjaringan", "fire_station", "Jl. Pluit Raya, Penjaringan",
+     -6.1265, 106.7900, 30, {"water": (60, 300), "formula": (5, 50), "diapers": (20, 100)}),
+    ("hub_demo_kampung_melayu", "Balai Warga Kampung Melayu", "community_center", "Jl. Jatinegara Barat, Kampung Melayu",
+     -6.2245, 106.8670, 18, {"water": (40, 250), "blankets": (10, 100), "canned_goods": (30, 200)}),
 )
 
 
@@ -45,15 +45,15 @@ DEMO_ACCOUNTS = (
 # (id, items, lat, lng, address, notes)
 DEMO_REQUESTS = (
     ("request_demo_formula", [{"category": "formula", "quantity": 4}, {"category": "diapers", "quantity": 2}],
-     29.7500, -95.3600, "2100 Travis St, Apt 4B", "Infant, 3 months. No car."),
-    ("request_demo_water", [{"category": "water", "quantity": 24}], 29.7810, -95.3850, "815 W 19th St", ""),
+     -6.2240, 106.8600, "Gg. Arus, Bukit Duri, RT 05/RW 12", "Infant, 3 months. House flooded, no vehicle."),
+    ("request_demo_water", [{"category": "water", "quantity": 24}], -6.1300, 106.7950, "Kampung Muara Baru, Penjaringan", ""),
     ("request_demo_blankets", [{"category": "blankets", "quantity": 3}, {"category": "canned_goods", "quantity": 10}],
-     29.7200, -95.3400, "4400 Lyons Ave", "Family of five, can pick up."),
+     -6.2150, 106.8700, "Jl. Kampung Melayu Kecil, RT 03", "Family of five, can pick up."),
 )
 # (id, hub_id, items, notes)
 DEMO_PLEDGES = (
-    ("pledge_demo_heights", "hub_demo_heights_cc", [{"category": "formula", "quantity": 12}], "Dropping off after 5pm"),
-    ("pledge_demo_station_26", "hub_demo_station_26",
+    ("pledge_demo_gor_senen", "hub_demo_gor_senen", [{"category": "formula", "quantity": 12}], "Dropping off after 5pm"),
+    ("pledge_demo_penjaringan", "hub_demo_damkar_penjaringan",
      [{"category": "water", "quantity": 48}, {"category": "diapers", "quantity": 30}], ""),
 )
 

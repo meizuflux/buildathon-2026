@@ -7,6 +7,7 @@ export const CATEGORY_LABELS = {
 };
 
 export const HUB_TYPES = {
+  mosque: 'Mosque',
   church: 'Church',
   fire_station: 'Fire station',
   school: 'School',
