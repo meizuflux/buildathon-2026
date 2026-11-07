@@ -13,7 +13,7 @@ from litestar.response import Response
 
 from haven.api_common import current_user, error, require_disaster, require_family, require_operator
 from haven.auth import now, timestamp
-from haven.allocation import recompute_disasters
+from haven.allocation import public_plan, recompute_disasters
 from haven.db import connect
 
 
@@ -50,7 +50,7 @@ async def generate_plan(family_id: FromPath[str], request: Request) -> dict:
             )).fetchone()
             if row is None:
                 error(500, "plan_unavailable", "The allocation service did not persist a plan for this family.")
-            plan = json.loads(row[0])
+            plan = public_plan(json.loads(row[0]))
             await connection.execute("COMMIT")
         except BaseException:
             await connection.execute("ROLLBACK")
@@ -70,7 +70,7 @@ async def get_plan(family_id: FromPath[str], request: Request, after_version: Fr
             row = await (await connection.execute("SELECT plan_json FROM plans WHERE family_id = ? ORDER BY version DESC LIMIT 1", (family_id,))).fetchone()
         if row is None:
             error(404, "plan_not_found", "No plan has been generated for this family.")
-        plan = json.loads(row[0])
+        plan = public_plan(json.loads(row[0]))
         if after_version is None or plan["version"] > after_version:
             return plan
         remaining = deadline - time.monotonic()
