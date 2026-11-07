@@ -16,9 +16,10 @@ from litestar.params import FromPath, FromQuery, JSONBody
 from haven.auth import now, timestamp
 from haven.db import connect
 from haven.donations.common import (
-    Items, Notes, adjust_stock, error, haversine_km, hub_exists, items_json, not_found, parse_items, require_role,
+    Items, Notes, adjust_stock, error, hub_exists, items_json, not_found, parse_items, pledged, require_role,
     reserved, stock, write_transaction,
 )
+from haven.donations.planner import HubState, OpenRequest, plan
 
 Status = Literal["open", "assigned", "fulfilled", "cancelled"]
 Method = Literal["delivery", "pickup"]
@@ -70,21 +71,39 @@ async def set_status(connection, request_id: str, status: str, **fields) -> None
     )
 
 
-async def suggest_hubs(connection: apsw.AsyncConnection, requests: list[dict], limit: int = 3) -> None:
-    """Attach the nearest hubs that can cover every item of each open request."""
-    hubs = await (await connection.execute("SELECT id, name, latitude, longitude FROM hubs")).fetchall()
-    held = await reserved(connection, tuple(h[0] for h in hubs))
-    stocks = {h[0]: await stock(connection, h[0]) for h in hubs}
+async def suggest_hubs(connection: apsw.AsyncConnection, requests: list[dict]) -> None:
+    """Attach ranked `suggested_hubs` to each open request in `requests`.
+
+    Every open request is planned together (see planner.py) so suggestions never double-book stock;
+    the first suggestion is the planned assignment.
+    """
+    if not any(r["status"] == "open" for r in requests):
+        return
+    hubs = await (await connection.execute("SELECT id, name, latitude, longitude, capacity_pct FROM hubs")).fetchall()
+    ids = tuple(h[0] for h in hubs)
+    held, incoming = await reserved(connection, ids), await pledged(connection, ids)
+    quantities: dict[str, dict[str, int]] = {}
+    targets: dict[str, dict[str, int]] = {}
+    async for hub_id, category, quantity, target in await connection.execute(
+        "SELECT hub_id, category, quantity, target FROM hub_supplies"
+    ):
+        quantities.setdefault(hub_id, {})[category] = quantity
+        targets.setdefault(hub_id, {})[category] = target
+    states = [
+        HubState(
+            id=hub_id, name=name, latitude=lat, longitude=lng, capacity_pct=capacity,
+            available={c: q - held.get(hub_id, {}).get(c, 0) for c, q in quantities.get(hub_id, {}).items()},
+            target=targets.get(hub_id, {}), pledged=incoming.get(hub_id, {}),
+        )
+        for hub_id, name, lat, lng, capacity in hubs
+    ]
+    open_rows = await (await connection.execute(
+        "SELECT id, latitude, longitude, items_json FROM supply_requests WHERE status = 'open' ORDER BY created_at, id"
+    )).fetchall()
+    plans = plan([OpenRequest(row[0], row[1], row[2], parse_items(row[3])) for row in open_rows], states)
     for item in requests:
-        if item["status"] != "open":
-            continue
-        options = []
-        for hub_id, name, lat, lng in hubs:
-            available = {c: q - held.get(hub_id, {}).get(c, 0) for c, q in stocks[hub_id].items()}
-            if all(available.get(i["category"], 0) >= i["quantity"] for i in item["items"]):
-                distance = round(haversine_km(item["latitude"], item["longitude"], lat, lng), 2)
-                options.append({"id": hub_id, "name": name, "distance_km": distance})
-        item["suggested_hubs"] = sorted(options, key=lambda h: h["distance_km"])[:limit]
+        if item["status"] == "open":
+            item["suggested_hubs"] = plans.get(item["id"], [])
 
 
 @post("/api/requests")
@@ -132,7 +151,7 @@ async def cancel_request(request_id: FromPath[str], request: Request) -> dict:
 async def list_requests(
     request: Request, status: FromQuery[Status | None] = None, assigned_to_me: FromQuery[bool] = False
 ) -> list[dict]:
-    """Operator queue. Open requests include `suggested_hubs` that can cover them, nearest first."""
+    """Operator queue. Open requests include ranked `suggested_hubs` with a score and reasons (best first)."""
     async with connect() as connection:
         actor = await require_role(request, connection, "operator")
         clauses, params = [], []

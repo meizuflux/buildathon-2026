@@ -22,11 +22,24 @@ function RequestCard({ item, onClaim, busy, error }) {
       ) : (
         <fieldset className="space-y-1">
           <legend className="text-xs font-medium uppercase tracking-wide text-gray-500">Source hub</legend>
-          {options.map((hub) => (
-            <label key={hub.id} className="flex items-center gap-2 text-sm">
-              <input type="radio" name={`hub-${item.id}`} checked={hubId === hub.id} onChange={() => setHubId(hub.id)} />
-              <span className="text-gray-900">{hub.name}</span>
-              <span className="text-gray-500">{hub.distance_km.toFixed(1)} km</span>
+          {options.map((hub, index) => (
+            <label key={hub.id} className="flex items-start gap-2 text-sm">
+              <input
+                type="radio"
+                name={`hub-${item.id}`}
+                checked={hubId === hub.id}
+                onChange={() => setHubId(hub.id)}
+                className="mt-1"
+              />
+              <span>
+                <span className="text-gray-900">{hub.name}</span>
+                {index === 0 && (
+                  <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">
+                    Recommended
+                  </span>
+                )}
+                <span className="block text-xs text-gray-500">{(hub.reasons ?? [`${hub.distance_km.toFixed(1)} km away`]).join(' · ')}</span>
+              </span>
             </label>
           ))}
         </fieldset>
