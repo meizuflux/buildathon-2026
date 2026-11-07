@@ -67,6 +67,7 @@ def seed_shelter(database, identity="shelter", **overrides):
         "wheelchair": True,
         "staff": ["nurse"],
         "medication": "available",
+        "special_care": None,
     } | overrides
     with sqlite3.connect(database) as connection:
         connection.execute(
@@ -85,7 +86,7 @@ def seed_shelter(database, identity="shelter", **overrides):
                         "child_friendly": data["children"],
                         "wheelchair_accessible": data["wheelchair"],
                         "medical_staff": data["staff"],
-                        "special_care_notes": None,
+                        "special_care_notes": data["special_care"],
                     }
                 ),
                 json.dumps(
@@ -304,6 +305,24 @@ def test_report_retries_conflicts_and_operator_listing(coordination_client):
     )
     with sqlite3.connect(database) as connection:
         assert connection.execute("SELECT COUNT(*) FROM reports").fetchone()[0] == 1
+    activity_url = "/api/disasters/disaster/activity"
+    assert client.get(activity_url).status_code == 401
+    denied = client.get(activity_url, headers=headers())
+    assert denied.status_code == 403
+    assert denied.json()["error"]["code"] == "not_permitted"
+    events = client.get(activity_url, headers=headers("operator")).json()["activity"]
+    assert len(events) == 1
+    assert events[0]["type"] == "report_received"
+    assert events[0]["ref"] == {"kind": "report", "id": first.json()["id"]}
+    assert events[0]["actor"] == {"kind": "family", "id": "family", "name": "Household"}
+    assert client.get("/api/disasters/other/activity", headers=headers("operator")).json() == {
+        "activity": []
+    }
+    assert (
+        client.get("/api/disasters/missing/activity", headers=headers("operator")).status_code
+        == 404
+    )
+    assert client.get(activity_url + "?limit=0", headers=headers("operator")).status_code == 400
     for change in (
         {"type": "invalid"},
         {"message": " "},
@@ -647,6 +666,111 @@ def test_bounded_relocation_uses_fragmented_shelter_capacity(coordination_client
     assert all(shelter_id is not None for _, shelter_id, _ in rows)
     assert sum(people for _, _, people in rows) == 10
     assert free == {"near": 0, "far": 0}
+
+
+def test_allocator_moves_incumbent_to_place_waiting_household(coordination_client, monkeypatch):
+    import haven.allocation_policy as allocation_policy
+
+    monkeypatch.setattr(allocation_policy, "_MAX_REFINEMENT_FAMILIES", 0)
+    client, database = coordination_client
+    no_needs = {
+        "pets": False,
+        "immediate_medication": False,
+        "medical_notes": None,
+        "accessibility_notes": None,
+        "other_special_care": None,
+    }
+    with sqlite3.connect(database) as connection:
+        # Keep the existing household first in priority through its medication need.
+        connection.execute(
+            "UPDATE families SET adults=3, children=0, needs_json=?, resources_json=? WHERE id='family'",
+            (
+                json.dumps({**no_needs, "immediate_medication": True}),
+                json.dumps({"has_car": True}),
+            ),
+        )
+    seed_family(database, "waiting", adults=4, children=0, needs=no_needs, has_car=True)
+    seed_shelter(database, "near", latitude=28.01, available=6)
+    seed_shelter(database, "far", latitude=28.2, available=3)
+
+    response = client.post("/api/families/family/plan/generate", headers=headers("operator"))
+    assert response.status_code == 200, response.text
+    with sqlite3.connect(database) as connection:
+        assignments = dict(
+            connection.execute(
+                "SELECT family_id, shelter_id FROM current_assignments WHERE disaster_id='disaster'"
+            ).fetchall()
+        )
+        free = {
+            identity: json.loads(raw)["available_people"]
+            for identity, raw in connection.execute("SELECT id, capacity_json FROM shelters")
+        }
+    assert assignments == {"family": "far", "waiting": "near"}
+    assert free == {"near": 2, "far": 0}
+
+
+def test_allocator_uses_two_shelter_exchange_to_place_waiting_household(
+    coordination_client, monkeypatch
+):
+    import haven.allocation_policy as allocation_policy
+
+    monkeypatch.setattr(allocation_policy, "_MAX_REFINEMENT_FAMILIES", 0)
+    client, database = coordination_client
+    no_needs = {
+        "pets": False,
+        "immediate_medication": False,
+        "medical_notes": None,
+        "accessibility_notes": None,
+        "other_special_care": None,
+    }
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            "UPDATE families SET adults=4, children=0, resources_json=? WHERE id='family'",
+            (json.dumps({"has_car": True}),),
+        )
+    seed_family(database, "second", adults=3, children=0, needs=no_needs, has_car=False)
+    seed_family(database, "waiting", adults=3, children=0, needs=no_needs, has_car=False)
+    seed_shelter(database, "near", latitude=28.01, available=6)
+    seed_shelter(database, "far", latitude=28.2, available=4)
+
+    response = client.post("/api/families/family/plan/generate", headers=headers("operator"))
+    assert response.status_code == 200, response.text
+    with sqlite3.connect(database) as connection:
+        assignments = dict(
+            connection.execute(
+                "SELECT family_id, shelter_id FROM current_assignments WHERE disaster_id='disaster'"
+            ).fetchall()
+        )
+        people_by_shelter = dict(
+            connection.execute(
+                "SELECT shelter_id, SUM(people) FROM current_assignments "
+                "WHERE disaster_id='disaster' GROUP BY shelter_id"
+            ).fetchall()
+        )
+    assert assignments == {"family": "far", "second": "near", "waiting": "near"}
+    assert people_by_shelter == {"far": 4, "near": 6}
+
+
+def test_allocator_reports_special_care_mismatch_on_fallback(coordination_client):
+    client, database = coordination_client
+    needs = {
+        "pets": False,
+        "immediate_medication": False,
+        "medical_notes": None,
+        "accessibility_notes": None,
+        "other_special_care": True,
+    }
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            "UPDATE families SET needs_json=? WHERE id='family'", (json.dumps(needs),)
+        )
+    seed_shelter(database, "only", latitude=28.01, special_care=None)
+
+    response = client.post("/api/families/family/plan/generate", headers=headers("operator"))
+    assert response.status_code == 200, response.text
+    plan = client.get("/api/families/family/plan", headers=headers()).json()
+    mismatch = next(alert for alert in plan["alerts"] if alert["code"] == "shelter_needs_mismatch")
+    assert mismatch["unmet_requirements"] == ["special_care"]
 
 
 def test_failed_automatic_reallocation_rolls_back_profile_and_reservations(

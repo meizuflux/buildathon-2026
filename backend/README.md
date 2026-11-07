@@ -17,7 +17,7 @@ Use `just prod` to run without reload (configure `HOST`, `PORT`, and `WEB_CONCUR
 
 Database operations use APSW’s async interface. Password hashing runs off the event loop.
 
-On startup, the application creates the tables in `src/haven/schema.sql`. The default database is `disaster_response.sqlite3` in the current working directory; set `DATABASE_PATH` to change it. This is an initial schema, not a migration system: changes to existing tables require recreating the development database or applying changes manually.
+On startup, the application creates the base tables in `src/haven/schema.sql`, applies versioned database migrations, and reconciles existing plans with the allocation ledger before serving requests. The default database is `disaster_response.sqlite3` in the current working directory; set `DATABASE_PATH` to change it. Run `just schema` to perform the same database setup without starting the server.
 
 ## Authentication
 
@@ -52,12 +52,35 @@ All paths below start with `/api`. Handlers are grouped in `haven/routers`, with
 | POST | `/families/{family_id}/plan/generate` | Reallocate the affected disaster and retrieve this family's plan; unchanged plans retain their version. |
 | GET | `/families/{family_id}/plan` | Retrieve the latest persisted plan, generated automatically when the profile is created. |
 | GET, POST | `/disasters/{disaster_id}/updates` | Read official updates or publish one as an operator. |
+| POST | `/disasters/{disaster_id}/updates/preview` | Count family profiles currently matching an update target (operator only). |
 | POST | `/families/{family_id}/reports` | Submit an idempotent family report. |
 | GET | `/disasters/{disaster_id}/reports` | List family reports as an operator. |
+| GET | `/disasters/{disaster_id}/activity` | Operator timeline of recorded actions, newest first; optional `limit` (1–1000, default 50). |
+| GET | `/resource-types` | List the seeded supply catalog (authenticated users). |
+| GET, POST | `/organizations` | List or create organizations for a disaster (operator only). |
+| GET, PATCH | `/organizations/{organization_id}` | Read or update an organization (operator only). |
+| GET | `/inventory` | List organization stock for a disaster (operator only). |
+| PATCH | `/organizations/{organization_id}/inventory` | Set stock quantities for an organization (operator only). |
+| GET, POST | `/needs` | List or create resource needs (operator only). |
+| PATCH | `/needs/{need_id}` | Update a need (operator only). |
+| GET, POST | `/shipments` | List or create shipments (operator only). |
+| PATCH | `/shipments/{shipment_id}` | Update a shipment's status, ETA, or notes (operator only). |
 
 Family and plan listings accept `limit` (1–1000, default 100) and `offset` (default 0), and return `total`, `limit`, and `offset`. Shelter listings already include resource availability, capabilities, and capacity.
 
 PATCH requests merge supplied nested fields, preserving omitted fields. Nullable notes may be cleared with `null`. Coordinates, counts, capacities, and enumerated values are validated. Errors use `{"error":{"code":"...","message":"..."}}` consistently.
+
+Official updates can target the families currently assigned to a shelter by adding
+`"target": {"type": "shelter", "shelter_id": "shelter_..."}` when publishing.
+Omit the target or use `{"type": "all"}` for a general update. Operators see all
+updates; anonymous visitors see general updates; authenticated families also see
+updates for their current assignment. Reassignment changes which targeted updates
+are visible. The shelter must belong to the same disaster.
+
+To preview the current number of matching family profiles, post
+`{"target": {"type": "all"}}` or a shelter target to the updates preview
+endpoint. It returns `{"recipient_count": 0}`; the count is a snapshot of
+current assignments, not a delivery or read count.
 
 ## Coordinated allocation and plan changes
 
@@ -99,9 +122,9 @@ operator-only because family alerts expose operational household information.
 
 Community hubs (churches, fire stations, schools) hold donated supplies. Citizens never pick a hub. They say what they have or need, and the server matches them: a donation goes to the best drop-off hub, and a request goes to the best source hub, where its items are reserved. Hub staff confirm drop-offs and log stock. Government workers claim matched requests, choose delivery or pickup, and dispatch transport to clear full hubs.
 
-Roles: `family` (citizen), `hub_staff` (linked to one hub through the `hub_staff` table), and `operator`. The `users.role` check now includes `hub_staff`, so recreate development databases created before this change.
+Roles: `family` (citizen), `hub_staff` (linked to one hub through the `hub_staff` table), and `operator`. Migration 3 adds the donation tables and the `hub_staff` role to existing databases, so no database needs recreating.
 
-Hubs and back-office depots share one stock engine with the supply logistics API below. A hub is an organization with a `site_type` (church, fire station, and so on), and its supplies are rows in the shared `inventory` table, keyed by `resource_type_id` from the fixed catalog at `GET /api/resource-types`. Citizens can request and pledge every type except insulin, prescription refills, and oxygen.
+Donations are built on the operator logistics tables in `haven/routers/logistics.py` (organizations, inventory, resource types). A hub is an organization with a row in `hubs` (site type and storage size); `hub_view` combines the two and computes % full from current stock. Organizations without a hub row are back-office depots. Operator shipments and citizen requests reserve and deduct the same `inventory` rows, so stock is never double-booked. The catalog is the logistics resource types plus specific citizen items (baby formula, diapers, blankets, cots, generators, and so on). `resource_type_details` marks which ones citizens can request and pledge; clinical items and the broad operational types are operator-only.
 
 **Nobody types in hub stock.** Quantities change only through app events: pledges received, requests fulfilled, shipments, walk-in donations, and transport pickups. A hub's `capacity_pct` is units on hand divided by its `storage_units` (set once), recalculated after every change. Targets come from demand (`donations/targets.py`): each item's target is `ceil(1.5 × demand) + baseline`. Demand is the last 7 days of citizen requests plus the unfilled part of open shelter needs, each counted at the nearest hub. The baseline is a small standing stock of essentials, such as 20 cases of water and 10 packs of diapers.
 
@@ -114,6 +137,7 @@ Each hub supply in a response has `resource_type_id`, `name`, `unit`, `quantity`
 | `GET /api/hubs/nearby?lat=&lng=&radius_km=25&limit=20&needs=&has=` | public | Hubs within the radius, nearest first, with `distance_km`. `needs=<resource_type_id>` keeps hubs short on it; `has=<resource_type_id>` keeps hubs with some available |
 | `GET /api/hubs?min_capacity=0` | public | Hubs at or above a capacity percentage, fullest first |
 | `GET /api/hubs/{hub_id}` | public | One hub |
+| `PUT /api/hubs/{hub_id}` | operator | `{"site_type", "storage_units", "capacity_pct"}` makes an organization a public hub or changes its settings. With `storage_units`, % full follows stock; `capacity_pct` is only used without it |
 | `POST /api/hubs/{hub_id}/walk-ins` | that hub's staff, operator | `{"items": [{"resource_type_id", "quantity"}]}` logs goods that arrived without a pledge; may match waiting requests |
 | `POST /api/hubs/{hub_id}/pickups` | operator | Dispatches transport; 409 `pickup_already_open` if one is already dispatched |
 | `GET /api/pickups?status=` | operator | Pickups, newest first, with `hub_name` |
@@ -170,22 +194,4 @@ For things outside the catalog (a wheelchair, a crib, phone chargers). A governm
 | `POST /api/custom-submissions/{id}/decline` | operator | `{"message"}` |
 | `POST /api/custom-submissions/{id}/complete` | operator | Mark an approved item as handed over |
 
-### Supply logistics (API contract part 2)
-
-These implement sections 1 to 5 of the dashboard's `frontend/docs/api-contract-part-2.md` (on the `frontend` branch): resource types, organizations, inventory, needs, and shipments. Everything is operator-only (403 `not_permitted`) except `GET /resource-types`, which any signed-in user may call. Hubs appear here as organizations, so a shipment out of a hub and a citizen request served from it draw on the same stock.
-
-| Endpoint | Purpose |
-|---|---|
-| `GET /api/resource-types` | The 16-item catalog: `id`, `name`, `category`, `unit`, `citizen_requestable` |
-| `GET, POST /api/organizations?disaster_id=` | List or create organizations; hubs carry `site_type` and `storage_units`, from which `capacity_pct` is derived |
-| `GET, PATCH /api/organizations/{id}` | Read or nested-merge an organization (`location` and `contact` merge key by key) |
-| `GET /api/inventory?disaster_id=&holder_kind=organization&holder_id=` | Stock rows with `holder`, `quantity`, `reserved`, `target` |
-| `PATCH /api/organizations/{id}/inventory` | `{"items": [{"resource_type_id", "quantity"}]}` sets absolute quantities; 409 `inventory_conflict` below `reserved` |
-| `GET, POST /api/needs?disaster_id=&status=` | Shelter or organization needs for one resource type |
-| `PATCH /api/needs/{id}` | Change quantities, priority, status, `needed_by`, or notes; an open need closes as `fulfilled` when `quantity_fulfilled` reaches `quantity_needed` |
-| `GET, POST /api/shipments?disaster_id=` | Operator shipments start `approved` and reserve stock at the source; 409 `insufficient_inventory` if short |
-| `PATCH /api/shipments/{id}` | `{"status"}`, `eta`, `notes`. `approved → in_transit` deducts stock, `→ cancelled` releases it, `in_transit → delivered` adds stock at an organization destination and credits linked needs. Other changes return 409 `invalid_transition` |
-
-Broadcast targeting, conversations, and the activity feed (contract sections 6 and later) are not implemented yet.
-
-CORS allows all origins by default; set `CORS_ORIGINS` to a comma-separated list to restrict it. UI components live in `app/src/donations/` (React Native) and `frontend/src/donations/` (React + Tailwind); `donations-sandbox/` runs them against this API.
+CORS allows all origins by default; set `CORS_ORIGINS` to a comma-separated list to restrict it. Matching also runs whenever the request queue or a citizen's activity is read, so stock that arrives through operator shipments is picked up without changes to the logistics module. UI components live in `app/src/donations/` (React Native) and `frontend/src/donations/` (React + Tailwind); `donations-sandbox/` runs them against this API. They are not yet mounted in the dashboard or the mobile app.

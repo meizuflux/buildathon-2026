@@ -10,9 +10,9 @@ from uuid import uuid4
 
 from haven.allocation import recompute_disasters
 from haven.auth import hash_password, now, timestamp
-from haven.db import connect, initialize_database
-from haven.donations.common import refresh_capacity
+from haven.db import connect
 from haven.donations.matching import match_waiting_requests
+from haven.startup import initialize_database
 
 # Demo region: the fictional Tampa hurricane scenario (see seed_tampa_scenario). Hubs are
 # fictional sites in real Tampa neighbourhoods, inside the scenario's shelter and family area.
@@ -294,64 +294,60 @@ async def seed_hubs() -> int:
     async with connect() as connection:
         async with connection:
             for hub_id, name, site_type, address, lat, lng, capacity, supplies in DEMO_HUBS:
+                organization = {
+                    "disaster_id": DEMO_DISASTER_ID,
+                    "name": name,
+                    "type": ORG_TYPE_FOR_SITE[site_type],
+                    "services": ["distribution"],
+                    "status": "active",
+                    "address": address,
+                    "location": {"latitude": lat, "longitude": lng},
+                    "contact": {"name": None, "phone": None, "email": staff_email(hub_id)},
+                    "coverage_radius_km": 5,
+                    "notes": "",
+                }
                 await connection.execute(
-                    "INSERT INTO organizations (id, disaster_id, name, type, services_json, status, "
-                    "address, latitude, longitude, contact_json, coverage_radius_km, notes, "
-                    "site_type, capacity_pct, storage_units, updated_at) "
-                    "VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, 5, '', ?, ?, ?, ?) "
-                    "ON CONFLICT(id) DO NOTHING",
-                    (
-                        hub_id,
-                        DEMO_DISASTER_ID,
-                        name,
-                        ORG_TYPE_FOR_SITE[site_type],
-                        json.dumps(["distribution"]),
-                        address,
-                        lat,
-                        lng,
-                        json.dumps({"name": None, "phone": None, "email": staff_email(hub_id)}),
-                        site_type,
-                        capacity,
-                        math.ceil(sum(q for q, _ in supplies.values()) * 100 / capacity),
-                        stamp,
-                    ),
+                    "INSERT INTO organizations VALUES (?, ?, ?, ?) ON CONFLICT(id) DO NOTHING",
+                    (hub_id, DEMO_DISASTER_ID, json.dumps(organization), stamp),
                 )
                 if not await connection.changes():
                     continue
                 created += 1
+                # Storage sized so the starting stock fills the hub to its scenario percentage.
+                storage = math.ceil(sum(q for q, _ in supplies.values()) * 100 / capacity)
+                await connection.execute(
+                    "INSERT INTO hubs (organization_id, site_type, storage_units) VALUES (?, ?, ?)",
+                    (hub_id, site_type, storage),
+                )
                 for resource_type_id, (quantity, _) in supplies.items():
                     await connection.execute(
                         "INSERT INTO inventory (organization_id, resource_type_id, quantity, "
-                        "updated_at) VALUES (?, ?, ?, ?)",
+                        "reserved, updated_at) VALUES (?, ?, ?, 0, ?)",
                         (hub_id, resource_type_id, quantity, stamp),
                     )
-                await refresh_capacity(connection, hub_id)
             for org_id, name, kind, services, address, lat, lng, notes, stock in DEMO_DEPOTS:
+                organization = {
+                    "disaster_id": DEMO_DISASTER_ID,
+                    "name": name,
+                    "type": kind,
+                    "services": services,
+                    "status": "active",
+                    "address": address,
+                    "location": {"latitude": lat, "longitude": lng},
+                    "contact": {"name": None, "phone": None, "email": None},
+                    "coverage_radius_km": 25,
+                    "notes": notes,
+                }
                 await connection.execute(
-                    "INSERT INTO organizations (id, disaster_id, name, type, services_json, status, "
-                    "address, latitude, longitude, contact_json, coverage_radius_km, notes, "
-                    "updated_at) VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, 25, ?, ?) "
-                    "ON CONFLICT(id) DO NOTHING",
-                    (
-                        org_id,
-                        DEMO_DISASTER_ID,
-                        name,
-                        kind,
-                        json.dumps(services),
-                        address,
-                        lat,
-                        lng,
-                        json.dumps({"name": None, "phone": None, "email": None}),
-                        notes,
-                        stamp,
-                    ),
+                    "INSERT INTO organizations VALUES (?, ?, ?, ?) ON CONFLICT(id) DO NOTHING",
+                    (org_id, DEMO_DISASTER_ID, json.dumps(organization), stamp),
                 )
                 if not await connection.changes():
                     continue
                 for resource_type_id, quantity in stock.items():
                     await connection.execute(
                         "INSERT INTO inventory (organization_id, resource_type_id, quantity, "
-                        "updated_at) VALUES (?, ?, ?, ?)",
+                        "reserved, updated_at) VALUES (?, ?, ?, 0, ?)",
                         (org_id, resource_type_id, quantity, stamp),
                     )
             for need_id, shelter_id, resource_type_id, quantity, priority, notes in DEMO_NEEDS:
@@ -447,7 +443,8 @@ async def seed_tampa_scenario() -> None:
                 return
             stamp = timestamp(now())
             await connection.execute(
-                "INSERT INTO disasters VALUES (?, ?, ?, ?, ?, ?)",
+                "INSERT INTO disasters (id, type, name, status, affected_area, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
                 (
                     DEMO_DISASTER_ID,
                     "hurricane",
@@ -473,7 +470,9 @@ async def seed_tampa_scenario() -> None:
                     "clothes": "limited" if i % 2 else "available",
                 }
                 await connection.execute(
-                    "INSERT INTO shelters VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO shelters (id, disaster_id, name, address, latitude, longitude, status, "
+                    "capacity_json, capabilities_json, resources_json, updated_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         f"demo_tampa_shelter_{i + 1:02d}",
                         DEMO_DISASTER_ID,
@@ -491,7 +490,8 @@ async def seed_tampa_scenario() -> None:
             for i in range(1000):
                 user_id = f"demo_tampa_user_{i + 1:04d}"
                 await connection.execute(
-                    "INSERT INTO users VALUES (?, ?, ?, ?, ?)",
+                    "INSERT INTO users (id, email, password_hash, role, created_at) "
+                    "VALUES (?, ?, ?, ?, ?)",
                     (user_id, f"synthetic-family-{i + 1:04d}@demo.invalid", "!", "family", stamp),
                 )
                 needs = {
@@ -502,7 +502,8 @@ async def seed_tampa_scenario() -> None:
                     "other_special_care": None,
                 }
                 await connection.execute(
-                    "INSERT INTO families VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO families (id, owner_user_id, disaster_id, adults, children, latitude, longitude, "
+                    "needs_json, resources_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         f"demo_tampa_family_{i + 1:04d}",
                         user_id,
@@ -518,7 +519,8 @@ async def seed_tampa_scenario() -> None:
                     ),
                 )
             await connection.execute(
-                "INSERT INTO disaster_updates VALUES (?, ?, ?, ?, ?, ?)",
+                "INSERT INTO disaster_updates (id, disaster_id, title, message, severity, published_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
                 (
                     "demo_tampa_update",
                     DEMO_DISASTER_ID,

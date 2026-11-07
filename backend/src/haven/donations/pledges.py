@@ -55,7 +55,7 @@ _COLUMNS = (
     "p.id, p.user_id, p.hub_id, p.items_json, p.notes, p.status, p.created_at, p.updated_at, "
     "h.name, h.address, u.email, h.latitude, h.longitude, p.match_json"
 )
-_FROM = "FROM pledges p JOIN organizations h ON h.id = p.hub_id JOIN users u ON u.id = p.user_id"
+_FROM = "FROM pledges p JOIN hub_view h ON h.id = p.hub_id JOIN users u ON u.id = p.user_id"
 
 
 def pledge_info(row: tuple, names: dict[str, dict]) -> dict:
@@ -148,8 +148,7 @@ async def create_pledge(
         async with write_transaction(connection):
             hub = await (
                 await connection.execute(
-                    "SELECT capacity_pct, status FROM organizations "
-                    "WHERE id = ? AND site_type IS NOT NULL",
+                    "SELECT capacity_pct, status FROM hub_view WHERE id = ?",
                     (hub_id,),
                 )
             ).fetchone()

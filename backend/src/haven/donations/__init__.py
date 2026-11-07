@@ -1,15 +1,16 @@
-"""Donation distribution and supply logistics: hubs, citizen requests and pledges, organizations,
-inventory, needs, and shipments."""
+"""Citizen donations: hubs, matched requests and pledges, custom items, and automatic hub stock.
+
+Built on the shared logistics tables (organizations, inventory, resource types) owned by
+haven.routers.logistics."""
 
 from litestar import Router
 
-from haven.donations import custom, hubs, logistics, pledges, supply_requests
+from haven.donations import custom, hubs, pledges, supply_requests
 
 HANDLERS = [
     *hubs.HANDLERS,
     *supply_requests.HANDLERS,
     *pledges.HANDLERS,
-    *logistics.HANDLERS,
     *custom.HANDLERS,
 ]
 

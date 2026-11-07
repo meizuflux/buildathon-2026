@@ -193,6 +193,7 @@ class Update(TypedDict):
     message: str
     severity: Literal["info", "warning", "critical"]
     published_at: str
+    target: NotRequired[dict[str, str]]
 
 
 class UpdateList(TypedDict):

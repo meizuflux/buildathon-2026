@@ -10,7 +10,7 @@ from uuid import uuid4
 
 import apsw
 import msgspec
-from litestar import Request, get, patch, post
+from litestar import Request, get, patch, post, put
 from litestar.params import FromPath, FromQuery, JSONBody, Parameter
 
 from haven.auth import now, timestamp
@@ -25,6 +25,7 @@ from haven.donations.common import (
     haversine_km,
     hub_exists,
     not_found,
+    organization_exists,
     parse_items,
     pledged,
     remove_stock,
@@ -36,6 +37,14 @@ from haven.donations.common import (
 )
 from haven.donations.matching import match_waiting_requests
 from haven.donations.targets import hub_targets
+
+SiteType = Literal["mosque", "church", "fire_station", "school", "community_center", "other"]
+
+
+class HubSetup(msgspec.Struct, forbid_unknown_fields=True):
+    site_type: SiteType
+    storage_units: Annotated[int, msgspec.Meta(gt=0, le=100_000_000)] | None = None
+    capacity_pct: Annotated[int, msgspec.Meta(ge=0, le=100)] = 0
 
 
 class WalkIn(msgspec.Struct, forbid_unknown_fields=True):
@@ -79,14 +88,13 @@ async def load_hubs(
 ) -> list[dict]:
     """Load hubs with supplies, reservation and pledge totals, and any open pickup.
 
-    `where` is extra SQL (starting with AND) on the organizations table. Supplies list every item
+    `where` is extra SQL (starting with AND) on hub_view. Supplies list every item
     the hub holds or wants. Per supply: `available` = on hand minus reserved; `target` comes from
     demand; `need` = target minus what's on hand and already pledged.
     """
     hubs: dict[str, dict[str, Any]] = {}
     async for row in await connection.execute(
-        f"SELECT {_HUB_COLUMNS} FROM organizations WHERE site_type IS NOT NULL {where} "
-        f"ORDER BY {order}",
+        f"SELECT {_HUB_COLUMNS} FROM hub_view WHERE 1 = 1 {where} ORDER BY {order}",
         params,
     ):
         hubs[str(row[0])] = dict(zip(_HUB_KEYS, row)) | {"supplies": [], "open_pickup": None}
@@ -198,6 +206,27 @@ async def get_hub(hub_id: FromPath[str]) -> dict:
         return await load_hub(connection, hub_id)
 
 
+@put("/hubs/{hub_id:str}")
+async def set_up_hub(hub_id: FromPath[str], data: JSONBody[HubSetup], request: Request) -> dict:
+    """Make an organization a public donation hub, or change its site type or storage size
+    (operator only). With `storage_units`, % full follows stock; `capacity_pct` is only used when
+    no storage size is given."""
+    async with connect() as connection:
+        await require_role(request, connection, "operator")
+        async with write_transaction(connection):
+            if not await organization_exists(connection, hub_id):
+                raise not_found("Organization", "organization_not_found")
+            await connection.execute(
+                "INSERT INTO hubs (organization_id, site_type, storage_units, capacity_pct) "
+                "VALUES (?, ?, ?, ?) ON CONFLICT(organization_id) DO UPDATE SET "
+                "site_type = excluded.site_type, storage_units = excluded.storage_units, "
+                "capacity_pct = excluded.capacity_pct",
+                (hub_id, data.site_type, data.storage_units, data.capacity_pct),
+            )
+            await match_waiting_requests(connection)
+        return await load_hub(connection, hub_id)
+
+
 @post("/hubs/{hub_id:str}/walk-ins", status_code=200)
 async def log_walk_in(hub_id: FromPath[str], data: JSONBody[WalkIn], request: Request) -> dict:
     """Log an unannounced drop-off at a hub (that hub's staff, or an operator).
@@ -246,7 +275,7 @@ async def dispatch_pickup(
 
 
 _PICKUP_COLUMNS = "p.id, p.hub_id, p.status, p.notes, p.created_at, h.name"
-_PICKUP_FROM = "FROM pickup_requests p JOIN organizations h ON h.id = p.hub_id"
+_PICKUP_FROM = "FROM pickup_requests p JOIN hub_view h ON h.id = p.hub_id"
 
 
 @get("/pickups")
@@ -272,7 +301,7 @@ async def nearest_depot(connection: apsw.AsyncConnection, hub_id: str) -> tuple[
     """The closest active non-hub organization in the hub's disaster, as (id, name)."""
     hub = await (
         await connection.execute(
-            "SELECT disaster_id, latitude, longitude FROM organizations WHERE id = ?", (hub_id,)
+            "SELECT disaster_id, latitude, longitude FROM hub_view WHERE id = ?", (hub_id,)
         )
     ).fetchone()
     if hub is None:
@@ -281,8 +310,11 @@ async def nearest_depot(connection: apsw.AsyncConnection, hub_id: str) -> tuple[
         list[tuple[str, str, float, float]],
         await (
             await connection.execute(
-                "SELECT id, name, latitude, longitude FROM organizations "
-                "WHERE site_type IS NULL AND status != 'inactive' AND disaster_id = ?",
+                "SELECT id, json_extract(data, '$.name'), "
+                "json_extract(data, '$.location.latitude'), json_extract(data, '$.location.longitude') "
+                "FROM organizations WHERE id NOT IN (SELECT organization_id FROM hubs) "
+                "AND COALESCE(json_extract(data, '$.status'), 'active') != 'inactive' "
+                "AND disaster_id = ?",
                 (hub[0],),
             )
         ).fetchall(),
@@ -345,6 +377,7 @@ HANDLERS = [
     nearby_hubs,
     list_hubs,
     get_hub,
+    set_up_hub,
     log_walk_in,
     dispatch_pickup,
     list_pickups,

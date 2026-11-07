@@ -45,14 +45,14 @@ async def demand_pressure(connection: apsw.AsyncConnection) -> dict[str, float]:
     free: dict[str, int] = {}
     on_hand: dict[str, int] = {}
     async for (resource_type_id,) in await connection.execute(
-        "SELECT id FROM resource_types WHERE citizen_requestable = 1"
+        "SELECT resource_type_id FROM resource_type_details WHERE citizen_requestable = 1"
     ):
         free[str(resource_type_id)] = 0
         on_hand[str(resource_type_id)] = 0
     async for resource_type_id, quantity, reserved in await connection.execute(
         "SELECT i.resource_type_id, SUM(i.quantity), SUM(i.reserved) FROM inventory i "
-        "JOIN organizations o ON o.id = i.organization_id "
-        "WHERE o.site_type IS NOT NULL AND o.status != 'inactive' GROUP BY i.resource_type_id"
+        "JOIN hub_view h ON h.id = i.organization_id "
+        "WHERE h.status != 'inactive' GROUP BY i.resource_type_id"
     ):
         key = str(resource_type_id)
         if key in free:

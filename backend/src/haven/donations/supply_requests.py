@@ -58,7 +58,7 @@ _COLUMNS = (
     "h.latitude, h.longitude, u.email, r.match_json"
 )
 _FROM = (
-    "FROM supply_requests r LEFT JOIN organizations h ON h.id = r.hub_id "
+    "FROM supply_requests r LEFT JOIN hub_view h ON h.id = r.hub_id "
     "LEFT JOIN users u ON u.id = r.assigned_to"
 )
 
@@ -112,6 +112,13 @@ async def set_status(connection, request_id: str, status: str, **fields) -> None
         f"UPDATE supply_requests SET status = ?, updated_at = ?{assignments} WHERE id = ?",
         (status, timestamp(now()), *fields.values(), request_id),
     )
+
+
+async def rematch(connection: apsw.AsyncConnection) -> None:
+    """Match waiting requests before reading them. Stock can also arrive through operator
+    shipments (haven.routers.logistics), which don't run the matcher themselves."""
+    async with write_transaction(connection):
+        await match_waiting_requests(connection)
 
 
 @post("/requests")
@@ -177,6 +184,7 @@ async def request_limits(request: Request) -> dict:
 async def my_requests(request: Request) -> list[dict]:
     async with connect() as connection:
         actor = await require_role(request, connection, "family")
+        await rematch(connection)
         rows = await (
             await connection.execute(
                 f"SELECT {_COLUMNS} {_FROM} WHERE r.user_id = ? "
@@ -216,6 +224,7 @@ async def list_requests(
     """Operator queue: `matched` requests are ready to claim; `open` ones wait for stock."""
     async with connect() as connection:
         actor = await require_role(request, connection, "operator")
+        await rematch(connection)
         clauses, params = [], []
         if status:
             clauses.append("r.status = ?")

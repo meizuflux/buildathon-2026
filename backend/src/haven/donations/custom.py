@@ -57,7 +57,7 @@ _COLUMNS = (
     "h.longitude, u.email, r.email"
 )
 _FROM = (
-    "FROM custom_submissions c LEFT JOIN organizations h ON h.id = c.hub_id "
+    "FROM custom_submissions c LEFT JOIN hub_view h ON h.id = c.hub_id "
     "JOIN users u ON u.id = c.user_id LEFT JOIN users r ON r.id = c.reviewed_by"
 )
 
@@ -117,8 +117,8 @@ async def nearby_hubs(
         list[tuple[str, str, float, float, int]],
         await (
             await connection.execute(
-                "SELECT id, name, latitude, longitude, capacity_pct FROM organizations "
-                "WHERE site_type IS NOT NULL AND status != 'inactive'"
+                "SELECT id, name, latitude, longitude, capacity_pct FROM hub_view "
+                "WHERE status != 'inactive'"
             )
         ).fetchall(),
     )

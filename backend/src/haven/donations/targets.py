@@ -44,8 +44,7 @@ async def hub_targets(connection: apsw.AsyncConnection) -> dict[str, dict[str, i
         list[tuple[str, float, float]],
         await (
             await connection.execute(
-                "SELECT id, latitude, longitude FROM organizations "
-                "WHERE site_type IS NOT NULL AND status != 'inactive'"
+                "SELECT id, latitude, longitude FROM hub_view WHERE status != 'inactive'"
             )
         ).fetchall(),
     )
@@ -76,12 +75,14 @@ async def hub_targets(connection: apsw.AsyncConnection) -> dict[str, dict[str, i
         list[tuple[float, float, str, int]],
         await (
             await connection.execute(
-                "SELECT COALESCE(s.latitude, o.latitude), COALESCE(s.longitude, o.longitude), "
+                "SELECT COALESCE(s.latitude, json_extract(o.data, '$.location.latitude')), "
+                "COALESCE(s.longitude, json_extract(o.data, '$.location.longitude')), "
                 "n.resource_type_id, n.quantity_needed - n.quantity_fulfilled FROM needs n "
                 "LEFT JOIN shelters s ON n.requester_kind = 'shelter' AND s.id = n.requester_id "
                 "LEFT JOIN organizations o ON n.requester_kind = 'organization' "
                 "AND o.id = n.requester_id "
-                "WHERE n.status = 'open' AND COALESCE(s.latitude, o.latitude) IS NOT NULL"
+                "WHERE n.status = 'open' AND COALESCE(s.latitude, "
+                "json_extract(o.data, '$.location.latitude')) IS NOT NULL"
             )
         ).fetchall(),
     )

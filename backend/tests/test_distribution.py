@@ -46,14 +46,14 @@ def stock_hub(client, headers, hub_id, capacity=50, **supplies):
         for resource_type_id, value in supplies.items():
             quantity = value[0] if isinstance(value, tuple) else value
             connection.execute(
-                "INSERT INTO inventory (organization_id, resource_type_id, quantity, updated_at) "
-                "VALUES (?, ?, ?, '2026-01-01T00:00:00Z') "
+                "INSERT INTO inventory (organization_id, resource_type_id, quantity, reserved, "
+                "updated_at) VALUES (?, ?, ?, 0, '2026-01-01T00:00:00Z') "
                 "ON CONFLICT(organization_id, resource_type_id) DO UPDATE SET "
                 "quantity = excluded.quantity",
                 (hub_id, resource_type_id, quantity),
             )
         connection.execute(
-            "UPDATE organizations SET capacity_pct = ? WHERE id = ?", (capacity, hub_id)
+            "UPDATE hubs SET capacity_pct = ? WHERE organization_id = ?", (capacity, hub_id)
         )
     return hub(client, hub_id)
 
@@ -393,7 +393,11 @@ def test_targets_follow_demand_near_the_hub(client, h):
 
 
 def test_percent_full_follows_stock_when_storage_is_set(client, h):
-    client.patch("/api/organizations/hub_mid", json={"storage_units": 200}, headers=h["op"])
+    client.put(
+        "/api/hubs/hub_mid",
+        json={"site_type": "fire_station", "storage_units": 200},
+        headers=h["op"],
+    )
     assert hub(client, "hub_mid")["capacity_pct"] == 0
     walk_in(client, h["op"], "hub_mid", water_bottled=60, blankets=40)
     assert hub(client, "hub_mid")["capacity_pct"] == 50
@@ -408,3 +412,40 @@ def test_walk_in_validation(client, h):
     assert walk_in(client, h["op"], "hub_mid").status_code == 400  # no items
     assert walk_in(client, h["op"], "hub_mid", gold=1).status_code == 400
     assert walk_in(client, h["op"], "missing", blankets=1).status_code == 404
+
+
+# Shared stock with operator shipments (haven.routers.logistics) ------------
+
+
+def ship_water(client, headers, quantity):
+    body = {
+        "disaster_id": "disaster_test",
+        "from": {"kind": "organization", "id": "hub_near"},
+        "to": {"kind": "organization", "id": "hub_far"},
+        "items": [{"resource_type_id": "water_bottled", "quantity": quantity}],
+        "need_ids": [],
+        "priority": "high",
+    }
+    return client.post("/api/shipments", json=body, headers=headers)
+
+
+def test_hub_stock_is_shared_with_operator_shipments(client, h):
+    """Shipments and citizen requests reserve the same hub stock; neither can double-book it."""
+    shipment = ship_water(client, h["op"], 8)  # hub_near has 10 bottled water
+    assert shipment.status_code == 201, shipment.text
+    water = supply(hub(client, "hub_near"), "water_bottled")
+    assert (water["quantity"], water["reserved"], water["available"]) == (10, 8, 2)
+
+    waiting = new_request(client, h["family"], water_bottled=3).json()
+    assert waiting["status"] == "open"  # only 2 free
+
+    cancelled = client.patch(
+        f"/api/shipments/{shipment.json()['id']}", json={"status": "cancelled"}, headers=h["op"]
+    )
+    assert cancelled.status_code == 200
+    # The next read of the queue matches the waiting request against the freed stock.
+    mine = client.get("/api/requests/mine", headers=h["family"]).json()[0]
+    assert (mine["status"], mine["hub"]["id"]) == ("matched", "hub_near")
+    assert supply(hub(client, "hub_near"), "water_bottled")["reserved"] == 3
+    assert ship_water(client, h["op"], 8).json()["error"]["code"] == "insufficient_inventory"
+    assert ship_water(client, h["op"], 7).status_code == 201

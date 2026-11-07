@@ -10,9 +10,9 @@ dev:
 prod:
     uv run --locked --no-dev uvicorn haven.app:app --no-proxy-headers --host "${HOST:-0.0.0.0}" --port "${PORT:-8000}"
 
-# Create missing database tables from the initial schema.
+# Initialize the schema, apply migrations, and reconcile stored plans.
 schema:
-    uv run --locked python -c 'import asyncio; from haven.db import initialize_database; asyncio.run(initialize_database())'
+    uv run --locked python -c 'import asyncio; from haven.startup import initialize_database; asyncio.run(initialize_database())'
 
 # Run the test suite.
 test:

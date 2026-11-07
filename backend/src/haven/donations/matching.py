@@ -24,8 +24,8 @@ async def hub_states(connection: apsw.AsyncConnection) -> list[HubState]:
         list[tuple[str, str, float, float, int]],
         await (
             await connection.execute(
-                "SELECT id, name, latitude, longitude, capacity_pct FROM organizations "
-                "WHERE site_type IS NOT NULL AND status != 'inactive' ORDER BY id"
+                "SELECT id, name, latitude, longitude, capacity_pct FROM hub_view "
+                "WHERE status != 'inactive' ORDER BY id"
             )
         ).fetchall(),
     )

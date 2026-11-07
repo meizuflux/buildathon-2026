@@ -1,4 +1,4 @@
-"""Shared types, authorization, and the stock engine for donations and supply logistics.
+"""Shared types, authorization, and the stock engine for citizen donations.
 
 Every movement of stock goes through reserve / release / consume / add_stock so that shipments
 (organization -> shelter or organization) and citizen requests (hub -> citizen) share one ledger:
@@ -9,8 +9,9 @@ Every movement of stock goes through reserve / release / consume / add_stock so 
     add_stock quantity += q, creating the row       (shipment delivered, pledge or walk-in received)
     remove_stock quantity -= q (unreserved stock)   (surplus collected by a transport pickup)
 
-Every quantity change refreshes the organization's capacity_pct from its storage size, so a hub's
-"% full" always reflects what is actually on its shelves.
+These operate on the shared logistics inventory table, so the operator shipments in
+haven.routers.logistics and citizen requests draw on the same stock. A hub's "% full" is computed
+from that stock by the hub_view database view, so it is always current.
 """
 
 import math
@@ -107,8 +108,9 @@ async def write_transaction(connection: apsw.AsyncConnection):
 async def catalog(connection: apsw.AsyncConnection) -> dict[str, dict]:
     rows = await (
         await connection.execute(
-            "SELECT id, name, category, unit, citizen_requestable FROM resource_types "
-            "ORDER BY sort_order"
+            "SELECT t.id, t.name, t.category, t.unit, COALESCE(d.citizen_requestable, 0) "
+            "FROM resource_types t LEFT JOIN resource_type_details d ON d.resource_type_id = t.id "
+            "ORDER BY COALESCE(d.sort_order, 1000), t.id"
         )
     ).fetchall()
     return {
@@ -179,9 +181,7 @@ async def organization_exists(connection: apsw.AsyncConnection, organization_id:
 async def hub_exists(connection: apsw.AsyncConnection, hub_id: str) -> bool:
     """A hub is an organization with a public site type."""
     row = await (
-        await connection.execute(
-            "SELECT 1 FROM organizations WHERE id = ? AND site_type IS NOT NULL", (hub_id,)
-        )
+        await connection.execute("SELECT 1 FROM hubs WHERE organization_id = ?", (hub_id,))
     ).fetchone()
     return row is not None
 
@@ -190,10 +190,10 @@ async def hub_exists(connection: apsw.AsyncConnection, hub_id: str) -> bool:
 
 
 async def stock(connection: apsw.AsyncConnection, organization_id: str) -> dict[str, tuple]:
-    """{resource_type_id: (quantity, reserved, target)} for one organization."""
+    """{resource_type_id: (quantity, reserved, 0)} for one organization (targets are computed)."""
     rows = await (
         await connection.execute(
-            "SELECT resource_type_id, quantity, reserved, target FROM inventory "
+            "SELECT resource_type_id, quantity, reserved, 0 FROM inventory "
             "WHERE organization_id = ?",
             (organization_id,),
         )
@@ -242,17 +242,6 @@ async def release(
         )
 
 
-async def refresh_capacity(connection: apsw.AsyncConnection, organization_id: str) -> None:
-    """Recompute capacity_pct = units on hand / storage size (capped at 100) when a size is set."""
-    await connection.execute(
-        "UPDATE organizations SET capacity_pct = MIN(100, CAST(ROUND(100.0 * ("
-        "SELECT COALESCE(SUM(quantity), 0) FROM inventory WHERE organization_id = organizations.id"
-        ") / storage_units) AS INTEGER)), updated_at = ? "
-        "WHERE id = ? AND storage_units IS NOT NULL",
-        (timestamp(now()), organization_id),
-    )
-
-
 async def consume(
     connection: apsw.AsyncConnection, organization_id: str, items: list[dict]
 ) -> None:
@@ -269,7 +258,6 @@ async def consume(
                 item["resource_type_id"],
             ),
         )
-    await refresh_capacity(connection, organization_id)
 
 
 async def remove_stock(
@@ -282,7 +270,6 @@ async def remove_stock(
             "WHERE organization_id = ? AND resource_type_id = ?",
             (item["quantity"], timestamp(now()), organization_id, item["resource_type_id"]),
         )
-    await refresh_capacity(connection, organization_id)
 
 
 async def add_stock(
@@ -290,12 +277,11 @@ async def add_stock(
 ) -> None:
     for item in items:
         await connection.execute(
-            "INSERT INTO inventory (organization_id, resource_type_id, quantity, updated_at) "
-            "VALUES (?, ?, ?, ?) ON CONFLICT(organization_id, resource_type_id) "
+            "INSERT INTO inventory (organization_id, resource_type_id, quantity, reserved, "
+            "updated_at) VALUES (?, ?, ?, 0, ?) ON CONFLICT(organization_id, resource_type_id) "
             "DO UPDATE SET quantity = quantity + excluded.quantity, updated_at = excluded.updated_at",
             (organization_id, item["resource_type_id"], item["quantity"], timestamp(now())),
         )
-    await refresh_capacity(connection, organization_id)
 
 
 async def pledged(connection: apsw.AsyncConnection, hub_ids: tuple[str, ...]) -> dict:

@@ -12,6 +12,7 @@ from litestar.openapi import ResponseSpec
 from litestar.params import FromPath, JSONBody, QueryParameter
 from litestar.response import Response
 
+from haven.activity import record_activity
 from haven.allocation import public_plan, recompute_disasters
 from haven.api_common import error, require_disaster, require_family
 from haven.auth import (
@@ -24,6 +25,7 @@ from haven.auth import (
 )
 from haven.db import connect
 from haven.openapi import BEARER, Plan, PlanPage, Report, ReportList, errors
+from haven.rows import REPORT_COLUMNS, projection, report_from_row
 
 
 class ReportLocation(msgspec.Struct, forbid_unknown_fields=True):
@@ -36,19 +38,6 @@ class ReportCreate(msgspec.Struct, forbid_unknown_fields=True):
     message: Annotated[str, msgspec.Meta(min_length=1, max_length=10000)]
     location: ReportLocation
     client_request_id: Annotated[str, msgspec.Meta(min_length=1, max_length=200)]
-
-
-def report_from_row(row: tuple) -> Report:
-    return {
-        "id": row[0],
-        "family_id": row[1],
-        "type": row[2],
-        "message": row[3],
-        "location": {"latitude": row[4], "longitude": row[5]} if row[4] is not None else None,
-        "client_request_id": row[6],
-        "status": row[7],
-        "created_at": row[8],
-    }
 
 
 @get(
@@ -185,10 +174,11 @@ async def create_report(
         user = get_authenticated_user(request)
         await connection.execute("BEGIN IMMEDIATE")
         try:
-            await require_family(connection, family_id, user)
+            family = await require_family(connection, family_id, user)
             row = await (
                 await connection.execute(
-                    "SELECT * FROM reports WHERE family_id = ? AND client_request_id = ?",
+                    f"SELECT {projection(REPORT_COLUMNS)} FROM reports "
+                    "WHERE family_id = ? AND client_request_id = ?",
                     (family_id, data.client_request_id),
                 )
             ).fetchone()
@@ -229,6 +219,15 @@ async def create_report(
                         report["created_at"],
                     ),
                 )
+                await record_activity(
+                    connection,
+                    disaster_id=family["disaster_id"],
+                    event_type="report_received",
+                    summary="Family report received",
+                    ref_kind="report",
+                    ref_id=report["id"],
+                    user=user,
+                )
             await connection.execute("COMMIT")
         except BaseException:
             await connection.execute("ROLLBACK")
@@ -248,7 +247,9 @@ async def list_reports(disaster_id: FromPath[str]) -> ReportList:
     async with connect() as connection:
         await require_disaster(connection, disaster_id)
         cursor = await connection.execute(
-            "SELECT r.* FROM reports r JOIN families f ON f.id = r.family_id WHERE f.disaster_id = ? ORDER BY r.created_at DESC, r.id",
+            f"SELECT {projection(tuple(f'r.{column}' for column in REPORT_COLUMNS))} "
+            "FROM reports r JOIN families f ON f.id = r.family_id "
+            "WHERE f.disaster_id = ? ORDER BY r.created_at DESC, r.id",
             (disaster_id,),
         )
         return {"reports": [report_from_row(row) async for row in cursor]}

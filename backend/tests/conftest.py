@@ -1,5 +1,6 @@
 """Shared fixtures: three hubs around CENTER and one account per role."""
 
+import json
 import sqlite3
 from contextlib import closing
 
@@ -50,16 +51,29 @@ def hub_client(tmp_path, monkeypatch):
                 "INSERT INTO disasters VALUES ('disaster_test', 'hurricane', 'Test', 'active', "
                 "'Test area', '2026-01-01T00:00:00Z')"
             )
-            connection.executemany(
-                "INSERT INTO organizations (id, disaster_id, name, type, services_json, status, "
-                "address, latitude, longitude, contact_json, site_type, capacity_pct, updated_at) "
-                "VALUES (?, 'disaster_test', ?, 'nonprofit', '[]', 'active', '1 Main St', ?, ?, "
-                "'{}', ?, ?, '2026-01-01T00:00:00Z')",
-                [(i, n, lat, lng, site, cap) for i, n, site, lat, lng, cap in HUBS],
-            )
+            for hub_id, name, site_type, lat, lng, capacity in HUBS:
+                organization = {
+                    "disaster_id": "disaster_test",
+                    "name": name,
+                    "type": "nonprofit",
+                    "services": [],
+                    "status": "active",
+                    "address": "1 Main St",
+                    "location": {"latitude": lat, "longitude": lng},
+                }
+                connection.execute(
+                    "INSERT INTO organizations VALUES (?, 'disaster_test', ?, "
+                    "'2026-01-01T00:00:00Z')",
+                    (hub_id, json.dumps(organization)),
+                )
+                # No storage size: these hubs keep the fixed % full given here.
+                connection.execute(
+                    "INSERT INTO hubs (organization_id, site_type, capacity_pct) VALUES (?, ?, ?)",
+                    (hub_id, site_type, capacity),
+                )
             connection.execute(
-                "INSERT INTO inventory (organization_id, resource_type_id, quantity, target, "
-                "updated_at) VALUES ('hub_near', 'water_bottled', 10, 50, '2026-01-01T00:00:00Z')"
+                "INSERT INTO inventory (organization_id, resource_type_id, quantity, reserved, "
+                "updated_at) VALUES ('hub_near', 'water_bottled', 10, 0, '2026-01-01T00:00:00Z')"
             )
         insert_user("op@example.com", "operator")
         insert_user("op2@example.com", "operator")

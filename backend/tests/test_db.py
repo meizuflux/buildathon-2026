@@ -5,14 +5,15 @@ import sqlite3
 import apsw
 import pytest
 
-from haven.db import connect, initialize_database
+from haven.db import connect, initialize_schema
+from haven.startup import initialize_database
 
 
 def test_async_database_and_foreign_keys(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "async.sqlite3"))
 
     async def exercise():
-        await initialize_database()
+        await initialize_schema()
         async with connect() as connection:
             values = [
                 row[0] async for row in await connection.execute("SELECT 1 UNION ALL SELECT 2")

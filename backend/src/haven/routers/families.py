@@ -21,6 +21,7 @@ from haven.auth import (
 )
 from haven.db import connect
 from haven.openapi import BEARER, Family, FamilyPage, errors
+from haven.rows import FAMILY_COLUMNS, family_from_row, projection
 
 Count = Annotated[int, msgspec.Meta(ge=0)]
 Latitude = Annotated[float, msgspec.Meta(ge=-90, le=90)]
@@ -80,21 +81,6 @@ class FamilyPatch(msgspec.Struct, forbid_unknown_fields=True):
     resources: FamilyResourcesPatch | msgspec.UnsetType = msgspec.UNSET
 
 
-def family_from_row(row: tuple) -> Family:
-    """Serialize SELECT * FROM families in the schema's column order."""
-    return {
-        "id": row[0],
-        "disaster_id": row[2],
-        "adults": row[3],
-        "children": row[4],
-        "location": {"latitude": row[5], "longitude": row[6]},
-        "needs": json.loads(row[7]),
-        "resources": json.loads(row[8]),
-        "created_at": row[9],
-        "updated_at": row[10],
-    }
-
-
 def require_people(adults: int, children: int) -> None:
     if adults + children == 0:
         error(400, "invalid_request", "A family must contain at least one person.")
@@ -116,7 +102,8 @@ async def list_families(
         await require_disaster(connection, disaster_id)
         rows = await (
             await connection.execute(
-                "SELECT * FROM families WHERE disaster_id = ? ORDER BY created_at, id LIMIT ? OFFSET ?",
+                f"SELECT {projection(FAMILY_COLUMNS)} FROM families "
+                "WHERE disaster_id = ? ORDER BY created_at, id LIMIT ? OFFSET ?",
                 (disaster_id, limit, offset),
             )
         ).fetchall()

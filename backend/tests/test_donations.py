@@ -75,12 +75,19 @@ def test_completed_pickup_moves_surplus_to_nearest_depot(client):
             "disaster_id": "disaster_test",
             "name": "County Depot",
             "type": "government",
+            "status": "active",
+            "services": ["logistics"],
             "address": "9 Dock Rd",
             "location": {"latitude": 29.77, "longitude": -95.37},
+            "contact": {},
         },
         headers=operator,
     ).json()
-    client.patch("/api/organizations/hub_near", json={"storage_units": 110}, headers=operator)
+    client.put(
+        "/api/hubs/hub_near",
+        json={"site_type": "church", "storage_units": 110},
+        headers=operator,
+    )
     client.post(
         "/api/hubs/hub_near/walk-ins",
         json={"items": [{"resource_type_id": "water_bottled", "quantity": 90}]},
@@ -107,7 +114,13 @@ def test_completed_pickup_moves_surplus_to_nearest_depot(client):
     water = next(s for s in hub["supplies"] if s["resource_type_id"] == "water_bottled")
     assert (water["quantity"], hub["capacity_pct"], hub["open_pickup"]) == (20, 18, None)
     depot_stock = client.get(
-        "/api/inventory", params={"holder_id": depot["id"]}, headers=operator
+        "/api/inventory",
+        params={
+            "disaster_id": "disaster_test",
+            "holder_kind": "organization",
+            "holder_id": depot["id"],
+        },
+        headers=operator,
     ).json()["items"]
     assert [(r["resource_type_id"], r["quantity"]) for r in depot_stock] == [("water_bottled", 80)]
 
