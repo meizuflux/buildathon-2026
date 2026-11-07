@@ -8,7 +8,7 @@ From the repository root, install [uv](https://docs.astral.sh/uv/getting-started
 
 ```powershell
 uv sync --project backend --locked --python 3.14
-cd frontend
+cd app
 npm install
 npm run backend:seed
 npm run backend:start
@@ -19,7 +19,7 @@ If using the workspace-local uv already installed for this session, replace the 
 In another terminal:
 
 ```powershell
-cd frontend
+cd app
 npm start
 ```
 
