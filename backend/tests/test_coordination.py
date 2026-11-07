@@ -307,7 +307,9 @@ def test_report_retries_conflicts_and_operator_listing(coordination_client):
         assert connection.execute("SELECT COUNT(*) FROM reports").fetchone()[0] == 1
     activity_url = "/api/disasters/disaster/activity"
     assert client.get(activity_url).status_code == 401
-    assert client.get(activity_url, headers=headers()).status_code == 403
+    denied = client.get(activity_url, headers=headers())
+    assert denied.status_code == 403
+    assert denied.json()["error"]["code"] == "not_permitted"
     events = client.get(activity_url, headers=headers("operator")).json()["activity"]
     assert len(events) == 1
     assert events[0]["type"] == "report_received"

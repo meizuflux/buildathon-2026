@@ -3,10 +3,12 @@
 from typing import Annotated, TypedDict
 
 from litestar import Router, get
+from litestar.connection import ASGIConnection
+from litestar.handlers.base import BaseRouteHandler
 from litestar.params import FromPath, QueryParameter
 
-from haven.api_common import require_disaster
-from haven.auth import operator_guard
+from haven.api_common import error, require_disaster
+from haven.auth import get_authenticated_user
 from haven.db import connect
 from haven.openapi import BEARER, errors
 
@@ -34,11 +36,16 @@ class ActivityList(TypedDict):
     activity: list[ActivityEntry]
 
 
+def activity_operator_guard(connection: ASGIConnection, _: BaseRouteHandler) -> None:
+    if get_authenticated_user(connection).role != "operator":
+        error(403, "not_permitted", "Operator access required.")
+
+
 @get(
     "/disasters/{disaster_id:str}/activity",
     tags=["Activity"],
     security=BEARER,
-    guards=[operator_guard],
+    guards=[activity_operator_guard],
     responses=errors(400, 401, 403, 404, 500),
     description="Operator-only newest-first activity timeline.",
 )
