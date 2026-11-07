@@ -6,9 +6,9 @@ from uuid import uuid4
 
 import apsw
 import msgspec
-from litestar import Request, get, post, put
+from litestar import Request, get, patch, post, put
 from litestar.exceptions import HTTPException
-from litestar.params import FromPath, JSONBody, Parameter
+from litestar.params import FromPath, FromQuery, JSONBody, Parameter
 
 from haven.auth import authenticate, now, timestamp
 from haven.db import connect
@@ -30,6 +30,12 @@ class InventoryUpdate(msgspec.Struct, forbid_unknown_fields=True):
 
 class PickupCreate(msgspec.Struct, forbid_unknown_fields=True):
     notes: Annotated[str, msgspec.Meta(max_length=500)] = ""
+
+
+class PickupUpdate(msgspec.Struct, forbid_unknown_fields=True):
+    status: Literal["completed", "cancelled"]
+    # Hub capacity after a completed pickup (the truck cleared space); ignored when cancelled.
+    capacity_pct: Annotated[int, msgspec.Meta(ge=0, le=100)] | None = None
 
 
 _HUB_COLUMNS = "id, name, type, address, latitude, longitude, capacity_pct, updated_at"
@@ -153,4 +159,50 @@ async def dispatch_pickup(hub_id: FromPath[str], request: Request, data: JSONBod
     return pickup_info(row)
 
 
-HANDLERS = [nearby_hubs, list_hubs, update_inventory, dispatch_pickup]
+_PICKUP_COLUMNS = "p.id, p.hub_id, p.status, p.notes, p.created_at, h.name"
+
+
+@get("/api/pickups")
+async def list_pickups(
+    request: Request, status: FromQuery[Literal["dispatched", "completed", "cancelled"] | None] = None
+) -> list[dict]:
+    """Pickup requests, newest first, optionally filtered by status (operator only)."""
+    where, params = ("WHERE p.status = ?", (status,)) if status else ("", ())
+    async with connect() as connection:
+        await require_operator(request, connection)
+        rows = await (await connection.execute(
+            f"SELECT {_PICKUP_COLUMNS} FROM pickup_requests p JOIN hubs h ON h.id = p.hub_id "
+            f"{where} ORDER BY p.created_at DESC LIMIT 200", params,
+        )).fetchall()
+    return [pickup_info(row) | {"hub_name": row[5]} for row in rows]
+
+
+@patch("/api/pickups/{pickup_id:str}")
+async def update_pickup(pickup_id: FromPath[str], data: JSONBody[PickupUpdate], request: Request) -> dict:
+    """Close a dispatched pickup as completed or cancelled (operator only)."""
+    async with connect() as connection:
+        await require_operator(request, connection)
+        await connection.execute("BEGIN IMMEDIATE")
+        try:
+            row = await (await connection.execute(
+                f"SELECT {_PICKUP_COLUMNS} FROM pickup_requests p JOIN hubs h ON h.id = p.hub_id WHERE p.id = ?",
+                (pickup_id,),
+            )).fetchone()
+            if row is None:
+                raise HTTPException(status_code=404, detail="Pickup not found.", extra={"code": "not_found"})
+            if row[2] != "dispatched":
+                raise HTTPException(status_code=409, detail="This pickup is already closed.", extra={"code": "pickup_closed"})
+            await connection.execute("UPDATE pickup_requests SET status = ? WHERE id = ?", (data.status, pickup_id))
+            if data.status == "completed" and data.capacity_pct is not None:
+                await connection.execute(
+                    "UPDATE hubs SET capacity_pct = ?, updated_at = ? WHERE id = ?",
+                    (data.capacity_pct, timestamp(now()), row[1]),
+                )
+            await connection.execute("COMMIT")
+        except BaseException:
+            await connection.execute("ROLLBACK")
+            raise
+    return pickup_info((row[0], row[1], data.status, row[3], row[4])) | {"hub_name": row[5]}
+
+
+HANDLERS = [nearby_hubs, list_hubs, update_inventory, dispatch_pickup, list_pickups, update_pickup]

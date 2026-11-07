@@ -105,3 +105,34 @@ def test_dispatch_pickup_once(client):
     assert client.post("/api/hubs/missing/pickups", headers=operator).status_code == 404
     hub = client.get("/api/hubs", params={"min_capacity": 90}).json()[0]
     assert hub["open_pickup"]["id"] == response.json()["id"]
+
+
+def test_complete_pickup_resets_capacity_and_allows_redispatch(client):
+    operator = headers_for(client, "op@example.com")
+    pickup = client.post("/api/hubs/hub_near/pickups", headers=operator).json()
+    listed = client.get("/api/pickups", params={"status": "dispatched"}, headers=operator).json()
+    assert [(p["id"], p["hub_name"]) for p in listed] == [(pickup["id"], "Near Church")]
+    family = headers_for(client, "family@example.com")
+    assert client.get("/api/pickups", headers=family).status_code == 403
+    assert client.patch(f"/api/pickups/{pickup['id']}", json={"status": "completed"}, headers=family).status_code == 403
+
+    done = client.patch(f"/api/pickups/{pickup['id']}", json={"status": "completed", "capacity_pct": 20}, headers=operator)
+    assert done.status_code == 200
+    assert done.json()["status"] == "completed"
+    hub = next(h for h in client.get("/api/hubs").json() if h["id"] == "hub_near")
+    assert hub["capacity_pct"] == 20
+    assert hub["open_pickup"] is None
+    again = client.patch(f"/api/pickups/{pickup['id']}", json={"status": "cancelled"}, headers=operator)
+    assert again.status_code == 409
+    assert client.patch("/api/pickups/missing", json={"status": "cancelled"}, headers=operator).status_code == 404
+    assert client.patch(f"/api/pickups/{pickup['id']}", json={"status": "dispatched"}, headers=operator).status_code == 400
+    assert client.post("/api/hubs/hub_near/pickups", headers=operator).status_code == 201
+
+
+def test_cancel_pickup_keeps_capacity(client):
+    operator = headers_for(client, "op@example.com")
+    pickup = client.post("/api/hubs/hub_near/pickups", headers=operator).json()
+    response = client.patch(f"/api/pickups/{pickup['id']}", json={"status": "cancelled", "capacity_pct": 0}, headers=operator)
+    assert response.status_code == 200
+    hub = next(h for h in client.get("/api/hubs").json() if h["id"] == "hub_near")
+    assert hub["capacity_pct"] == 95
