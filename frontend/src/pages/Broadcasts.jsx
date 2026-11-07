@@ -56,8 +56,8 @@ export default function Broadcasts() {
         <form className="card-panel compose" onSubmit={submit}>
           <div className="panel-title">
             <h2>New broadcast</h2>
-            <select className="select-sm" value="" onChange={(e) => applyTemplate(e.target.value)} aria-label="Use a template">
-              <option value="">Use a template…</option>
+            <select className="select-sm" value="" onChange={(e) => applyTemplate(e.target.value)} aria-label="Apply a template">
+              <option value="">Apply a template…</option>
               {BROADCAST_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
           </div>
