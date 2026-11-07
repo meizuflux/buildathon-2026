@@ -1,0 +1,27 @@
+# List available recipes.
+default:
+    @just --list
+
+# Run the development server with automatic reload.
+dev:
+    uv run --locked litestar --app haven.app:app run --reload
+
+# Run the production server. Set HOST, PORT, and WEB_CONCURRENCY as needed.
+prod:
+    uv run --locked --no-dev uvicorn haven.app:app --no-proxy-headers --host "${HOST:-0.0.0.0}" --port "${PORT:-8000}"
+
+# Create missing database tables from the initial schema.
+schema:
+    uv run --locked python -c 'import asyncio; from haven.db import initialize_database; asyncio.run(initialize_database())'
+
+# Run the test suite.
+test:
+    uv run --locked pytest -q
+
+# Create an operator interactively (password is not echoed).
+create-operator:
+    uv run --locked python -m haven.create_operator
+
+# Create demo accounts and the fictional Tampa scenario; existing data is preserved.
+demo-data:
+    uv run --locked python -m haven.demo_data
