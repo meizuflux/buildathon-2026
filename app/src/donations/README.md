@@ -5,7 +5,7 @@ The citizen side of donation distribution. It uses only `react-native` primitive
 ```jsx
 import CitizenDonations from './src/donations/CitizenDonations';
 
-<CitizenDonations token={session.access_token} lat={coords.latitude} lng={coords.longitude} apiBase="http://192.168.1.20:8000" />
+<CitizenDonations token={session.access_token} apiBase="http://192.168.1.20:8000" />
 ```
 
 | Component | What it does |
