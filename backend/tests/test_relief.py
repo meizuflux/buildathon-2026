@@ -84,10 +84,14 @@ def test_relief_authorization_and_validation(relief_client):
         response = client.post("/api/shelters", headers=headers["operator"], json=shelter_data(**change))
         assert response.status_code == 400, response.text
     shelter = client.post("/api/shelters", headers=headers["operator"], json=shelter_data()).json()
-    for change in ({"capacity": {"total_people": 1}}, {"resources": None}, {"capacity": {"available_people": None}}, {"surprise": True}):
+    for change in ({"resources": None}, {"capacity": {"available_people": None}}, {"surprise": True}):
         response = client.patch(f"/api/shelters/{shelter['id']}", headers=headers["operator"], json=change)
         assert response.status_code == 400, response.text
     assert client.get("/api/shelters", params={"disaster_id": "active"}).json()["shelters"][0]["capacity"] == shelter["capacity"]
+    reduced = client.patch(f"/api/shelters/{shelter['id']}", headers=headers["operator"],
+                           json={"capacity": {"total_people": 1}})
+    assert reduced.status_code == 200, reduced.text
+    assert reduced.json()["capacity"] == {"total_people": 1, "available_people": 1}
     assert client.get("/api/shelters").status_code == 400
     assert client.get("/api/shelters", params={"disaster_id": "missing"}).status_code == 404
 
@@ -124,20 +128,27 @@ def test_family_to_operator_contract_flow(relief_client):
     })
     assert response.status_code == 201, response.text
     family_id = response.json()["id"]
-    shelter = client.post("/api/shelters", headers=headers["operator"], json=shelter_data()).json()
     plan_path = f"/api/families/{family_id}/plan"
+    initial_plan = client.get(plan_path, headers=headers["family"])
+    assert initial_plan.status_code == 200
+    assert initial_plan.json()["status"] == "no_match"
+    assert initial_plan.json()["version"] == 1
+    shelter = client.post("/api/shelters", headers=headers["operator"], json=shelter_data()).json()
     response = client.post(plan_path + "/generate", headers=headers["family"])
     assert response.status_code == 200, response.text
     plan = response.json()
     assert plan["status"] == "recommended"
     assert plan["shelter"]["id"] == shelter["id"]
+    assert plan["version"] == initial_plan.json()["version"] + 1
+    assert plan["capacity_reserved"] is True
     assert client.get(plan_path, headers=headers["family"]).json() == plan
     response = client.patch(f"/api/shelters/{shelter['id']}", headers=headers["operator"],
-                            json={"capacity": {"available_people": 0}})
+                            json={"status": "closed"})
     assert response.status_code == 200
-    response = client.post(plan_path + "/generate", headers=headers["family"])
-    assert response.json()["status"] == "no_match"
-    assert response.json()["version"] == plan["version"] + 1
+    updated_plan = client.get(plan_path, headers=headers["family"]).json()
+    assert updated_plan["status"] == "no_match"
+    assert updated_plan["capacity_reserved"] is False
+    assert updated_plan["version"] == plan["version"] + 1
     response = client.post(f"/api/families/{family_id}/reports", headers=headers["family"], json={
         "type": "need_help", "message": "Need transportation", "client_request_id": "integration-retry",
         "location": {"latitude": 27.9506, "longitude": -82.4572},
