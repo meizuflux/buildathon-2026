@@ -35,12 +35,12 @@ def test_legacy_database_is_migrated_once_without_losing_data():
             ).fetchall()
             assert ("current_assignments",) in tables
             assert ("shelter_capacity_budgets",) in tables
-            assert await (
-                await connection.execute("SELECT id FROM disasters")
-            ).fetchone() == ("disaster",)
-            assert await (
-                await connection.execute("SELECT id FROM shelters")
-            ).fetchone() == ("shelter",)
+            assert await (await connection.execute("SELECT id FROM disasters")).fetchone() == (
+                "disaster",
+            )
+            assert await (await connection.execute("SELECT id FROM shelters")).fetchone() == (
+                "shelter",
+            )
         finally:
             await connection.aclose()
 

@@ -65,11 +65,10 @@ def distance(family: dict[str, Any], shelter: dict[str, Any]) -> float:
     return 6371.0088 * 2 * math.asin(math.sqrt(min(1.0, max(0.0, a))))
 
 
-
 def allocate_disaster(
     families: list[dict[str, Any]],
     shelters: list[dict[str, Any]],
-    prior_shelter: dict[str, str],
+    prior_shelter: dict[str, str | None],
     *,
     max_refinement_families: int | None = None,
     max_refinement_nodes: int | None = None,
@@ -192,9 +191,7 @@ def allocate_disaster(
                 repaired = True
                 break
 
-            moves: list[
-                tuple[tuple[Any, ...], dict[str, Any], dict[str, Any], dict[str, Any]]
-            ] = []
+            moves: list[tuple[tuple[Any, ...], dict[str, Any], dict[str, Any], dict[str, Any]]] = []
             for incumbent in ordered_families:
                 repair_checks += 1
                 if repair_checks > 10_000:
@@ -290,10 +287,7 @@ def allocate_disaster(
                             second_size = household_size(second)
                             if remaining[target["id"]] + second_size < first_size:
                                 continue
-                            if (
-                                remaining[source["id"]] + first_size
-                                < second_size + waiting_size
-                            ):
+                            if remaining[source["id"]] + first_size < second_size + waiting_size:
                                 continue
                             key = (
                                 round(distance(waiting, source), 9),
@@ -327,17 +321,13 @@ def allocate_disaster(
     # Refine small pools against an explicit objective while keeping
     # existing reservations fixed. The greedy/repair result seeds the
     # search, so hitting the node bound can never make placement worse.
-    movable_families = [
-        family for family in ordered_families if family["id"] not in protected_ids
-    ]
+    movable_families = [family for family in ordered_families if family["id"] not in protected_ids]
     if movable_families and len(movable_families) <= max_refinement_families:
 
         def refinement_score(
             selection: dict[str, dict[str, Any] | None],
         ) -> tuple[int, int, float]:
-            placed = [
-                family for family in movable_families if selection[family["id"]] is not None
-            ]
+            placed = [family for family in movable_families if selection[family["id"]] is not None]
             people = sum(household_size(family) for family in placed)
             travel = sum(
                 round(distance(family, shelter), 9)
@@ -434,9 +424,7 @@ def allocate_disaster(
         def fallback_key(shelter: dict[str, Any]) -> tuple[Any, ...]:
             mismatches = compatibility_mismatches(family, shelter)
             projected_people = shelter["allocation_budget"] - remaining[shelter["id"]] + size
-            physical_overflow = max(
-                0, projected_people - int(shelter["capacity"]["total_people"])
-            )
+            physical_overflow = max(0, projected_people - int(shelter["capacity"]["total_people"]))
             budget_overflow = max(0, projected_people - shelter["allocation_budget"])
             return (
                 len(mismatches),

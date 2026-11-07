@@ -277,7 +277,7 @@ async def recompute_disasters(
             ids,
         )
     ).fetchall()
-    prior_shelter = {family_id: shelter_id for family_id, shelter_id in prior_rows}
+    prior_shelter = dict(cast(list[tuple[str, str | None]], prior_rows))
 
     family_rows = await (
         await connection.execute(

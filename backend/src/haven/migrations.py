@@ -39,7 +39,9 @@ _LATEST_VERSION = _MIGRATIONS[-1][0]
 async def validate_schema_version(connection: apsw.AsyncConnection) -> int:
     """Reject a database created by a newer app before schema setup runs."""
     version_rows = await (await connection.execute("PRAGMA user_version")).fetchall()
-    current_version = int(version_rows[0][0])
+    current_version = version_rows[0][0]
+    if not isinstance(current_version, int):
+        raise RuntimeError("SQLite returned an invalid schema version.")
     if current_version > _LATEST_VERSION:
         raise RuntimeError(
             f"Database schema version {current_version} is newer than supported version "
@@ -62,7 +64,9 @@ async def migrate_database(connection: apsw.AsyncConnection) -> None:
             if version <= current_version:
                 continue
             if version != current_version + 1:
-                raise RuntimeError(f"No migration is available for schema version {current_version + 1}.")
+                raise RuntimeError(
+                    f"No migration is available for schema version {current_version + 1}."
+                )
             async for _ in await connection.execute(script):
                 pass
             await connection.execute(f"PRAGMA user_version = {version}")
