@@ -1,6 +1,9 @@
 """Litestar application entry point."""
 
+import os
+
 from litestar import Litestar, Request, get
+from litestar.config.cors import CORSConfig
 from litestar.exceptions import HTTPException
 from litestar.openapi import OpenAPIConfig
 from litestar.openapi.plugins import SwaggerRenderPlugin
@@ -8,6 +11,7 @@ from litestar.response import Response
 
 from haven.auth import login, logout, me, register
 from haven.db import connect, initialize_database
+from haven.donations import HANDLERS as DONATION_HANDLERS
 
 
 @get("/health")
@@ -24,8 +28,10 @@ def http_error(request: Request, exc: HTTPException) -> Response:
 
 
 app = Litestar(
-    route_handlers=[health, register, login, logout, me],
+    route_handlers=[health, register, login, logout, me, *DONATION_HANDLERS],
     on_startup=[initialize_database],
+    # Web dashboard and Expo dev servers run on other origins; restrict with CORS_ORIGINS.
+    cors_config=CORSConfig(allow_origins=os.environ.get("CORS_ORIGINS", "*").split(",")),
     exception_handlers={HTTPException: http_error},
     openapi_config=OpenAPIConfig(
         title="Haven API",
