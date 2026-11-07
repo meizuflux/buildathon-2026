@@ -1,7 +1,6 @@
 """Family accounts and opaque, revocable bearer sessions."""
 
 import hashlib
-import hmac
 import re
 import secrets
 import sqlite3
@@ -10,6 +9,8 @@ from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import msgspec
+from argon2 import PasswordHasher, Type
+from argon2.exceptions import InvalidHashError, VerificationError
 from litestar import Request, get, post
 from litestar.exceptions import HTTPException
 from litestar.params import JSONBody
@@ -43,25 +44,24 @@ def normalize_email(email: str) -> str:
     return email
 
 
-def hash_password(password: str, salt: bytes | None = None) -> str:
-    salt = salt or secrets.token_bytes(16)
-    digest = hashlib.scrypt(password.encode(), salt=salt, n=16384, r=8, p=1, dklen=32)
-    return f"scrypt$16384$8$1${salt.hex()}${digest.hex()}"
+_PASSWORD_HASHER = PasswordHasher(type=Type.ID)
+
+
+def hash_password(password: str) -> str:
+    return _PASSWORD_HASHER.hash(password)
 
 
 def verify_password(password: str, encoded: str) -> bool:
+    if not encoded.startswith("$argon2id$"):
+        return False
     try:
-        algorithm, n, r, p, salt, expected = encoded.split("$")
-        if (algorithm, n, r, p) != ("scrypt", "16384", "8", "1"):
-            return False
-        actual = hash_password(password, bytes.fromhex(salt))
-        return hmac.compare_digest(actual, encoded)
-    except (ValueError, TypeError):
+        return _PASSWORD_HASHER.verify(encoded, password)
+    except (InvalidHashError, VerificationError):
         return False
 
 
 # Equalize the expensive password verification path for unknown accounts.
-_DUMMY_HASH = hash_password("not-a-real-password", b"\0" * 16)
+_DUMMY_HASH = hash_password("not-a-real-password")
 
 
 def require_password(password: str, *, registration: bool = False) -> None:

@@ -40,6 +40,7 @@ def test_registration_login_and_logout(client):
     with closing(connect()) as connection:
         user = connection.execute("SELECT * FROM users").fetchone()
         session = connection.execute("SELECT * FROM sessions").fetchone()
+        assert user["password_hash"].startswith("$argon2id$")
         assert user["password_hash"] != "correct-password"
         assert session["token_hash"] != body["access_token"]
     assert client.post("/api/auth/logout", headers=headers).status_code == 204
