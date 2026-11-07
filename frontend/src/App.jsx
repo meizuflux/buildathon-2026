@@ -4,8 +4,12 @@ import { DataProvider } from './data.jsx'
 import Login from './components/Login.jsx'
 import Layout from './components/Layout.jsx'
 import CommandCenter from './pages/CommandCenter.jsx'
+import Alerts from './pages/Alerts.jsx'
+import Families from './pages/Families.jsx'
+import FamilyDetail from './pages/FamilyDetail.jsx'
 import MapPage from './pages/MapPage.jsx'
 import Broadcasts from './pages/Broadcasts.jsx'
+import FamilyReports from './pages/FamilyReports.jsx'
 import Needs from './pages/Needs.jsx'
 import Dispatch from './pages/Dispatch.jsx'
 import Inventory from './pages/Inventory.jsx'
@@ -20,12 +24,13 @@ export default function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<CommandCenter />} />
+          <Route path="alerts" element={<Alerts />} />
+          <Route path="families" element={<Families />} />
+          <Route path="families/:id" element={<FamilyDetail />} />
           <Route path="map" element={<MapPage />} />
-          <Route path="citizens" element={<Unavailable name="Citizen assistance" />} />
           <Route path="comms" element={<Navigate to="/comms/broadcasts" replace />} />
           <Route path="comms/broadcasts" element={<Broadcasts />} />
-          <Route path="comms/messages" element={<Unavailable name="Messages" />} />
-          <Route path="comms/messages/:id" element={<Unavailable name="Messages" />} />
+          <Route path="comms/reports" element={<FamilyReports />} />
           <Route path="logistics" element={<Navigate to="/logistics/needs" replace />} />
           <Route path="logistics/needs" element={<Needs />} />
           <Route path="logistics/dispatch" element={<Dispatch />} />

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { REPORT_TYPES } from '../lib/constants.js'
 import { fullTime, timeAgo } from '../lib/format.js'
 
-export default function ReportsPanel({ reports, onLocate, showOnMap, setShowOnMap }) {
+export default function ReportsPanel({ reports }) {
   const [type, setType] = useState('all')
   const shown = type === 'all' ? reports : reports.filter((r) => r.type === type)
 
@@ -16,10 +16,6 @@ export default function ReportsPanel({ reports, onLocate, showOnMap, setShowOnMa
             <option key={k} value={k}>{label} ({reports.filter((r) => r.type === k).length})</option>
           ))}
         </select>
-        <label className="check">
-          <input type="checkbox" checked={showOnMap} onChange={(e) => setShowOnMap(e.target.checked)} />
-          Show on map
-        </label>
       </div>
 
       <ul className="list">
@@ -34,9 +30,8 @@ export default function ReportsPanel({ reports, onLocate, showOnMap, setShowOnMa
             <div className="card-foot">
               <span className="muted mono">{r.family_id}</span>
               <span className="foot-actions">
-                <Link className="btn btn-ghost btn-sm" to={`/comms/messages?to=family:${r.family_id}&subject=${encodeURIComponent(`Re: ${REPORT_TYPES[r.type] || 'your report'}`)}`}>Reply</Link>
                 {r.location ? (
-                  <button className="btn btn-ghost btn-sm" onClick={() => onLocate(r.location)}>Show on map</button>
+                  <Link className="btn btn-ghost btn-sm" to={`/map?report=${encodeURIComponent(r.id)}`}>Show on map</Link>
                 ) : (
                   <span className="muted">No location</span>
                 )}

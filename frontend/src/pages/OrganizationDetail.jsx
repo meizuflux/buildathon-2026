@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Circle, CircleMarker } from 'react-leaflet'
-import { ArrowLeft, Mail, MessagesSquare, PackagePlus, Pencil, Phone, Plus, Truck } from 'lucide-react'
+import { ArrowLeft, Mail, PackagePlus, Pencil, Phone, Plus, Truck } from 'lucide-react'
 import { useData } from '../data.jsx'
 import { Empty, PriorityBadge, Progress, Segmented } from '../components/ui.jsx'
 import OrgDialog from '../components/OrgDialog.jsx'
@@ -14,7 +14,6 @@ import { cap, timeAgo } from '../lib/format.js'
 export default function OrganizationDetail() {
   const { id } = useParams()
   const d = useData()
-  const navigate = useNavigate()
   const org = d.organizations.find((o) => o.id === id)
   const [dialog, setDialog] = useState(null)
 
@@ -22,7 +21,6 @@ export default function OrganizationDetail() {
 
   const needs = d.needs.filter((n) => n.requester.id === org.id && n.status === 'open')
   const shipments = d.shipments.filter((s) => s.from.id === org.id || s.to.id === org.id).sort((a, b) => b.updated_at.localeCompare(a.updated_at))
-  const conv = d.conversations.find((c) => c.participant.kind === 'organization' && c.participant.id === org.id)
   const setStatus = (status) => d.mutate((api) => api.updateOrganization(org.id, { status })).catch((e) => alert(e.message))
 
   return (
@@ -35,9 +33,6 @@ export default function OrganizationDetail() {
           <div className="tags">{org.services.map((s) => <span key={s} className="tag">{ORG_SERVICES[s]}</span>)}</div>
         </div>
         <div className="page-actions">
-          <button className="btn" onClick={() => navigate(conv ? `/comms/messages/${conv.id}` : `/comms/messages?to=organization:${org.id}`)}>
-            <MessagesSquare size={15} /> {conv ? 'Open thread' : 'Message'}{conv?.unread_count ? ` (${conv.unread_count})` : ''}
-          </button>
           <button className="btn" onClick={() => setDialog('need')}><PackagePlus size={15} /> Log need</button>
           <button className="btn btn-primary" onClick={() => setDialog('ship')}><Truck size={15} /> Dispatch from here</button>
           <button className="icon-btn" onClick={() => setDialog('edit')} aria-label="Edit organization"><Pencil size={16} /></button>
@@ -104,18 +99,6 @@ export default function OrganizationDetail() {
               {org.contact?.email && <a href={`mailto:${org.contact.email}`}><Mail size={13} /> {org.contact.email}</a>}
             </div>
             {org.notes && <><h2 className="mt">Notes</h2><p className="small">{org.notes}</p></>}
-          </section>
-          <section className="card-panel">
-            <h2>Citizen assistance (unavailable)</h2>
-            <label className="check">
-              <input type="checkbox" disabled checked={!!org.citizen_assistance} onChange={(e) => d.mutate((api) => api.updateOrganization(org.id, { citizen_assistance: e.target.checked })).catch((err) => alert(err.message))} />
-              Approved to help households directly
-            </label>
-            <p className="hint">When on, this organization sees consented citizen requests within {org.coverage_radius_km} km (approximate location only) and can accept them, which reveals the household's contact details. Every acceptance is logged.</p>
-            {(() => {
-              const mine = d.assistance.filter((a) => a.assigned_to?.id === org.id)
-              return mine.length > 0 && <p className="small"><Link to="/citizens">{mine.filter((a) => ['claimed', 'en_route'].includes(a.status)).length} active · {mine.filter((a) => a.status === 'completed').length} completed</Link></p>
-            })()}
           </section>
           <section className="card-panel"><h2>Partner portal</h2><p className="muted">Unavailable with the current server.</p></section>
           <section className="card-panel flush mini-map">

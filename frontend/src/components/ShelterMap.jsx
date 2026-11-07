@@ -49,12 +49,12 @@ function ClickToPick({ onPick }) {
 }
 
 export default function ShelterMap({
-  shelters, reports, organizations = [], shipments = [], disasterId, selectedId, onSelect, focus,
+  shelters, families = [], familyError, reports, organizations = [], shipments = [], disasterId, selectedId, onSelect, focus,
   layers, setLayers, picking, draftLocation, onPick,
 }) {
   const points = useMemo(
-    () => [...shelters, ...organizations].map((s) => [s.location.latitude, s.location.longitude]),
-    [shelters, organizations],
+    () => [...shelters, ...organizations, ...families].map((s) => [s.location.latitude, s.location.longitude]),
+    [shelters, organizations, families],
   )
   const where = (ref) => (ref.kind === 'shelter' ? shelters : organizations).find((x) => x.id === ref.id)?.location
   const routes = shipments
@@ -89,8 +89,18 @@ export default function ShelterMap({
               <strong>{REPORT_TYPES[r.type] || r.type}</strong>
               <div className="popup-meta">{r.family_id} · {timeAgo(r.created_at)}</div>
               <p className="popup-msg">{r.message}</p>
-              <Link to={`/comms/messages?to=family:${r.family_id}`}>Message family →</Link>
             </Popup>
+          </CircleMarker>
+        ))}
+
+        {layers.families && families.map((family) => (
+          <CircleMarker key={family.id} center={[family.location.latitude, family.location.longitude]} radius={5}
+            pathOptions={{ color: '#1d4ed8', weight: 1.5, fillColor: '#60a5fa', fillOpacity: 0.8 }}>
+            {!picking && <Popup>
+              <strong>Family {family.id}</strong>
+              <div className="popup-meta">{family.adults} adults · {family.children} children</div>
+              <Link to={`/families/${encodeURIComponent(family.id)}`}>View family profile →</Link>
+            </Popup>}
           </CircleMarker>
         ))}
 
@@ -141,16 +151,18 @@ export default function ShelterMap({
       ) : (
         <>
           <div className="layer-toggle" role="group" aria-label="Map layers">
-            {[['shelters', 'Shelters'], ['organizations', 'Organizations'], ['shipments', 'Shipments'], ['reports', 'Family reports']].map(([k, label]) => (
+            {[['shelters', 'Shelters'], ['families', 'Families'], ['organizations', 'Organizations'], ['shipments', 'Shipments'], ['reports', 'Family reports']].map(([k, label]) => (
               <label key={k} className="check">
                 <input type="checkbox" checked={layers[k]} onChange={(e) => setLayers((l) => ({ ...l, [k]: e.target.checked }))} />
                 {label}
               </label>
             ))}
+            {layers.families && familyError && <span className="error" role="alert">Families could not be loaded: {familyError}</span>}
           </div>
           <div className="legend" aria-label="Map legend">
             {Object.entries(LEVEL_COLOR).map(([k, c]) => <span key={k}><i style={{ background: c }} />{LEVEL_LABEL[k]}</span>)}
             <span><span className="org-pin org-nonprofit legend-pin">■</span>Organization</span>
+            <span><i style={{ background: '#60a5fa', border: '1px solid #1d4ed8' }} />Family</span>
             <span><i className="legend-report" />Family report</span>
             <span><i className="legend-route" />Shipment</span>
           </div>

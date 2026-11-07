@@ -51,6 +51,13 @@ export const liveApi = {
 
   listDisasters: () => request('GET', '/disasters').then((d) => d.disasters),
 
+  listFamilies: (disasterId, limit = 50, offset = 0) => request('GET', `/families${q({ disaster_id: disasterId, limit, offset })}`),
+  getFamily: (id) => request('GET', `/families/${e(id)}`),
+  updateFamily: (id, patch) => request('PATCH', `/families/${e(id)}`, patch),
+  listPlans: (disasterId, limit = 1000, offset = 0) => request('GET', `/disasters/${e(disasterId)}/plans${q({ limit, offset })}`),
+  getPlan: (id) => request('GET', `/families/${e(id)}/plan`),
+  generatePlan: (id) => request('POST', `/families/${e(id)}/plan/generate`),
+
   listShelters: (disasterId) => request('GET', `/shelters${q({ disaster_id: disasterId })}`).then((d) => d.shelters),
   createShelter: (shelter) => request('POST', '/shelters', shelter),
   updateShelter: (id, patch) => request('PATCH', `/shelters/${e(id)}`, patch),
@@ -86,10 +93,7 @@ export const liveApi = {
   markConversationRead: (id) => request('POST', `/conversations/${e(id)}/read`),
 
   listActivity: (disasterId) => request('GET', `/disasters/${e(disasterId)}/activity?limit=50`).then((d) => d.activity),
-
-  // Citizen assistance (Part 2 §11)
-  listAssistanceRequests: (disasterId) => request('GET', `/assistance-requests${q({ disaster_id: disasterId })}`).then((d) => d.requests),
-  updateAssistanceRequest: (id, patch) => request('PATCH', `/assistance-requests/${e(id)}`, patch),
+  listAlerts: (disasterId) => request('GET', `/disasters/${e(disasterId)}/alerts?limit=1000`),
 
   // Partner portal accounts (Part 2 §10)
   listPartnerAccounts: (disasterId) => request('GET', `/partner-accounts${q({ disaster_id: disasterId })}`).then((d) => d.accounts),

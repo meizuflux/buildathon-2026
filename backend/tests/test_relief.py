@@ -281,6 +281,24 @@ def test_shelter_targeted_updates_follow_current_assignment(relief_client):
     payload = {"title": "Shelter notice", "message": "Water is available.", "severity": "info"}
     global_update = client.post(path, headers=headers["operator"], json=payload).json()
     target = {"type": "shelter", "shelter_id": shelter["id"]}
+    preview = path + "/preview"
+    assert client.post(
+        preview, headers=headers["operator"], json={"target": {"type": "all"}}
+    ).json() == {"recipient_count": 1}
+    assert client.post(preview, headers=headers["operator"], json={"target": target}).json() == {
+        "recipient_count": 1
+    }
+    assert (
+        client.post(preview, headers=headers["family"], json={"target": target}).status_code == 403
+    )
+    assert (
+        client.post(
+            preview,
+            headers=headers["operator"],
+            json={"target": {"type": "shelter", "shelter_id": "missing"}},
+        ).status_code
+        == 404
+    )
     response = client.post(path, headers=headers["operator"], json=payload | {"target": target})
     assert response.status_code == 201, response.text
     targeted = response.json()
@@ -299,6 +317,9 @@ def test_shelter_targeted_updates_follow_current_assignment(relief_client):
             (family.json()["id"],),
         )
     assert client.get(path, headers=headers["family"]).json() == {"updates": [global_update]}
+    assert client.post(preview, headers=headers["operator"], json={"target": target}).json() == {
+        "recipient_count": 0
+    }
     assert (
         client.post(
             path,

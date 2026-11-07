@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { MapPin, Users } from 'lucide-react'
 import { useData } from '../data.jsx'
+import { api } from '../api/index.js'
 import { PageHeader, Segmented, Empty } from '../components/ui.jsx'
 import TargetPicker from '../components/TargetPicker.jsx'
 import { AUDIENCE_NEEDS, BROADCAST_TEMPLATES, SEVERITIES } from '../lib/constants.js'
 import { cap, fullTime, timeAgo } from '../lib/format.js'
 
-const blank = { title: '', message: '', severity: 'info', target: { type: 'all' }, needs: [], when: 'now', scheduled_for: '', expires_in: '' }
+const blank = { title: '', message: '', severity: 'info', target: { type: 'all' } }
 
 export default function Broadcasts() {
   const d = useData()
@@ -15,9 +16,22 @@ export default function Broadcasts() {
   const [error, setError] = useState(null)
   const [sent, setSent] = useState(null)
   const [filter, setFilter] = useState('all')
+  const [templateId, setTemplateId] = useState('')
+  const [reach, setReach] = useState(null)
+  const [reachError, setReachError] = useState(false)
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }))
 
   const target = f.target
+
+  useEffect(() => {
+    let current = true
+    setReach(null)
+    setReachError(false)
+    if (d.disasterId) api.previewUpdate(d.disasterId, { target })
+      .then((result) => { if (current) setReach(result.recipient_count) })
+      .catch(() => { if (current) setReachError(true) })
+    return () => { current = false }
+  }, [d.disasterId, target])
 
   const applyTemplate = (id) => {
     const t = BROADCAST_TEMPLATES.find((x) => x.id === id)
@@ -27,7 +41,6 @@ export default function Broadcasts() {
   async function submit(e) {
     e.preventDefault()
     setError(null)
-    if (f.when === 'later' && !f.scheduled_for) return setError('Pick a time to send.')
     const where = target.type === 'shelter' ? 'families assigned to the selected shelter' : 'every family in this disaster'
     if (f.severity === 'critical' && !confirm(`Publish a CRITICAL alert to ${where}?`)) return
     setBusy(true)
@@ -37,6 +50,7 @@ export default function Broadcasts() {
       }))
       setSent(created)
       setF(blank)
+      setTemplateId('')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -51,16 +65,24 @@ export default function Broadcasts() {
 
   return (
     <div className="page">
-      <PageHeader title="Broadcasts" subtitle="Official updates pushed to families' Haven app — everyone, or a targeted area and audience." />
+      <PageHeader title="Broadcasts" subtitle="Publish official updates for all families or those currently assigned to a shelter." />
 
       <div className="broadcast-grid">
         <form className="card-panel compose" onSubmit={submit}>
-          <div className="panel-title">
+          <div className="broadcast-compose-header">
             <h2>New broadcast</h2>
-            <select className="select-sm" value="" onChange={(e) => applyTemplate(e.target.value)} aria-label="Use a template">
-              <option value="">Use a template…</option>
-              {BROADCAST_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
+            <div className="broadcast-template">
+              <div className="broadcast-template-controls">
+                <label className="field">
+                  <span className="sr-only">Broadcast template</span>
+                  <select value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+                    <option value="">Choose a template…</option>
+                    {BROADCAST_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                </label>
+                <button type="button" className="btn" disabled={!templateId} onClick={() => applyTemplate(templateId)}>Apply</button>
+              </div>
+            </div>
           </div>
 
           <div className="field">
@@ -81,31 +103,6 @@ export default function Broadcasts() {
             <TargetPicker target={f.target} setTarget={(t) => set('target', t)} shelters={d.shelters} />
           </fieldset>
 
-          <fieldset disabled>
-            <legend><Users size={12} /> Who (unavailable)</legend>
-            <p className="hint">Leave all unchecked to reach every family in the area. Otherwise, families matching <em>any</em> checked need.</p>
-            <div className="filters">
-              {Object.entries(AUDIENCE_NEEDS).map(([k, label]) => (
-                <button type="button" key={k} className={`filter ${f.needs.includes(k) ? 'on' : ''}`} aria-pressed={f.needs.includes(k)}
-                  onClick={() => set('needs', f.needs.includes(k) ? f.needs.filter((x) => x !== k) : [...f.needs, k])}>{label}</button>
-              ))}
-            </div>
-          </fieldset>
-
-          <fieldset disabled>
-            <legend>When (unavailable)</legend>
-            <div className="row">
-              <div className="field">
-                <Segmented size="sm" value={f.when} onChange={(v) => set('when', v)} label="Send time" options={[['now', 'Send now'], ['later', 'Schedule']]} />
-                {f.when === 'later' && <input type="datetime-local" value={f.scheduled_for} onChange={(e) => set('scheduled_for', e.target.value)} style={{ marginTop: 8 }} />}
-              </div>
-              <label className="field">
-                <span>Expires after (hours, optional)</span>
-                <input type="number" min="1" value={f.expires_in} onChange={(e) => set('expires_in', e.target.value)} placeholder="Never" />
-              </label>
-            </div>
-          </fieldset>
-
           <div className={`preview sev-border-${f.severity}`}>
             <div className="preview-label muted small">Family app preview</div>
             <div><span className={`badge sev-${f.severity}`}>{cap(f.severity)}</span> <strong>{f.title || 'Title'}</strong></div>
@@ -115,9 +112,9 @@ export default function Broadcasts() {
           {error && <p className="error" role="alert">{error}</p>}
           {sent && <p className="success" role="status">Published "{sent.title}".</p>}
           <div className="form-actions">
-            <span className="reach-est"><Users size={15} /> <strong>—</strong> recipient count unavailable</span>
+            <span className="reach-est"><Users size={15} /> {reach === null ? (reachError ? 'Recipient count unavailable' : 'Counting families…') : <><strong>{reach.toLocaleString()}</strong> {reach === 1 ? 'family' : 'families'} currently match</>}</span>
             <button className={`btn ${f.severity === 'critical' ? 'btn-danger' : 'btn-primary'}`} disabled={busy || !f.title.trim() || !f.message.trim()}>
-              {busy ? 'Sending…' : f.when === 'later' ? 'Schedule broadcast' : `Send ${f.severity} broadcast`}
+              {busy ? 'Sending…' : `Send ${f.severity} broadcast`}
             </button>
           </div>
         </form>
@@ -128,9 +125,6 @@ export default function Broadcasts() {
             <select className="select-sm" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter history">
               <option value="all">All</option>
               <option value="published">Live</option>
-              <option value="scheduled" disabled>Scheduled (unavailable)</option>
-              <option value="retracted" disabled>Retracted (unavailable)</option>
-              <option value="expired" disabled>Expired (unavailable)</option>
               <option value="critical">Critical only</option>
             </select>
           </div>
@@ -152,7 +146,7 @@ export default function Broadcasts() {
                   </div>
                   <p className="report-msg">{u.message}</p>
                   <div className="tags">
-                    <span className="tag"><MapPin size={11} /> {u.target?.type === 'shelter' ? (d.shelters.find((s) => s.id === u.target.shelter_id)?.name || u.target.shelter_id) : 'Entire area'}</span>
+                    <span className="tag"><MapPin size={11} /> {u.target?.type === 'shelter' ? `Families assigned to ${d.shelters.find((s) => s.id === u.target.shelter_id)?.name || u.target.shelter_id}` : 'All families in this disaster'}</span>
                     {(u.audience?.needs || []).map((n) => <span key={n} className="tag">{AUDIENCE_NEEDS[n]}</span>)}
                   </div>
                   <div className="reach">
@@ -164,7 +158,6 @@ export default function Broadcasts() {
                       {u.status === 'scheduled' ? `Sends ${timeAgo(u.scheduled_for)}` : `Sent ${timeAgo(u.published_at)}`}
                       {u.expires_at && ` · expires ${timeAgo(u.expires_at)}`}
                     </span>
-                    <button className="btn btn-ghost btn-sm danger" disabled title="Unavailable with the current server">Retract</button>
                   </div>
                 </li>
               )

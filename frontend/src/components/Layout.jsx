@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Building2, HandHeart, KeyRound, LayoutDashboard, Map, Megaphone, MessagesSquare, PackageSearch, RefreshCw, Truck, Warehouse } from 'lucide-react'
+import { Bell, Building2, FileText, KeyRound, LayoutDashboard, Map, Megaphone, PackageSearch, RefreshCw, Truck, Users, Warehouse } from 'lucide-react'
 import { useAuth } from '../auth.jsx'
 import { useData } from '../data.jsx'
 import { DISASTER_TYPES } from '../lib/constants.js'
@@ -10,22 +10,21 @@ export default function Layout() {
   const { user, logout } = useAuth()
   const d = useData()
 
-  const unread = d.conversations.reduce((n, c) => n + (c.unread_count || 0), 0)
   const criticalNeeds = d.needs.filter((n) => n.status === 'open' && n.priority === 'critical' && needProgress(n, d.shipments).uncovered > 0).length
   const late = d.shipments.filter(isLate).length
   const pendingApproval = d.shipments.filter((s) => s.status === 'requested').length
-  const citizenCritical = d.assistance.filter((a) => a.status === 'open' && ['critical', 'high'].includes(a.priority)).length
   const helpOpen = d.reports.filter((r) => r.type === 'need_help' && r.status === 'received').length
 
   const nav = [
     { section: null, items: [
       { to: '/', label: 'Command Center', icon: LayoutDashboard, end: true },
-      { to: '/map', label: 'Operations Map', icon: Map, badge: helpOpen, tone: 'alert' },
-      { to: '/citizens', label: 'Citizen requests', icon: HandHeart, badge: citizenCritical, tone: 'alert' },
+      { to: '/alerts', label: 'Alerts', icon: Bell, badge: d.alerts?.total, tone: 'alert' },
+      { to: '/map', label: 'Operations Map', icon: Map },
+      { to: '/families', label: 'Families', icon: Users },
     ] },
     { section: 'Communications', items: [
       { to: '/comms/broadcasts', label: 'Broadcasts', icon: Megaphone },
-      { to: '/comms/messages', label: 'Messages', icon: MessagesSquare, badge: unread, tone: 'info' },
+      { to: '/comms/reports', label: 'Family reports', icon: FileText, badge: helpOpen, tone: 'alert' },
     ] },
     { section: 'Logistics', items: [
       { to: '/logistics/needs', label: 'Needs', icon: PackageSearch, badge: criticalNeeds, tone: 'alert' },
