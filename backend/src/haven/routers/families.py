@@ -1,7 +1,7 @@
 """Family profile creation, ownership checks, and nested merge updates."""
 
 import json
-from typing import Annotated
+from typing import Annotated, Any, cast
 from uuid import uuid4
 
 import apsw
@@ -9,9 +9,16 @@ import msgspec
 from litestar import Request, Router, get, patch, post
 from litestar.params import FromPath, FromQuery, JSONBody, QueryParameter
 
-from haven.api_common import error, require_disaster, require_family
-from haven.auth import authenticated_guard, family_account_guard, get_authenticated_user, now, operator_guard, timestamp
 from haven.allocation import recompute_disasters
+from haven.api_common import error, require_disaster, require_family
+from haven.auth import (
+    authenticated_guard,
+    family_account_guard,
+    get_authenticated_user,
+    now,
+    operator_guard,
+    timestamp,
+)
 from haven.db import connect
 from haven.openapi import BEARER, Family, FamilyPage, errors
 
@@ -73,13 +80,18 @@ class FamilyPatch(msgspec.Struct, forbid_unknown_fields=True):
     resources: FamilyResourcesPatch | msgspec.UnsetType = msgspec.UNSET
 
 
-def family_from_row(row: tuple) -> dict:
+def family_from_row(row: tuple) -> Family:
     """Serialize SELECT * FROM families in the schema's column order."""
     return {
-        "id": row[0], "disaster_id": row[2], "adults": row[3], "children": row[4],
+        "id": row[0],
+        "disaster_id": row[2],
+        "adults": row[3],
+        "children": row[4],
         "location": {"latitude": row[5], "longitude": row[6]},
-        "needs": json.loads(row[7]), "resources": json.loads(row[8]),
-        "created_at": row[9], "updated_at": row[10],
+        "needs": json.loads(row[7]),
+        "resources": json.loads(row[8]),
+        "created_at": row[9],
+        "updated_at": row[10],
     }
 
 
@@ -88,7 +100,13 @@ def require_people(adults: int, children: int) -> None:
         error(400, "invalid_request", "A family must contain at least one person.")
 
 
-@get("", security=BEARER, guards=[operator_guard], responses=errors(400, 401, 403, 404, 500), description="Operator only. List a disaster’s family profiles, ordered by creation time and ID.")
+@get(
+    "",
+    security=BEARER,
+    guards=[operator_guard],
+    responses=errors(400, 401, 403, 404, 500),
+    description="Operator only. List a disaster’s family profiles, ordered by creation time and ID.",
+)
 async def list_families(
     disaster_id: FromQuery[str],
     limit: Annotated[int, QueryParameter(ge=1, le=1000)] = 100,
@@ -96,15 +114,34 @@ async def list_families(
 ) -> FamilyPage:
     async with connect() as connection:
         await require_disaster(connection, disaster_id)
-        rows = await (await connection.execute(
-            "SELECT * FROM families WHERE disaster_id = ? ORDER BY created_at, id LIMIT ? OFFSET ?",
-            (disaster_id, limit, offset),
-        )).fetchall()
-        total = (await (await connection.execute("SELECT count(*) FROM families WHERE disaster_id = ?", (disaster_id,))).fetchone())[0]
-    return {"families": [family_from_row(row) for row in rows], "total": total, "limit": limit, "offset": offset}
+        rows = await (
+            await connection.execute(
+                "SELECT * FROM families WHERE disaster_id = ? ORDER BY created_at, id LIMIT ? OFFSET ?",
+                (disaster_id, limit, offset),
+            )
+        ).fetchall()
+        total = (
+            await (
+                await connection.execute(
+                    "SELECT count(*) FROM families WHERE disaster_id = ?", (disaster_id,)
+                )
+            ).fetchone()
+        )[0]
+    return {
+        "families": [family_from_row(row) for row in rows],
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
-@post("", security=BEARER, guards=[family_account_guard], responses=errors(400, 401, 403, 404, 409, 500), description="Family account only. Creates a profile and automatically allocates a plan.")
+@post(
+    "",
+    security=BEARER,
+    guards=[family_account_guard],
+    responses=errors(400, 401, 403, 404, 409, 500),
+    description="Family account only. Creates a profile and automatically allocates a plan.",
+)
 async def create_family(data: JSONBody[FamilyCreate], request: Request) -> Family:
     async with connect() as connection:
         user = get_authenticated_user(request)
@@ -118,10 +155,19 @@ async def create_family(data: JSONBody[FamilyCreate], request: Request) -> Famil
                 await connection.execute(
                     "INSERT INTO families (id, owner_user_id, disaster_id, adults, children, latitude, longitude, "
                     "needs_json, resources_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    (family_id, user.id, data.disaster_id, data.adults, data.children,
-                     data.location.latitude, data.location.longitude,
-                     msgspec.json.encode(data.needs).decode(), msgspec.json.encode(data.resources).decode(),
-                     created_at, created_at),
+                    (
+                        family_id,
+                        user.id,
+                        data.disaster_id,
+                        data.adults,
+                        data.children,
+                        data.location.latitude,
+                        data.location.longitude,
+                        msgspec.json.encode(data.needs).decode(),
+                        msgspec.json.encode(data.resources).decode(),
+                        created_at,
+                        created_at,
+                    ),
                 )
             except apsw.ConstraintError:
                 error(409, "family_exists", "This account already has a family profile.")
@@ -134,45 +180,73 @@ async def create_family(data: JSONBody[FamilyCreate], request: Request) -> Famil
         return family
 
 
-@get("/{family_id:str}", security=BEARER, guards=[authenticated_guard], responses=errors(400, 401, 403, 404, 500), description="Family owner or operator only.")
+@get(
+    "/{family_id:str}",
+    security=BEARER,
+    guards=[authenticated_guard],
+    responses=errors(400, 401, 403, 404, 500),
+    description="Family owner or operator only.",
+)
 async def get_family(family_id: FromPath[str], request: Request) -> Family:
     async with connect() as connection:
         user = get_authenticated_user(request)
         return await require_family(connection, family_id, user)
 
 
-@patch("/{family_id:str}", security=BEARER, guards=[authenticated_guard], responses=errors(400, 401, 403, 404, 500), description="Family owner or operator only. Nested fields are merged; relevant changes trigger reallocation.")
-async def patch_family(family_id: FromPath[str], data: JSONBody[FamilyPatch], request: Request) -> Family:
+@patch(
+    "/{family_id:str}",
+    security=BEARER,
+    guards=[authenticated_guard],
+    responses=errors(400, 401, 403, 404, 500),
+    description="Family owner or operator only. Nested fields are merged; relevant changes trigger reallocation.",
+)
+async def patch_family(
+    family_id: FromPath[str], data: JSONBody[FamilyPatch], request: Request
+) -> Family:
     async with connect() as connection:
         user = get_authenticated_user(request)
         await connection.execute("BEGIN IMMEDIATE")
         try:
             family = await require_family(connection, family_id, user)
+            family_data = cast(dict[str, Any], family)
             original = {
-                "disaster_id": family["disaster_id"], "adults": family["adults"], "children": family["children"],
-                "location": family["location"].copy(), "needs": family["needs"].copy(),
+                "disaster_id": family["disaster_id"],
+                "adults": family["adults"],
+                "children": family["children"],
+                "location": family["location"].copy(),
+                "needs": family["needs"].copy(),
                 "resources": family["resources"].copy(),
             }
             changes = msgspec.to_builtins(data)
             for key, value in changes.items():
                 if isinstance(value, dict):
-                    family[key].update(value)
+                    family_data[key].update(value)
                 else:
-                    family[key] = value
+                    family_data[key] = value
             require_people(family["adults"], family["children"])
             await require_disaster(connection, family["disaster_id"])
-            current = {key: family[key] for key in original}
+            current = {key: family_data[key] for key in original}
             if current != original:
                 old_disaster_id = original["disaster_id"]
                 family["updated_at"] = timestamp(now())
                 await connection.execute(
                     "UPDATE families SET disaster_id = ?, adults = ?, children = ?, latitude = ?, longitude = ?, "
                     "needs_json = ?, resources_json = ?, updated_at = ? WHERE id = ?",
-                    (family["disaster_id"], family["adults"], family["children"], family["location"]["latitude"],
-                     family["location"]["longitude"], json.dumps(family["needs"]), json.dumps(family["resources"]),
-                     family["updated_at"], family_id),
+                    (
+                        family["disaster_id"],
+                        family["adults"],
+                        family["children"],
+                        family["location"]["latitude"],
+                        family["location"]["longitude"],
+                        json.dumps(family["needs"]),
+                        json.dumps(family["resources"]),
+                        family["updated_at"],
+                        family_id,
+                    ),
                 )
-                await recompute_disasters(connection, sorted({old_disaster_id, family["disaster_id"]}))
+                await recompute_disasters(
+                    connection, sorted({old_disaster_id, family["disaster_id"]})
+                )
             await connection.execute("COMMIT")
             return family
         except BaseException:
@@ -180,4 +254,8 @@ async def patch_family(family_id: FromPath[str], data: JSONBody[FamilyPatch], re
             raise
 
 
-router = Router(path="/families", route_handlers=[list_families, create_family, get_family, patch_family], tags=["Families"])
+router = Router(
+    path="/families",
+    route_handlers=[list_families, create_family, get_family, patch_family],
+    tags=["Families"],
+)

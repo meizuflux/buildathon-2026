@@ -13,8 +13,20 @@ def test_startup_creates_schema_and_health_endpoint(tmp_path, monkeypatch):
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
     with sqlite3.connect(database) as connection:
-        tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
-    assert {"users", "sessions", "disasters", "families", "shelters", "plans", "disaster_updates", "reports"} <= tables
+        tables = {
+            row[0]
+            for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
+        }
+    assert {
+        "users",
+        "sessions",
+        "disasters",
+        "families",
+        "shelters",
+        "plans",
+        "disaster_updates",
+        "reports",
+    } <= tables
 
 
 def test_openapi_docs_and_schema(tmp_path, monkeypatch):
@@ -30,10 +42,15 @@ def test_openapi_docs_and_schema(tmp_path, monkeypatch):
         assert {"/api/auth/login", "/api/me"} <= schema.json()["paths"].keys()
         paths = schema.json()["paths"]
         assert {
-            "/api/disasters", "/api/families", "/api/families/{family_id}",
-            "/api/shelters", "/api/shelters/{shelter_id}",
-            "/api/families/{family_id}/plan/generate", "/api/families/{family_id}/plan",
-            "/api/disasters/{disaster_id}/updates", "/api/families/{family_id}/reports",
+            "/api/disasters",
+            "/api/families",
+            "/api/families/{family_id}",
+            "/api/shelters",
+            "/api/shelters/{shelter_id}",
+            "/api/families/{family_id}/plan/generate",
+            "/api/families/{family_id}/plan",
+            "/api/disasters/{disaster_id}/updates",
+            "/api/families/{family_id}/reports",
             "/api/disasters/{disaster_id}/reports",
         } <= paths.keys()
 
@@ -58,30 +75,41 @@ def test_errors_share_contract_shape(tmp_path, monkeypatch):
         monkeypatch.setattr("haven.app.connect", unavailable)
         response = client.get("/health")
         assert response.status_code == 500
-        assert response.json() == {"error": {"code": "server_error", "message": "Internal server error."}}
+        assert response.json() == {
+            "error": {"code": "server_error", "message": "Internal server error."}
+        }
 
 
 def test_openapi_documents_types_security_and_polling(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "contract.sqlite3"))
     with TestClient(app=app) as client:
-        schema = client.get('/schema/openapi.json').json()
-    paths = schema['paths']
-    assert schema['components']['securitySchemes']['BearerAuth']['scheme'] == 'bearer'
-    assert not paths['/api/auth/login']['post'].get('security')
-    assert not paths['/api/shelters']['get'].get('security')
-    assert paths['/api/families']['get']['security'] == [{'BearerAuth': []}]
-    assert paths['/api/shelters']['post']['security'] == [{'BearerAuth': []}]
+        schema = client.get("/schema/openapi.json").json()
+    paths = schema["paths"]
+    assert schema["components"]["securitySchemes"]["BearerAuth"]["scheme"] == "bearer"
+    assert not paths["/api/auth/login"]["post"].get("security")
+    assert not paths["/api/shelters"]["get"].get("security")
+    assert paths["/api/families"]["get"]["security"] == [{"BearerAuth": []}]
+    assert paths["/api/shelters"]["post"]["security"] == [{"BearerAuth": []}]
     for path, method, status, model in (
-        ('/api/auth/login', 'post', '200', 'Session'),
-        ('/api/families', 'get', '200', 'FamilyPage'),
-        ('/api/shelters', 'get', '200', 'ShelterList'),
-        ('/api/families/{family_id}/plan', 'get', '200', 'Plan'),
-        ('/api/disasters/{disaster_id}/reports', 'get', '200', 'ReportList'),
+        ("/api/auth/login", "post", "200", "Session"),
+        ("/api/families", "get", "200", "FamilyPage"),
+        ("/api/shelters", "get", "200", "ShelterList"),
+        ("/api/families/{family_id}/plan", "get", "200", "Plan"),
+        ("/api/disasters/{disaster_id}/reports", "get", "200", "ReportList"),
     ):
-        response = paths[path][method]['responses'][status]
-        assert response['content']['application/json']['schema']['$ref'] == '#/components/schemas/' + model
-    poll = paths['/api/families/{family_id}/plan']['get']['responses']
-    assert '204' in poll and 'content' not in poll['204']
-    assert poll['403']['content']['application/json']['schema']['$ref'] == '#/components/schemas/ErrorResponse'
-    assert '429' in paths['/api/auth/login']['post']['responses']
-    assert {'version', 'shelter', 'capacity_reserved'} <= set(schema['components']['schemas']['Plan']['required'])
+        response = paths[path][method]["responses"][status]
+        assert (
+            response["content"]["application/json"]["schema"]["$ref"]
+            == "#/components/schemas/" + model
+        )
+    poll = paths["/api/families/{family_id}/plan"]["get"]["responses"]
+    assert "204" in poll and "content" not in poll["204"]
+    assert (
+        poll["403"]["content"]["application/json"]["schema"]["$ref"]
+        == "#/components/schemas/ErrorResponse"
+    )
+    assert "429" in paths["/api/auth/login"]["post"]["responses"]
+    assert {"version", "shelter", "capacity_reserved", "alerts"} <= set(
+        schema["components"]["schemas"]["Plan"]["required"]
+    )
+    assert "PlanAlert" in schema["components"]["schemas"]

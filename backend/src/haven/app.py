@@ -28,23 +28,59 @@ async def health() -> dict[str, str]:
 
 def http_error(request: Request, exc: HTTPException) -> Response:
     code = exc.extra.get("code") if isinstance(exc.extra, dict) else None
-    defaults = {401: "unauthorized", 403: "forbidden", 404: "not_found", 405: "method_not_allowed", 409: "conflict"}
-    return Response({"error": {"code": code or defaults.get(exc.status_code, "invalid_request"), "message": exc.detail}}, status_code=exc.status_code)
+    defaults = {
+        401: "unauthorized",
+        403: "forbidden",
+        404: "not_found",
+        405: "method_not_allowed",
+        409: "conflict",
+    }
+    return Response(
+        {
+            "error": {
+                "code": code or defaults.get(exc.status_code, "invalid_request"),
+                "message": exc.detail,
+            }
+        },
+        status_code=exc.status_code,
+    )
 
 
 def server_error(request: Request, exc: Exception) -> Response:
-    return Response({"error": {"code": "server_error", "message": "Internal server error."}}, status_code=500)
+    return Response(
+        {"error": {"code": "server_error", "message": "Internal server error."}}, status_code=500
+    )
 
 
 app = Litestar(
-    route_handlers=[health, Router(path="/api", route_handlers=[accounts_router, families_router, relief_router, coordination_router, alerts_router])],
+    route_handlers=[
+        health,
+        Router(
+            path="/api",
+            route_handlers=[
+                accounts_router,
+                families_router,
+                relief_router,
+                coordination_router,
+                alerts_router,
+            ],
+        ),
+    ],
     on_startup=[initialize_database],
     middleware=[DefineMiddleware(DatabaseTokenAuthMiddleware)],
     exception_handlers={HTTPException: http_error, Exception: server_error},
     openapi_config=OpenAPIConfig(
         title="Haven API",
         version="0.1.0",
-        components=Components(security_schemes={"BearerAuth": SecurityScheme(type="http", scheme="bearer", description="Opaque session token returned by login.")}),
+        components=Components(
+            security_schemes={
+                "BearerAuth": SecurityScheme(
+                    type="http",
+                    scheme="bearer",
+                    description="Opaque session token returned by login.",
+                )
+            }
+        ),
         render_plugins=[SwaggerRenderPlugin()],
     ),
 )

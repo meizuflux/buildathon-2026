@@ -22,12 +22,13 @@ import hashlib
 import json
 import math
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 import apsw
 
 from haven.auth import now, timestamp
+from haven.openapi import Plan
 
 _MAX_REFINEMENT_FAMILIES = 64
 _MAX_REFINEMENT_NODES = 10_000
@@ -85,13 +86,18 @@ def compatibility_mismatches(family: dict[str, Any], shelter: dict[str, Any]) ->
         mismatches.append("child_friendly")
     if needs.get("accessibility_notes") and not capabilities.get("wheelchair_accessible"):
         mismatches.append("wheelchair_accessible")
-    if (needs.get("immediate_medication") or needs.get("medical_notes")) and not capabilities.get("medical_staff"):
+    if (needs.get("immediate_medication") or needs.get("medical_notes")) and not capabilities.get(
+        "medical_staff"
+    ):
         mismatches.append("medical_staff")
     if needs.get("other_special_care") and not capabilities.get("special_care_notes"):
         mismatches.append("special_care")
     # Availability labels are only a compatibility signal for an explicit
     # immediate-medication need. They are never counted or reserved as stock.
-    if needs.get("immediate_medication") and shelter["resources"].get("medication") not in {"available", "limited"}:
+    if needs.get("immediate_medication") and shelter["resources"].get("medication") not in {
+        "available",
+        "limited",
+    }:
         mismatches.append("medication")
     return mismatches
 
@@ -118,14 +124,22 @@ async def set_shelter_allocation_budget(
     adding the active reservations. The budget may exceed physical capacity
     when existing reservations or forced placements already do so.
     """
-    row = await (await connection.execute(
-        "SELECT 1 FROM shelters WHERE id = ?", (shelter_id,),
-    )).fetchone()
+    row = await (
+        await connection.execute(
+            "SELECT 1 FROM shelters WHERE id = ?",
+            (shelter_id,),
+        )
+    ).fetchone()
     if row is None:
         return 0
-    reserved_row = await (await connection.execute(
-        "SELECT COALESCE(SUM(people), 0) FROM current_assignments WHERE shelter_id = ?", (shelter_id,),
-    )).fetchone()
+    reserved_row = await (
+        await connection.execute(
+            "SELECT COALESCE(SUM(people), 0) FROM current_assignments WHERE shelter_id = ?",
+            (shelter_id,),
+        )
+    ).fetchone()
+    if reserved_row is None:
+        raise RuntimeError("The shelter reservation aggregate returned no row.")
     # Existing reservations may already exceed physical capacity. Keep their
     # full accounting budget so a capacity edit cannot silently discard them.
     budget = max(0, int(requested_available)) + int(reserved_row[0])
@@ -185,11 +199,17 @@ def _plan(
         else:
             reason = "Has space for your whole household and matches your listed shelter needs."
         status = "recommended"
-        instructions.insert(0, f"Travel to {selected['name']} if local officials say it is safe to do so.")
+        instructions.insert(
+            0, f"Travel to {selected['name']} if local officials say it is safe to do so."
+        )
         if mismatch:
-            instructions.append("Confirm support for your listed needs at this shelter before traveling.")
+            instructions.append(
+                "Confirm support for your listed needs at this shelter before traveling."
+            )
         if overflow:
-            instructions.append("This shelter may be over its reported capacity; coordinate overflow support.")
+            instructions.append(
+                "This shelter may be over its reported capacity; coordinate overflow support."
+            )
         if family["needs"].get("immediate_medication") or family["needs"].get("medical_notes"):
             instructions.append("Bring your medication and any required medical supplies.")
         if family["needs"].get("pets"):
@@ -209,7 +229,9 @@ def _plan(
             "capacity": {"total_people": selected["capacity"]["total_people"]},
             "capabilities": selected["capabilities"],
             "resources": selected["resources"],
-        } if selected else None,
+        }
+        if selected
+        else None,
         "reason": reason,
         "instructions": instructions,
         "alerts": alerts,
@@ -225,11 +247,13 @@ def _assignment_alerts(
     remaining_by_shelter: dict[str, int],
 ) -> list[dict[str, Any]]:
     if selected is None:
-        return [{
-            "code": "no_open_shelter",
-            "severity": "critical",
-            "message": "No open or full shelter is listed. Arrange a safe destination immediately.",
-        }]
+        return [
+            {
+                "code": "no_open_shelter",
+                "severity": "critical",
+                "message": "No open or full shelter is listed. Arrange a safe destination immediately.",
+            }
+        ]
 
     used = selected["allocation_budget"] - remaining_by_shelter[selected["id"]]
     total = int(selected["capacity"]["total_people"])
@@ -247,31 +271,35 @@ def _assignment_alerts(
                 f"{selected['name']} has no reported free capacity. "
                 "Coordinate overflow support for this placement."
             )
-        alerts.append({
-            "code": "shelter_capacity_overflow",
-            "severity": "critical" if physical_overflow else "warning",
-            "shelter_id": selected["id"],
-            "shelter_name": selected["name"],
-            "assigned_people": used,
-            "total_people": total,
-            "people_over_capacity": physical_overflow,
-            "people_over_allocation_budget": budget_overflow,
-            "message": message,
-        })
+        alerts.append(
+            {
+                "code": "shelter_capacity_overflow",
+                "severity": "critical" if physical_overflow else "warning",
+                "shelter_id": selected["id"],
+                "shelter_name": selected["name"],
+                "assigned_people": used,
+                "total_people": total,
+                "people_over_capacity": physical_overflow,
+                "people_over_allocation_budget": budget_overflow,
+                "message": message,
+            }
+        )
 
     mismatches = compatibility_mismatches(family, selected)
     if mismatches:
-        alerts.append({
-            "code": "shelter_needs_mismatch",
-            "severity": "critical",
-            "shelter_id": selected["id"],
-            "shelter_name": selected["name"],
-            "unmet_requirements": mismatches,
-            "message": (
-                f"{selected['name']} does not list support for all of this household's needs. "
-                "Confirm the placement and coordinate support."
-            ),
-        })
+        alerts.append(
+            {
+                "code": "shelter_needs_mismatch",
+                "severity": "critical",
+                "shelter_id": selected["id"],
+                "shelter_name": selected["name"],
+                "unmet_requirements": mismatches,
+                "message": (
+                    f"{selected['name']} does not list support for all of this household's needs. "
+                    "Confirm the placement and coordinate support."
+                ),
+            }
+        )
     return alerts
 
 
@@ -284,9 +312,11 @@ def _fingerprint(family: dict[str, Any], selected: dict[str, Any] | None) -> str
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
-def public_plan(plan: dict[str, Any]) -> dict[str, Any]:
+def public_plan(plan: dict[str, Any]) -> Plan:
     """Return the family-facing plan without its internal version fingerprint."""
-    return {key: value for key, value in plan.items() if key != "_allocation_fingerprint"}
+    return cast(
+        Plan, {key: value for key, value in plan.items() if key != "_allocation_fingerprint"}
+    )
 
 
 def _same_plan(candidate: dict[str, Any], previous: dict[str, Any]) -> bool:
@@ -298,7 +328,7 @@ async def recompute_disasters(
     disaster_ids: Iterable[str],
     *,
     changed_at: str | None = None,
-) -> dict[str, dict[str, Any]]:
+) -> dict[str, Plan]:
     """Rebuild active assignments and material plan versions for given pools.
 
     The caller owns an immediate write transaction. All prior reservations in
@@ -317,33 +347,44 @@ async def recompute_disasters(
     now_text = changed_at or timestamp(now())
     marks = ",".join("?" for _ in ids)
 
-    prior_rows = await (await connection.execute(
-        f"SELECT family_id, shelter_id FROM current_assignments WHERE disaster_id IN ({marks})",
-        ids,
-    )).fetchall()
+    prior_rows = await (
+        await connection.execute(
+            f"SELECT family_id, shelter_id FROM current_assignments WHERE disaster_id IN ({marks})",
+            ids,
+        )
+    ).fetchall()
     prior_shelter = {family_id: shelter_id for family_id, shelter_id in prior_rows}
 
-    family_rows = await (await connection.execute(
-        f"SELECT id, disaster_id, adults, children, latitude, longitude, needs_json, resources_json, created_at "
-        f"FROM families WHERE disaster_id IN ({marks}) ORDER BY disaster_id, created_at, id",
-        ids,
-    )).fetchall()
+    family_rows = await (
+        await connection.execute(
+            f"SELECT id, disaster_id, adults, children, latitude, longitude, needs_json, resources_json, created_at "
+            f"FROM families WHERE disaster_id IN ({marks}) ORDER BY disaster_id, created_at, id",
+            ids,
+        )
+    ).fetchall()
     families_by_disaster: dict[str, list[dict[str, Any]]] = {disaster_id: [] for disaster_id in ids}
     for row in family_rows:
+        row = cast(tuple[str, str, int, int, float, float, str, str, str], row)
         family = _family(row)
         families_by_disaster[family["disaster_id"]].append(family)
 
-    shelter_rows = await (await connection.execute(
-        f"SELECT id, disaster_id, name, address, latitude, longitude, status, capacity_json, "
-        f"capabilities_json, resources_json FROM shelters WHERE disaster_id IN ({marks}) ORDER BY disaster_id, id",
-        ids,
-    )).fetchall()
+    shelter_rows = await (
+        await connection.execute(
+            f"SELECT id, disaster_id, name, address, latitude, longitude, status, capacity_json, "
+            f"capabilities_json, resources_json FROM shelters WHERE disaster_id IN ({marks}) ORDER BY disaster_id, id",
+            ids,
+        )
+    ).fetchall()
     shelters_by_disaster: dict[str, list[dict[str, Any]]] = {disaster_id: [] for disaster_id in ids}
     for row in shelter_rows:
+        row = cast(tuple[str, str, str, str, float, float, str, str, str, str], row)
         raw_capacity = _loads(row[7])
-        budget_row = await (await connection.execute(
-            "SELECT allocation_budget FROM shelter_capacity_budgets WHERE shelter_id = ?", (row[0],),
-        )).fetchone()
+        budget_row = await (
+            await connection.execute(
+                "SELECT allocation_budget FROM shelter_capacity_budgets WHERE shelter_id = ?",
+                (row[0],),
+            )
+        ).fetchone()
         budget = int(budget_row[0]) if budget_row else int(raw_capacity["available_people"])
         budget = max(0, budget)
         await connection.execute(
@@ -355,10 +396,12 @@ async def recompute_disasters(
 
     latest: dict[str, tuple[int, dict[str, Any]]] = {}
     for family in [family for pool in families_by_disaster.values() for family in pool]:
-        row = await (await connection.execute(
-            "SELECT version, plan_json FROM plans WHERE family_id = ? ORDER BY version DESC LIMIT 1",
-            (family["id"],),
-        )).fetchone()
+        row = await (
+            await connection.execute(
+                "SELECT version, plan_json FROM plans WHERE family_id = ? ORDER BY version DESC LIMIT 1",
+                (family["id"],),
+            )
+        ).fetchone()
         if row is not None:
             latest[family["id"]] = (int(row[0]), _loads(row[1]))
 
@@ -367,7 +410,7 @@ async def recompute_disasters(
     # placements; this makes multi-disaster moves atomic and avoids stale use.
     await connection.execute(f"DELETE FROM current_assignments WHERE disaster_id IN ({marks})", ids)
 
-    result: dict[str, dict[str, Any]] = {}
+    result: dict[str, Plan] = {}
     chosen_by_family: dict[str, dict[str, Any] | None] = {}
     remaining_by_shelter: dict[str, int] = {}
 
@@ -379,7 +422,8 @@ async def recompute_disasters(
         def initial_options(family: dict[str, Any]) -> list[dict[str, Any]]:
             size = household_size(family)
             return [
-                shelter for shelter in shelters
+                shelter
+                for shelter in shelters
                 if compatible(family, shelter) and shelter["allocation_budget"] >= size
             ]
 
@@ -410,10 +454,7 @@ async def recompute_disasters(
             previous_id = prior_shelter.get(family["id"])
             previous = shelters_by_id.get(previous_id)
             size = household_size(family)
-            if (
-                previous is not None
-                and previous["status"] in {"open", "full"}
-            ):
+            if previous is not None and previous["status"] in {"open", "full"}:
                 assigned[family["id"]] = previous
                 protected_ids.add(family["id"])
                 remaining[previous["id"]] -= size
@@ -426,13 +467,16 @@ async def recompute_disasters(
                 continue
             size = household_size(family)
             feasible = [
-                shelter for shelter in shelters
+                shelter
+                for shelter in shelters
                 if compatible(family, shelter) and remaining[shelter["id"]] >= size
             ]
-            feasible.sort(key=lambda shelter: (
-                round(distance(family, shelter), 9),
-                shelter["id"],
-            ))
+            feasible.sort(
+                key=lambda shelter: (
+                    round(distance(family, shelter), 9),
+                    shelter["id"],
+                )
+            )
             selected = feasible[0] if feasible else None
             if selected is not None:
                 remaining[selected["id"]] -= size
@@ -467,9 +511,12 @@ async def recompute_disasters(
                         direct.append(shelter)
                 if repair_exhausted:
                     break
-                direct.sort(key=lambda shelter: (
-                    round(distance(waiting, shelter), 9), shelter["id"],
-                ))
+                direct.sort(
+                    key=lambda shelter: (
+                        round(distance(waiting, shelter), 9),
+                        shelter["id"],
+                    )
+                )
                 if direct:
                     selected = direct[0]
                     remaining[selected["id"]] -= waiting_size
@@ -478,7 +525,9 @@ async def recompute_disasters(
                     repaired = True
                     break
 
-                moves: list[tuple[tuple[Any, ...], dict[str, Any], dict[str, Any], dict[str, Any]]] = []
+                moves: list[
+                    tuple[tuple[Any, ...], dict[str, Any], dict[str, Any], dict[str, Any]]
+                ] = []
                 for incumbent in ordered_families:
                     repair_checks += 1
                     if repair_checks > 10_000:
@@ -529,7 +578,16 @@ async def recompute_disasters(
                 # capacities 6 and 4). The waiting household then takes the
                 # freed places without evicting either incumbent.
                 if not repair_exhausted:
-                    swaps: list[tuple[tuple[Any, ...], dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]] = []
+                    swaps: list[
+                        tuple[
+                            tuple[Any, ...],
+                            dict[str, Any],
+                            dict[str, Any],
+                            dict[str, Any],
+                            dict[str, Any],
+                            dict[str, Any],
+                        ]
+                    ] = []
                     for first in ordered_families:
                         repair_checks += 1
                         if repair_checks > 10_000:
@@ -557,15 +615,18 @@ async def recompute_disasters(
                                     break
                                 if (
                                     second["id"] in protected_ids
-                                    or assigned[second["id"]] is None
-                                    or assigned[second["id"]]["id"] != target["id"]
+                                    or (assigned_second := assigned[second["id"]]) is None
+                                    or assigned_second["id"] != target["id"]
                                     or not compatible(second, source)
                                 ):
                                     continue
                                 second_size = household_size(second)
                                 if remaining[target["id"]] + second_size < first_size:
                                     continue
-                                if remaining[source["id"]] + first_size < second_size + waiting_size:
+                                if (
+                                    remaining[source["id"]] + first_size
+                                    < second_size + waiting_size
+                                ):
                                     continue
                                 key = (
                                     round(distance(waiting, source), 9),
@@ -600,36 +661,34 @@ async def recompute_disasters(
         # existing reservations fixed. The greedy/repair result seeds the
         # search, so hitting the node bound can never make placement worse.
         movable_families = [
-            family for family in ordered_families
-            if family["id"] not in protected_ids
+            family for family in ordered_families if family["id"] not in protected_ids
         ]
         if movable_families and len(movable_families) <= _MAX_REFINEMENT_FAMILIES:
-            def refinement_score(selection: dict[str, dict[str, Any] | None]) -> tuple[int, int, float]:
+
+            def refinement_score(
+                selection: dict[str, dict[str, Any] | None],
+            ) -> tuple[int, int, float]:
                 placed = [
-                    family for family in movable_families
-                    if selection[family["id"]] is not None
+                    family for family in movable_families if selection[family["id"]] is not None
                 ]
                 people = sum(household_size(family) for family in placed)
                 travel = sum(
-                    round(distance(family, selection[family["id"]]), 9)
+                    round(distance(family, shelter), 9)
                     for family in placed
+                    if (shelter := selection[family["id"]]) is not None
                 )
                 return len(placed), people, -travel
 
-            best_selection = {
-                family["id"]: assigned[family["id"]]
-                for family in movable_families
-            }
+            best_selection = {family["id"]: assigned[family["id"]] for family in movable_families}
             best_score = refinement_score(best_selection)
             search_selection: dict[str, dict[str, Any] | None] = {}
             search_remaining = remaining_after_reservations.copy()
             search_nodes = 0
             remaining_people_upper_bound = [0] * (len(movable_families) + 1)
             for index in range(len(movable_families) - 1, -1, -1):
-                remaining_people_upper_bound[index] = (
-                    remaining_people_upper_bound[index + 1]
-                    + household_size(movable_families[index])
-                )
+                remaining_people_upper_bound[index] = remaining_people_upper_bound[
+                    index + 1
+                ] + household_size(movable_families[index])
 
             def search(index: int, placed_count: int, placed_people: int, travel: float) -> None:
                 nonlocal best_score, best_selection, search_nodes
@@ -654,12 +713,16 @@ async def recompute_disasters(
                 family = movable_families[index]
                 size = household_size(family)
                 feasible = [
-                    shelter for shelter in shelters
+                    shelter
+                    for shelter in shelters
                     if compatible(family, shelter) and search_remaining[shelter["id"]] >= size
                 ]
-                feasible.sort(key=lambda shelter: (
-                    round(distance(family, shelter), 9), shelter["id"],
-                ))
+                feasible.sort(
+                    key=lambda shelter: (
+                        round(distance(family, shelter), 9),
+                        shelter["id"],
+                    )
+                )
                 for shelter in feasible:
                     if search_nodes >= _MAX_REFINEMENT_NODES:
                         break
@@ -697,17 +760,16 @@ async def recompute_disasters(
             if assigned[family["id"]] is not None:
                 continue
             size = household_size(family)
-            candidates = [
-                shelter for shelter in shelters
-                if shelter["status"] in {"open", "full"}
-            ]
+            candidates = [shelter for shelter in shelters if shelter["status"] in {"open", "full"}]
             if not candidates:
                 continue
 
             def fallback_key(shelter: dict[str, Any]) -> tuple[Any, ...]:
                 mismatches = compatibility_mismatches(family, shelter)
                 projected_people = shelter["allocation_budget"] - remaining[shelter["id"]] + size
-                physical_overflow = max(0, projected_people - int(shelter["capacity"]["total_people"]))
+                physical_overflow = max(
+                    0, projected_people - int(shelter["capacity"]["total_people"])
+                )
                 budget_overflow = max(0, projected_people - shelter["allocation_budget"])
                 return (
                     len(mismatches),
@@ -790,6 +852,6 @@ async def reallocate_disaster(
     disaster_id: str,
     *,
     changed_at: str | None = None,
-) -> dict[str, dict[str, Any]]:
+) -> dict[str, Plan]:
     """Single-pool convenience wrapper retained for startup reconciliation."""
     return await recompute_disasters(connection, (disaster_id,), changed_at=changed_at)

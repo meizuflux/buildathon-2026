@@ -36,7 +36,9 @@ async def initialize_database() -> None:
 
         await connection.execute("BEGIN IMMEDIATE")
         try:
-            disasters = await (await connection.execute("SELECT id FROM disasters ORDER BY id")).fetchall()
+            disasters = await (
+                await connection.execute("SELECT id FROM disasters ORDER BY id")
+            ).fetchall()
             await recompute_disasters(connection, (row[0] for row in disasters))
             await connection.execute("COMMIT")
         except BaseException:

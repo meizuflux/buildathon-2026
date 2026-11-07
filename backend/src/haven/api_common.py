@@ -6,6 +6,7 @@ import apsw
 from litestar.exceptions import HTTPException
 
 from haven.auth import AuthenticatedUser
+from haven.openapi import Family
 
 
 def error(status: int, code: str, message: str) -> NoReturn:
@@ -13,15 +14,21 @@ def error(status: int, code: str, message: str) -> NoReturn:
 
 
 async def require_disaster(connection: apsw.AsyncConnection, disaster_id: str) -> None:
-    row = await (await connection.execute("SELECT 1 FROM disasters WHERE id = ?", (disaster_id,))).fetchone()
+    row = await (
+        await connection.execute("SELECT 1 FROM disasters WHERE id = ?", (disaster_id,))
+    ).fetchone()
     if row is None:
         error(404, "disaster_not_found", "Disaster not found.")
 
 
-async def require_family(connection: apsw.AsyncConnection, family_id: str, user: AuthenticatedUser) -> dict:
+async def require_family(
+    connection: apsw.AsyncConnection, family_id: str, user: AuthenticatedUser
+) -> Family:
     from haven.routers.families import family_from_row
 
-    row = await (await connection.execute("SELECT * FROM families WHERE id = ?", (family_id,))).fetchone()
+    row = await (
+        await connection.execute("SELECT * FROM families WHERE id = ?", (family_id,))
+    ).fetchone()
     if row is None:
         error(404, "family_not_found", "Family not found.")
     if user.role != "operator" and row[1] != user.id:

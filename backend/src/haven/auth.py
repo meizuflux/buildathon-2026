@@ -71,7 +71,11 @@ def timestamp(value: datetime) -> str:
 def normalize_email(email: str) -> str:
     email = email.strip().lower()
     if len(email) > 254 or not _EMAIL.fullmatch(email):
-        raise HTTPException(status_code=400, detail="Enter a valid email address.", extra={"code": "invalid_request"})
+        raise HTTPException(
+            status_code=400,
+            detail="Enter a valid email address.",
+            extra={"code": "invalid_request"},
+        )
     return email
 
 
@@ -97,12 +101,18 @@ _DUMMY_HASH = hash_password("not-a-real-password")
 
 def require_password(password: str, *, registration: bool = False) -> None:
     if len(password.encode("utf-8")) > 1024 or (registration and len(password) < 8):
-        raise HTTPException(status_code=400, detail="Password must be at least 8 characters and at most 1024 bytes.", extra={"code": "invalid_request"})
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 8 characters and at most 1024 bytes.",
+            extra={"code": "invalid_request"},
+        )
 
 
-async def user_info(connection: apsw.AsyncConnection, user: AuthenticatedUser) -> dict:
-    family = await (await connection.execute("SELECT id FROM families WHERE owner_user_id = ?", (user.id,))).fetchone()
-    return {"id": user.id, "role": user.role, "family_id": family[0] if family else None}
+async def user_info(connection: apsw.AsyncConnection, user: AuthenticatedUser) -> User:
+    family = await (
+        await connection.execute("SELECT id FROM families WHERE owner_user_id = ?", (user.id,))
+    ).fetchone()
+    return User(id=user.id, role=user.role, family_id=family[0] if family else None)
 
 
 def token_hash(token: str) -> str:
@@ -110,20 +120,28 @@ def token_hash(token: str) -> str:
 
 
 async def authenticate_digest(digest: str, connection: apsw.AsyncConnection) -> AuthenticatedUser:
-    user = await (await connection.execute(
-        "SELECT u.id, u.role FROM sessions s JOIN users u ON u.id = s.user_id "
-        "WHERE s.token_hash = ? AND s.revoked_at IS NULL AND s.expires_at > ?",
-        (digest, timestamp(now())),
-    )).fetchone()
+    user = await (
+        await connection.execute(
+            "SELECT u.id, u.role FROM sessions s JOIN users u ON u.id = s.user_id "
+            "WHERE s.token_hash = ? AND s.revoked_at IS NULL AND s.expires_at > ?",
+            (digest, timestamp(now())),
+        )
+    ).fetchone()
     if user is None:
-        raise HTTPException(status_code=401, detail="Authentication required.", extra={"code": "unauthorized"})
+        raise HTTPException(
+            status_code=401, detail="Authentication required.", extra={"code": "unauthorized"}
+        )
     return AuthenticatedUser(id=user[0], role=user[1])
 
 
-async def authenticate(authorization: str, connection: apsw.AsyncConnection) -> tuple[AuthenticatedUser, str]:
+async def authenticate(
+    authorization: str, connection: apsw.AsyncConnection
+) -> tuple[AuthenticatedUser, str]:
     parts = authorization.split()
     if len(parts) != 2 or parts[0].lower() != "bearer" or len(parts[1]) > 256:
-        raise HTTPException(status_code=401, detail="Authentication required.", extra={"code": "unauthorized"})
+        raise HTTPException(
+            status_code=401, detail="Authentication required.", extra={"code": "unauthorized"}
+        )
     digest = token_hash(parts[1])
     user = await authenticate_digest(digest, connection)
     return user, digest
@@ -147,14 +165,32 @@ async def check_login_limit(connection: apsw.AsyncConnection, email: str, client
     keys = ["email:" + token_hash(email), "ip:" + token_hash(client)]
     await connection.execute("BEGIN IMMEDIATE")
     try:
-        await connection.execute("DELETE FROM login_attempts WHERE window_start <= ?", (timestamp(current - LOGIN_WINDOW),))
-        rows = [await (await connection.execute("SELECT attempts FROM login_attempts WHERE key = ?", (key,))).fetchone() for key in keys]
-        if any(row and row[0] >= limit for row, limit in zip(rows, (LOGIN_ACCOUNT_LIMIT, LOGIN_IP_LIMIT))):
-            raise HTTPException(status_code=429, detail="Too many login attempts. Try again later.", extra={"code": "rate_limited"})
+        await connection.execute(
+            "DELETE FROM login_attempts WHERE window_start <= ?",
+            (timestamp(current - LOGIN_WINDOW),),
+        )
+        rows = [
+            await (
+                await connection.execute(
+                    "SELECT attempts FROM login_attempts WHERE key = ?", (key,)
+                )
+            ).fetchone()
+            for key in keys
+        ]
+        if any(
+            row and row[0] >= limit
+            for row, limit in zip(rows, (LOGIN_ACCOUNT_LIMIT, LOGIN_IP_LIMIT))
+        ):
+            raise HTTPException(
+                status_code=429,
+                detail="Too many login attempts. Try again later.",
+                extra={"code": "rate_limited"},
+            )
         for key in keys:
             await connection.execute(
                 "INSERT INTO login_attempts (key, window_start, attempts) VALUES (?, ?, 1) "
-                "ON CONFLICT(key) DO UPDATE SET attempts = attempts + 1", (key, timestamp(current)),
+                "ON CONFLICT(key) DO UPDATE SET attempts = attempts + 1",
+                (key, timestamp(current)),
             )
         await connection.execute("COMMIT")
     except BaseException:
@@ -162,7 +198,11 @@ async def check_login_limit(connection: apsw.AsyncConnection, email: str, client
         raise
 
 
-@post("/register", responses=errors(400, 409, 500), description="Register a family account. Passwords must be at least 8 characters and at most 1024 UTF-8 bytes.")
+@post(
+    "/register",
+    responses=errors(400, 409, 500),
+    description="Register a family account. Passwords must be at least 8 characters and at most 1024 UTF-8 bytes.",
+)
 async def register(data: JSONBody[Credentials]) -> Registration:
     email = normalize_email(data.email)
     require_password(data.password, registration=True)
@@ -170,32 +210,62 @@ async def register(data: JSONBody[Credentials]) -> Registration:
     password_hash = await asyncio.to_thread(hash_password, data.password)
     try:
         async with connect() as connection:
-            await connection.execute("INSERT INTO users (id, email, password_hash, role, created_at) VALUES (?, ?, ?, 'family', ?)",
-                                     (user_id, email, password_hash, timestamp(now())))
+            await connection.execute(
+                "INSERT INTO users (id, email, password_hash, role, created_at) VALUES (?, ?, ?, 'family', ?)",
+                (user_id, email, password_hash, timestamp(now())),
+            )
     except apsw.ConstraintError:
-        raise HTTPException(status_code=409, detail="An account with this email already exists.", extra={"code": "email_in_use"})
+        raise HTTPException(
+            status_code=409,
+            detail="An account with this email already exists.",
+            extra={"code": "email_in_use"},
+        )
     return {"user_id": user_id, "role": "family"}
 
 
-@post("/login", status_code=200, responses=errors(400, 401, 429, 500), description="Sign in and receive an opaque bearer token valid for 24 hours.")
+@post(
+    "/login",
+    status_code=200,
+    responses=errors(400, 401, 429, 500),
+    description="Sign in and receive an opaque bearer token valid for 24 hours.",
+)
 async def login(data: JSONBody[Credentials], request: Request) -> Session:
     email = normalize_email(data.email)
     require_password(data.password)
     client = request.client.host if request.client else "unknown"
     async with connect() as connection:
         await check_login_limit(connection, email, client)
-        user = await (await connection.execute("SELECT id, role, password_hash FROM users WHERE email = ?", (email,))).fetchone()
-        valid = await asyncio.to_thread(verify_password, data.password, user[2] if user else _DUMMY_HASH)
+        user = await (
+            await connection.execute(
+                "SELECT id, role, password_hash FROM users WHERE email = ?", (email,)
+            )
+        ).fetchone()
+        valid = await asyncio.to_thread(
+            verify_password, data.password, user[2] if user else _DUMMY_HASH
+        )
         if not user or not valid:
-            raise HTTPException(status_code=401, detail="Invalid email or password.", extra={"code": "invalid_credentials"})
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid email or password.",
+                extra={"code": "invalid_credentials"},
+            )
         token = secrets.token_urlsafe(32)
         expires = timestamp(now() + SESSION_LIFETIME)
         async with connection:
-            await connection.execute("INSERT INTO sessions (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)",
-                                     ("session_" + uuid4().hex, user[0], token_hash(token), expires))
-            await connection.execute("DELETE FROM login_attempts WHERE key = ?", ("email:" + token_hash(email),))
+            await connection.execute(
+                "INSERT INTO sessions (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)",
+                ("session_" + uuid4().hex, user[0], token_hash(token), expires),
+            )
+            await connection.execute(
+                "DELETE FROM login_attempts WHERE key = ?", ("email:" + token_hash(email),)
+            )
             info = await user_info(connection, AuthenticatedUser(id=user[0], role=user[1]))
-        return {"access_token": token, "token_type": "Bearer", "expires_at": expires, "user": info}
+        return Session(
+            access_token=token,
+            token_type="Bearer",
+            expires_at=expires,
+            user=info,
+        )
 
 
 @get("/me", security=BEARER, guards=[authenticated_guard], responses=errors(401, 500))
@@ -204,9 +274,17 @@ async def me(request: Request) -> User:
         return await user_info(connection, get_authenticated_user(request))
 
 
-@post("/logout", status_code=204, security=BEARER, guards=[authenticated_guard], responses=errors(401, 500))
+@post(
+    "/logout",
+    status_code=204,
+    security=BEARER,
+    guards=[authenticated_guard],
+    responses=errors(401, 500),
+)
 async def logout(request: Request) -> None:
-    async with connect() as connection:
-        async with connection:
-            get_authenticated_user(request)
-            await connection.execute("UPDATE sessions SET revoked_at = ? WHERE token_hash = ?", (timestamp(now()), request.auth))
+    async with connect() as connection, connection:
+        get_authenticated_user(request)
+        await connection.execute(
+            "UPDATE sessions SET revoked_at = ? WHERE token_hash = ?",
+            (timestamp(now()), request.auth),
+        )

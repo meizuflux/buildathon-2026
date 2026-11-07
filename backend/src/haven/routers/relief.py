@@ -1,18 +1,28 @@
 """Disasters, relief locations, and official announcements."""
 
 import json
-from typing import Annotated, Literal
+from collections.abc import Mapping
+from typing import Annotated, Any, Literal, cast
 from uuid import uuid4
 
 import msgspec
 from litestar import Router, get, patch, post
 from litestar.params import FromPath, FromQuery, JSONBody
 
+from haven.allocation import recompute_disasters, set_shelter_allocation_budget
 from haven.api_common import error, require_disaster
 from haven.auth import now, operator_guard, timestamp
-from haven.allocation import recompute_disasters, set_shelter_allocation_budget
 from haven.db import connect
-from haven.openapi import BEARER, DisasterList, Shelter, ShelterList, Update, UpdateList, errors
+from haven.openapi import (
+    BEARER,
+    Disaster,
+    DisasterList,
+    Shelter,
+    ShelterList,
+    Update,
+    UpdateList,
+    errors,
+)
 
 NonNegative = Annotated[int, msgspec.Meta(ge=0)]
 Text = Annotated[str, msgspec.Meta(min_length=1, max_length=10000)]
@@ -98,44 +108,78 @@ class UpdateCreate(msgspec.Struct, forbid_unknown_fields=True):
     severity: Literal["info", "warning", "critical"]
 
 
-def shelter_from_row(row: tuple) -> dict:
+def shelter_from_row(row: tuple) -> Shelter:
     return {
-        "id": row[0], "disaster_id": row[1], "name": row[2], "address": row[3],
-        "location": {"latitude": row[4], "longitude": row[5]}, "status": row[6],
-        "capacity": json.loads(row[7]), "capabilities": json.loads(row[8]),
-        "resources": json.loads(row[9]), "updated_at": row[10],
+        "id": row[0],
+        "disaster_id": row[1],
+        "name": row[2],
+        "address": row[3],
+        "location": {"latitude": row[4], "longitude": row[5]},
+        "status": row[6],
+        "capacity": json.loads(row[7]),
+        "capabilities": json.loads(row[8]),
+        "resources": json.loads(row[9]),
+        "updated_at": row[10],
     }
 
 
-def validate_shelter(shelter: dict, *, allow_derived_capacity_overflow: bool = False) -> None:
+def validate_shelter(
+    shelter: Mapping[str, Any], *, allow_derived_capacity_overflow: bool = False
+) -> None:
     capacity = shelter["capacity"]
-    if not allow_derived_capacity_overflow and capacity["available_people"] > capacity["total_people"]:
+    if (
+        not allow_derived_capacity_overflow
+        and capacity["available_people"] > capacity["total_people"]
+    ):
         error(400, "invalid_request", "Available capacity cannot exceed total capacity.")
     if not shelter["name"].strip() or not shelter["address"].strip():
         error(400, "invalid_request", "Shelter name and address must not be blank.")
 
 
-def update_from_row(row: tuple) -> dict:
-    return dict(zip(("id", "disaster_id", "title", "message", "severity", "published_at"), row))
+def update_from_row(row: tuple) -> Update:
+    return cast(
+        Update,
+        dict(zip(("id", "disaster_id", "title", "message", "severity", "published_at"), row)),
+    )
 
 
 @get("/disasters", tags=["Disasters"], responses=errors(500), description="List active disasters.")
 async def list_disasters() -> DisasterList:
     async with connect() as connection:
-        rows = await (await connection.execute("SELECT * FROM disasters WHERE status = 'active' ORDER BY updated_at DESC, id")).fetchall()
+        rows = await (
+            await connection.execute(
+                "SELECT * FROM disasters WHERE status = 'active' ORDER BY updated_at DESC, id"
+            )
+        ).fetchall()
     fields = ("id", "type", "name", "status", "affected_area", "updated_at")
-    return {"disasters": [dict(zip(fields, row)) for row in rows]}
+    return {"disasters": [cast(Disaster, dict(zip(fields, row))) for row in rows]}
 
 
-@get("/shelters", tags=["Shelters"], responses=errors(400, 404, 500), description="Public listing with available capacity, capabilities and resource availability labels; labels are not quantities.")
+@get(
+    "/shelters",
+    tags=["Shelters"],
+    responses=errors(400, 404, 500),
+    description="Public listing with available capacity, capabilities and resource availability labels; labels are not quantities.",
+)
 async def list_shelters(disaster_id: FromQuery[str]) -> ShelterList:
     async with connect() as connection:
         await require_disaster(connection, disaster_id)
-        rows = await (await connection.execute("SELECT * FROM shelters WHERE disaster_id = ? ORDER BY name, id", (disaster_id,))).fetchall()
+        rows = await (
+            await connection.execute(
+                "SELECT * FROM shelters WHERE disaster_id = ? ORDER BY name, id", (disaster_id,)
+            )
+        ).fetchall()
     return {"shelters": [shelter_from_row(row) for row in rows]}
 
 
-@post("/shelters", tags=["Shelters"], security=BEARER, guards=[operator_guard], responses=errors(400, 401, 403, 404, 500), description="Operator only. Creating a shelter triggers reallocation.")
+@post(
+    "/shelters",
+    tags=["Shelters"],
+    security=BEARER,
+    guards=[operator_guard],
+    responses=errors(400, 401, 403, 404, 500),
+    description="Operator only. Creating a shelter triggers reallocation.",
+)
 async def create_shelter(data: JSONBody[ShelterCreate]) -> Shelter:
     shelter = msgspec.to_builtins(data)
     async with connect() as connection:
@@ -146,12 +190,24 @@ async def create_shelter(data: JSONBody[ShelterCreate]) -> Shelter:
             shelter.update(id="shelter_" + uuid4().hex, updated_at=timestamp(now()))
             await connection.execute(
                 "INSERT INTO shelters VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (shelter["id"], data.disaster_id, data.name, data.address, data.location.latitude,
-                 data.location.longitude, data.status, json.dumps(shelter["capacity"]),
-                 json.dumps(shelter["capabilities"]), json.dumps(shelter["resources"]), shelter["updated_at"]),
+                (
+                    shelter["id"],
+                    data.disaster_id,
+                    data.name,
+                    data.address,
+                    data.location.latitude,
+                    data.location.longitude,
+                    data.status,
+                    json.dumps(shelter["capacity"]),
+                    json.dumps(shelter["capabilities"]),
+                    json.dumps(shelter["resources"]),
+                    shelter["updated_at"],
+                ),
             )
             await recompute_disasters(connection, (data.disaster_id,))
-            row = await (await connection.execute("SELECT * FROM shelters WHERE id = ?", (shelter["id"],))).fetchone()
+            row = await (
+                await connection.execute("SELECT * FROM shelters WHERE id = ?", (shelter["id"],))
+            ).fetchone()
             shelter = shelter_from_row(row)
             await connection.execute("COMMIT")
         except BaseException:
@@ -160,26 +216,40 @@ async def create_shelter(data: JSONBody[ShelterCreate]) -> Shelter:
     return shelter
 
 
-@patch("/shelters/{shelter_id:str}", tags=["Shelters"], security=BEARER, guards=[operator_guard], responses=errors(400, 401, 403, 404, 500), description="Operator only. Nested fields merge and relevant changes trigger reallocation.")
+@patch(
+    "/shelters/{shelter_id:str}",
+    tags=["Shelters"],
+    security=BEARER,
+    guards=[operator_guard],
+    responses=errors(400, 401, 403, 404, 500),
+    description="Operator only. Nested fields merge and relevant changes trigger reallocation.",
+)
 async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch]) -> Shelter:
     async with connect() as connection:
         await connection.execute("BEGIN IMMEDIATE")
         try:
-            row = await (await connection.execute("SELECT * FROM shelters WHERE id = ?", (shelter_id,))).fetchone()
+            row = await (
+                await connection.execute("SELECT * FROM shelters WHERE id = ?", (shelter_id,))
+            ).fetchone()
             if row is None:
                 error(404, "shelter_not_found", "Shelter not found.")
             shelter = shelter_from_row(row)
+            shelter_data = cast(dict[str, Any], shelter)
             original = {
-                "disaster_id": shelter["disaster_id"], "name": shelter["name"], "address": shelter["address"],
-                "location": shelter["location"].copy(), "status": shelter["status"],
-                "capacity": shelter["capacity"].copy(), "capabilities": shelter["capabilities"].copy(),
+                "disaster_id": shelter["disaster_id"],
+                "name": shelter["name"],
+                "address": shelter["address"],
+                "location": shelter["location"].copy(),
+                "status": shelter["status"],
+                "capacity": shelter["capacity"].copy(),
+                "capabilities": shelter["capabilities"].copy(),
                 "resources": shelter["resources"].copy(),
             }
             for key, value in msgspec.to_builtins(data).items():
                 if isinstance(value, dict):
-                    shelter[key].update(value)
+                    shelter_data[key].update(value)
                 else:
-                    shelter[key] = value
+                    shelter_data[key] = value
             capacity_patch = data.capacity
             has_capacity_patch = capacity_patch is not msgspec.UNSET
             requested_available = (
@@ -196,24 +266,38 @@ async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch]
             )
             await require_disaster(connection, shelter["disaster_id"])
             validate_shelter(shelter, allow_derived_capacity_overflow=lowering_total_only)
-            current = {key: shelter[key] for key in original}
+            current = {key: shelter_data[key] for key in original}
             if current != original:
                 old_disaster_id = original["disaster_id"]
                 shelter["updated_at"] = timestamp(now())
                 await connection.execute(
                     "UPDATE shelters SET disaster_id = ?, name = ?, address = ?, latitude = ?, longitude = ?, "
                     "status = ?, capacity_json = ?, capabilities_json = ?, resources_json = ?, updated_at = ? WHERE id = ?",
-                    (shelter["disaster_id"], shelter["name"], shelter["address"], shelter["location"]["latitude"],
-                     shelter["location"]["longitude"], shelter["status"], json.dumps(shelter["capacity"]),
-                     json.dumps(shelter["capabilities"]), json.dumps(shelter["resources"]), shelter["updated_at"], shelter_id),
+                    (
+                        shelter["disaster_id"],
+                        shelter["name"],
+                        shelter["address"],
+                        shelter["location"]["latitude"],
+                        shelter["location"]["longitude"],
+                        shelter["status"],
+                        json.dumps(shelter["capacity"]),
+                        json.dumps(shelter["capabilities"]),
+                        json.dumps(shelter["resources"]),
+                        shelter["updated_at"],
+                        shelter_id,
+                    ),
                 )
                 if (
                     has_requested_available
                     and requested_available != original["capacity"]["available_people"]
                 ):
                     await set_shelter_allocation_budget(connection, shelter_id, requested_available)
-                await recompute_disasters(connection, sorted({old_disaster_id, shelter["disaster_id"]}))
-                updated_row = await (await connection.execute("SELECT * FROM shelters WHERE id = ?", (shelter_id,))).fetchone()
+                await recompute_disasters(
+                    connection, sorted({old_disaster_id, shelter["disaster_id"]})
+                )
+                updated_row = await (
+                    await connection.execute("SELECT * FROM shelters WHERE id = ?", (shelter_id,))
+                ).fetchone()
                 shelter = shelter_from_row(updated_row)
             await connection.execute("COMMIT")
         except BaseException:
@@ -226,21 +310,51 @@ async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch]
 async def list_updates(disaster_id: FromPath[str]) -> UpdateList:
     async with connect() as connection:
         await require_disaster(connection, disaster_id)
-        rows = await (await connection.execute(
-            "SELECT * FROM disaster_updates WHERE disaster_id = ? ORDER BY published_at DESC, id", (disaster_id,),
-        )).fetchall()
+        rows = await (
+            await connection.execute(
+                "SELECT * FROM disaster_updates WHERE disaster_id = ? ORDER BY published_at DESC, id",
+                (disaster_id,),
+            )
+        ).fetchall()
     return {"updates": [update_from_row(row) for row in rows]}
 
 
-@post("/disasters/{disaster_id:str}/updates", tags=["Updates"], security=BEARER, guards=[operator_guard], responses=errors(400, 401, 403, 404, 500), description="Operator only. Publish an official update.")
+@post(
+    "/disasters/{disaster_id:str}/updates",
+    tags=["Updates"],
+    security=BEARER,
+    guards=[operator_guard],
+    responses=errors(400, 401, 403, 404, 500),
+    description="Operator only. Publish an official update.",
+)
 async def publish_update(disaster_id: FromPath[str], data: JSONBody[UpdateCreate]) -> Update:
     async with connect() as connection:
         await require_disaster(connection, disaster_id)
         if not data.title.strip() or not data.message.strip():
             error(400, "invalid_request", "Update title and message must not be blank.")
-        result = {"id": "update_" + uuid4().hex, "disaster_id": disaster_id, **msgspec.to_builtins(data), "published_at": timestamp(now())}
-        await connection.execute("INSERT INTO disaster_updates VALUES (?, ?, ?, ?, ?, ?)", tuple(result.values()))
+        result = cast(
+            Update,
+            {
+                "id": "update_" + uuid4().hex,
+                "disaster_id": disaster_id,
+                **msgspec.to_builtins(data),
+                "published_at": timestamp(now()),
+            },
+        )
+        await connection.execute(
+            "INSERT INTO disaster_updates VALUES (?, ?, ?, ?, ?, ?)", tuple(result.values())
+        )
     return result
 
 
-router = Router(path="/", route_handlers=[list_disasters, list_shelters, create_shelter, update_shelter, list_updates, publish_update])
+router = Router(
+    path="/",
+    route_handlers=[
+        list_disasters,
+        list_shelters,
+        create_shelter,
+        update_shelter,
+        list_updates,
+        publish_update,
+    ],
+)

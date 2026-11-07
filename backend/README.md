@@ -8,6 +8,9 @@ uv sync
 just dev
 ```
 
+Run the development checks with `just check`. The individual recipes are `just lint`,
+`just format-check`, `just typecheck`, and `just test`; use `just format` to apply Ruff formatting.
+
 The API listens on `http://127.0.0.1:8000`. Check `GET /health` or visit `/schema` for Swagger UI or `/schema/openapi.json` for the generated OpenAPI document. The Swagger UI loads its assets from a CDN and needs internet access. Run tests with `just test`.
 
 Use `just prod` to run without reload (configure `HOST`, `PORT`, and `WEB_CONCURRENCY` through environment variables). Run `just schema` to create missing tables without starting the server. Run `just` to list all recipes.
