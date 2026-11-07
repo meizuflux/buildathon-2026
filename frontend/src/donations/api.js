@@ -44,3 +44,37 @@ export const updateInventory = (hubId, capacityPct, supplies, options) =>
     method: 'PUT',
     body: JSON.stringify({ capacity_pct: capacityPct, supplies }),
   });
+
+// Citizen supply requests (operator workflow).
+export const fetchRequests = ({ status, assignedToMe } = {}, options) => {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (assignedToMe) params.set('assigned_to_me', 'true');
+  return request(`/api/requests?${params}`, options);
+};
+
+// method: 'delivery' | 'pickup'
+export const claimRequest = (requestId, hubId, method, options) =>
+  request(`/api/requests/${encodeURIComponent(requestId)}/claim`, {
+    ...options,
+    method: 'POST',
+    body: JSON.stringify({ hub_id: hubId, method }),
+  });
+
+export const releaseRequest = (requestId, options) =>
+  request(`/api/requests/${encodeURIComponent(requestId)}/release`, { ...options, method: 'POST' });
+
+export const fulfillRequest = (requestId, options) =>
+  request(`/api/requests/${encodeURIComponent(requestId)}/fulfill`, { ...options, method: 'POST' });
+
+// Drop-off pledges (hub staff and operators).
+export const fetchHub = (hubId, options) => request(`/api/hubs/${encodeURIComponent(hubId)}`, options);
+
+export const fetchHubPledges = (hubId, status = 'pending', options) =>
+  request(`/api/hubs/${encodeURIComponent(hubId)}/pledges?status=${status}`, options);
+
+export const receivePledge = (pledgeId, options) =>
+  request(`/api/pledges/${encodeURIComponent(pledgeId)}/receive`, { ...options, method: 'POST' });
+
+export const noShowPledge = (pledgeId, options) =>
+  request(`/api/pledges/${encodeURIComponent(pledgeId)}/no-show`, { ...options, method: 'POST' });
