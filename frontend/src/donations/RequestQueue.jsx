@@ -2,49 +2,29 @@ import { useCallback, useEffect, useState } from 'react';
 import { API_BASE, claimRequest, fetchRequests } from './api';
 import { authMessage, itemsText, timeAgo } from './format';
 
+function Where({ item }) {
+  return (
+    <div className="text-sm text-gray-600">
+      {item.address || `${item.latitude.toFixed(4)}, ${item.longitude.toFixed(4)}`}
+      {item.notes && <div className="mt-1 italic text-gray-500">“{item.notes}”</div>}
+    </div>
+  );
+}
+
 function RequestCard({ item, onClaim, busy, error }) {
-  const [hubId, setHubId] = useState(item.suggested_hubs?.[0]?.id ?? '');
   const [method, setMethod] = useState('delivery');
-  const options = item.suggested_hubs ?? [];
   return (
     <li className="space-y-3 rounded-lg border border-gray-200 p-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div className="font-semibold text-gray-900">{itemsText(item.items)}</div>
         <div className="text-xs text-gray-500">{timeAgo(item.created_at)}</div>
       </div>
-      <div className="text-sm text-gray-600">
-        {item.address || `${item.latitude.toFixed(4)}, ${item.longitude.toFixed(4)}`}
-        {item.notes && <div className="mt-1 italic text-gray-500">“{item.notes}”</div>}
+      <Where item={item} />
+      <div className="rounded-md bg-green-50 px-3 py-2 text-sm">
+        <div className="text-xs font-medium uppercase tracking-wide text-green-800">Matched hub (items reserved)</div>
+        <div className="font-medium text-gray-900">{item.hub.name}</div>
+        {item.match?.reasons && <div className="text-xs text-gray-600">{item.match.reasons.join(' · ')}</div>}
       </div>
-
-      {options.length === 0 ? (
-        <p className="text-sm text-amber-700">No hub has enough stock for this request right now.</p>
-      ) : (
-        <fieldset className="space-y-1">
-          <legend className="text-xs font-medium uppercase tracking-wide text-gray-500">Source hub</legend>
-          {options.map((hub, index) => (
-            <label key={hub.id} className="flex items-start gap-2 text-sm">
-              <input
-                type="radio"
-                name={`hub-${item.id}`}
-                checked={hubId === hub.id}
-                onChange={() => setHubId(hub.id)}
-                className="mt-1"
-              />
-              <span>
-                <span className="text-gray-900">{hub.name}</span>
-                {index === 0 && (
-                  <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">
-                    Recommended
-                  </span>
-                )}
-                <span className="block text-xs text-gray-500">{(hub.reasons ?? [`${hub.distance_km.toFixed(1)} km away`]).join(' · ')}</span>
-              </span>
-            </label>
-          ))}
-        </fieldset>
-      )}
-
       <div className="flex flex-wrap items-center gap-2">
         <div className="inline-flex overflow-hidden rounded-md border border-gray-300 text-sm">
           {[
@@ -63,8 +43,8 @@ function RequestCard({ item, onClaim, busy, error }) {
         </div>
         <button
           type="button"
-          disabled={!hubId || busy}
-          onClick={() => onClaim(item, hubId, method)}
+          disabled={busy}
+          onClick={() => onClaim(item, method)}
           className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
         >
           {busy ? 'Claiming…' : 'Claim request'}
@@ -76,19 +56,26 @@ function RequestCard({ item, onClaim, busy, error }) {
 }
 
 /**
- * Open citizen requests, oldest first, with hubs that can cover each one.
- * A worker picks a hub and delivery method, then claims the request.
+ * Citizen requests. Each is matched to the best hub automatically and its items reserved; a worker
+ * claims a matched request and chooses delivery or pickup. Requests no hub can cover yet are listed
+ * as waiting and are matched automatically when stock arrives.
  * Props: token (operator), apiBase, pollMs, onClaimed(request).
  */
 export default function RequestQueue({ token, apiBase = API_BASE, pollMs = 20000, onClaimed }) {
-  const [items, setItems] = useState([]);
+  const [matched, setMatched] = useState([]);
+  const [waiting, setWaiting] = useState([]);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(null);
   const [rowErrors, setRowErrors] = useState({});
 
   const load = useCallback(async () => {
     try {
-      setItems(await fetchRequests({ status: 'open' }, { apiBase, token }));
+      const [ready, open] = await Promise.all([
+        fetchRequests({ status: 'matched' }, { apiBase, token }),
+        fetchRequests({ status: 'open' }, { apiBase, token }),
+      ]);
+      setMatched(ready);
+      setWaiting(open);
       setError(null);
     } catch (e) {
       setError(authMessage(e));
@@ -101,16 +88,16 @@ export default function RequestQueue({ token, apiBase = API_BASE, pollMs = 20000
     return () => clearInterval(id);
   }, [load, pollMs]);
 
-  const claim = async (item, hubId, method) => {
+  const claim = async (item, method) => {
     setBusy(item.id);
     setRowErrors((e) => ({ ...e, [item.id]: null }));
     try {
-      const claimed = await claimRequest(item.id, hubId, method, { apiBase, token });
-      setItems((list) => list.filter((r) => r.id !== item.id));
+      const claimed = await claimRequest(item.id, method, { apiBase, token });
+      setMatched((list) => list.filter((r) => r.id !== item.id));
       onClaimed?.(claimed);
     } catch (e) {
       setRowErrors((errs) => ({ ...errs, [item.id]: authMessage(e) }));
-      if (e.code === 'request_not_open') load();
+      if (e.code === 'request_not_matched') load();
     } finally {
       setBusy(null);
     }
@@ -120,15 +107,34 @@ export default function RequestQueue({ token, apiBase = API_BASE, pollMs = 20000
     <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
       <header className="border-b border-gray-200 px-4 py-3">
         <h2 className="text-lg font-semibold text-gray-900">Citizen requests</h2>
-        <p className="text-sm text-gray-500">{items.length} open, oldest first. Claim one to take responsibility for it.</p>
+        <p className="text-sm text-gray-500">
+          {matched.length} ready to claim, {waiting.length} waiting for supplies. Hubs are matched automatically.
+        </p>
       </header>
       {error && <p className="px-4 py-3 text-sm text-red-700">{error}</p>}
       <ul className="space-y-3 p-4">
-        {items.length === 0 && !error && <li className="text-sm text-gray-500">No open requests.</li>}
-        {items.map((item) => (
+        {matched.length === 0 && !error && <li className="text-sm text-gray-500">No requests waiting for a worker.</li>}
+        {matched.map((item) => (
           <RequestCard key={item.id} item={item} onClaim={claim} busy={busy === item.id} error={rowErrors[item.id]} />
         ))}
       </ul>
+      {waiting.length > 0 && (
+        <div className="border-t border-gray-200 px-4 py-3">
+          <h3 className="text-sm font-semibold text-amber-800">Waiting for supplies</h3>
+          <p className="mb-2 text-xs text-gray-500">No hub can cover these yet. They'll be matched as soon as stock arrives.</p>
+          <ul className="space-y-2">
+            {waiting.map((item) => (
+              <li key={item.id} className="rounded-md bg-amber-50 px-3 py-2">
+                <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+                  <span className="font-medium text-gray-900">{itemsText(item.items)}</span>
+                  <span className="text-xs text-gray-500">{timeAgo(item.created_at)}</span>
+                </div>
+                <Where item={item} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </section>
   );
 }

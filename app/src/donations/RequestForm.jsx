@@ -1,33 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { API_BASE, createRequest, requestLimits } from './api';
+import { LocationStatus, MatchCard } from './parts';
 import { Button, ItemPicker, LABELS, colors, itemsText, pickedItems } from './shared';
 import useDeviceLocation from './useDeviceLocation';
-
-function LocationStatus({ place }) {
-  if (place.status === 'locating') {
-    return (
-      <View style={[styles.locationBox, styles.row]}>
-        <ActivityIndicator size="small" />
-        <Text style={styles.body}>Finding your location…</Text>
-      </View>
-    );
-  }
-  if (place.status === 'ready') {
-    const accuracy = place.coords.accuracy ? ` (±${Math.round(place.coords.accuracy)} m)` : '';
-    return (
-      <View style={styles.locationBox}>
-        <Text style={styles.locationText}>📍 Using your current location{accuracy}</Text>
-      </View>
-    );
-  }
-  return (
-    <View style={[styles.locationBox, styles.locationError]}>
-      <Text style={styles.error}>{place.error}</Text>
-      <Button title="Try again" variant="secondary" onPress={place.retry} />
-    </View>
-  );
-}
 
 /** The cap that applies to the picked items (their scarcest resource type) and how many requests are left. */
 function limitFor(limits, picked) {
@@ -46,7 +22,7 @@ function LimitNotice({ limits, picked }) {
   const { cap, level, scarcest, remaining } = limit;
   const tight = cap < limits.base_cap;
   return (
-    <View style={[styles.limitBox, remaining === 0 && styles.locationError]}>
+    <View style={[styles.limitBox, remaining === 0 && styles.limitReached]}>
       <Text style={styles.body}>
         {remaining === 0
           ? `You have ${limits.active} active request${limits.active === 1 ? '' : 's'}, the most allowed right now. `
@@ -57,9 +33,33 @@ function LimitNotice({ limits, picked }) {
   );
 }
 
+function RequestResult({ request, onDone }) {
+  return (
+    <View style={styles.result}>
+      {request.status === 'matched' ? (
+        <MatchCard title="Matched" hub={request.hub} match={request.match}>
+          <Text style={styles.body}>
+            {itemsText(request.items)} {request.items.length === 1 ? 'is' : 'are'} set aside for you here. A response worker
+            will contact you to deliver it or arrange pickup.
+          </Text>
+        </MatchCard>
+      ) : (
+        <View style={styles.waitBox}>
+          <Text style={styles.waitTitle}>Waiting for supplies</Text>
+          <Text style={styles.body}>
+            No hub has {itemsText(request.items)} right now. You'll be matched automatically as soon as a hub receives
+            them.
+          </Text>
+        </View>
+      )}
+      {onDone && <Button title="View my activity" variant="secondary" onPress={() => onDone(request)} />}
+    </View>
+  );
+}
+
 /**
- * Ask for supplies, sent with the device's GPS position. A government worker picks a hub and
- * either delivers or sets the items aside for pickup.
+ * Ask for supplies. The system matches the request to the best hub automatically, using the
+ * device's GPS position; a response worker then delivers or arranges pickup.
  * Props: token (family login), apiBase, place (a useDeviceLocation() result; created here if omitted), onDone(request).
  */
 export default function RequestForm({ token, apiBase = API_BASE, place: placeProp, onDone }) {
@@ -94,16 +94,21 @@ export default function RequestForm({ token, apiBase = API_BASE, place: placePro
     loadLimits();
   };
 
+  if (state.kind === 'done') {
+    return (
+      <ScrollView contentContainerStyle={styles.box}>
+        <Text style={styles.title}>Request sent</Text>
+        <RequestResult request={state.request} onDone={onDone} />
+        <Button title="Request something else" variant="secondary" onPress={() => setState({ kind: 'idle' })} />
+      </ScrollView>
+    );
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.box}>
       <Text style={styles.title}>Request supplies</Text>
-      <Text style={styles.body}>
-        Tell us what you need. A response worker will deliver it or set it aside at a nearby hub for you to pick up.
-      </Text>
+      <Text style={styles.body}>Tell us what you need. We'll match you with the best hub that has it.</Text>
       <LocationStatus place={place} />
-      {state.kind === 'done' && (
-        <Text style={styles.success}>Request sent for {itemsText(state.request.items)}. Track it under My activity.</Text>
-      )}
       <ItemPicker value={items} onChange={setItems} />
       <LimitNotice limits={limits} picked={picked} />
       <TextInput
@@ -123,26 +128,24 @@ export default function RequestForm({ token, apiBase = API_BASE, place: placePro
       />
       {state.kind === 'error' && <Text style={styles.error}>{state.message}</Text>}
       <Button
-        title={state.kind === 'saving' ? 'Sending…' : 'Send request'}
+        title={state.kind === 'saving' ? 'Finding a hub…' : 'Send request'}
         onPress={submit}
         disabled={!picked.length || state.kind === 'saving' || place.status !== 'ready' || limitFor(limits, picked)?.remaining === 0}
       />
-      {state.kind === 'done' && onDone && <Button title="View my activity" variant="secondary" onPress={() => onDone(state.request)} />}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   box: { padding: 16, gap: 12 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   title: { fontSize: 20, fontWeight: '700', color: colors.text },
   body: { fontSize: 14, color: colors.muted },
-  success: { fontSize: 14, color: colors.ok, fontWeight: '600' },
   error: { fontSize: 14, color: colors.danger },
-  locationBox: { backgroundColor: '#f0fdf4', borderRadius: 8, padding: 10, gap: 8 },
-  locationText: { fontSize: 14, color: '#166534', fontWeight: '500' },
-  locationError: { backgroundColor: '#fef2f2' },
+  result: { gap: 12 },
+  waitBox: { backgroundColor: '#fffbeb', borderRadius: 12, padding: 14, gap: 4, borderWidth: 1, borderColor: '#fde68a' },
+  waitTitle: { fontSize: 16, fontWeight: '700', color: '#92400e' },
   limitBox: { backgroundColor: '#f3f4f6', borderRadius: 8, padding: 10 },
+  limitReached: { backgroundColor: '#fef2f2' },
   input: { borderWidth: 1, borderColor: colors.border, borderRadius: 8, padding: 10, fontSize: 15, color: colors.text },
   multiline: { minHeight: 70, textAlignVertical: 'top' },
 });

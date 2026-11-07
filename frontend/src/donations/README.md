@@ -15,7 +15,7 @@ import HubStaffConsole from './donations/HubStaffConsole';
 | `DonationsTab` | Government view with three sections: **Hubs & transport** (map plus over-capacity table), **Citizen requests** (queue plus my assignments), and **Edit a hub** |
 | `HubMap` | Leaflet/OpenStreetMap map. Hubs are colored and sized by capacity, open requests appear as blue dots, and each hub's popup can dispatch transport |
 | `OverCapacityHubs` | Hubs at or above 70, 80 or 90% capacity, with **Dispatch Transport Pickup** and **Mark cleared** |
-| `RequestQueue` | Open citizen requests with suggested source hubs. Pick delivery or pickup, then claim |
+| `RequestQueue` | Citizen requests already matched to a hub, with the reasons. Choose delivery or pickup, then claim. Requests waiting for stock are listed separately |
 | `MyAssignments` | The worker's claimed requests: where to collect, where to deliver, a directions link, and **Mark delivered**/**Mark picked up** (which deducts stock) or **Release to queue** |
 | `HubStaffConsole` | One hub's live summary, incoming pledges, and check-in form |
 | `PledgeInbox` | Pending drop-offs for a hub. **Received** adds the items to inventory |

@@ -369,25 +369,26 @@ async def seed_hubs() -> int:
     return created
 
 
+def synthetic_user(index: int) -> str:
+    """One of the Tampa scenario's synthetic family accounts (they can't sign in)."""
+    return f"demo_tampa_user_{index + 1:04d}"
+
+
 async def seed_activity() -> None:
-    """Sample requests (matched to hubs) and pending pledges from the demo family; existing rows
-    are left unchanged."""
+    """Sample requests (matched to hubs) and pending pledges from the scenario's synthetic families,
+    so the demo family account starts with no activity of its own. Existing rows are left
+    unchanged."""
     async with connect() as connection:
-        family = await (
-            await connection.execute("SELECT id FROM users WHERE email = 'family@demo.example'")
-        ).fetchone()
-        if family is None:
-            return
         stamp = timestamp(now())
         await connection.execute("BEGIN IMMEDIATE")
         try:
-            for request_id, items, lat, lng, address, notes in DEMO_REQUESTS:
+            for index, (request_id, items, lat, lng, address, notes) in enumerate(DEMO_REQUESTS):
                 await connection.execute(
                     "INSERT INTO supply_requests (id, user_id, items_json, latitude, longitude, address, notes, status, "
                     "created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'open', ?, ?) ON CONFLICT(id) DO NOTHING",
                     (
                         request_id,
-                        family[0],
+                        synthetic_user(index),
                         json.dumps(items),
                         lat,
                         lng,
@@ -397,11 +398,19 @@ async def seed_activity() -> None:
                         stamp,
                     ),
                 )
-            for pledge_id, hub_id, items, notes in DEMO_PLEDGES:
+            for index, (pledge_id, hub_id, items, notes) in enumerate(DEMO_PLEDGES, 10):
                 await connection.execute(
                     "INSERT INTO pledges (id, user_id, hub_id, items_json, notes, status, created_at, updated_at) "
                     "VALUES (?, ?, ?, ?, ?, 'pending', ?, ?) ON CONFLICT(id) DO NOTHING",
-                    (pledge_id, family[0], hub_id, json.dumps(items), notes, stamp, stamp),
+                    (
+                        pledge_id,
+                        synthetic_user(index),
+                        hub_id,
+                        json.dumps(items),
+                        notes,
+                        stamp,
+                        stamp,
+                    ),
                 )
             await match_waiting_requests(connection)
             await connection.execute("COMMIT")

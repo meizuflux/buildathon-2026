@@ -51,7 +51,10 @@ export default function HubMap({ token, apiBase = API_BASE, center = DEFAULT_CEN
       // keep the last good data on screen
     }
     if (token) {
-      fetchRequests({ status: 'open' }, { apiBase, token }).then(setRequests, () => setRequests([]));
+      Promise.all([
+        fetchRequests({ status: 'open' }, { apiBase, token }),
+        fetchRequests({ status: 'matched' }, { apiBase, token }),
+      ]).then(([open, matched]) => setRequests([...open, ...matched]), () => setRequests([]));
     }
   }, [apiBase, token]);
 

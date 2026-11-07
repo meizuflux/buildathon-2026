@@ -22,14 +22,6 @@ async function request(path, { apiBase = API_BASE, token, method = 'GET', body }
   return data;
 }
 
-// filter: { needs: resource_type_id } for hubs that want a donation, { has: resource_type_id } for hubs that can give one.
-export function fetchNearbyHubs(lat, lng, { radiusKm = 25, needs, has, ...options } = {}) {
-  const params = new URLSearchParams({ lat: String(lat), lng: String(lng), radius_km: String(radiusKm) });
-  if (needs) params.set('needs', needs);
-  if (has) params.set('has', has);
-  return request(`/api/hubs/nearby?${params}`, options);
-}
-
 // items: [{ resource_type_id, quantity }]
 export const createRequest = ({ items, latitude, longitude, address = '', notes = '' }, options) =>
   request('/api/requests', { ...options, method: 'POST', body: { items, latitude, longitude, address, notes } });
@@ -39,8 +31,9 @@ export const myRequests = (options) => request('/api/requests/mine', options);
 export const cancelRequest = (id, options) =>
   request(`/api/requests/${encodeURIComponent(id)}/cancel`, { ...options, method: 'POST' });
 
-export const createPledge = (hubId, { items, notes = '' }, options) =>
-  request(`/api/hubs/${encodeURIComponent(hubId)}/pledges`, { ...options, method: 'POST', body: { items, notes } });
+// Donate items; the server picks the best drop-off hub. Returns the pledge with `hub` and `match`.
+export const createDonation = ({ items, latitude, longitude, notes = '' }, options) =>
+  request('/api/pledges', { ...options, method: 'POST', body: { items, latitude, longitude, notes } });
 
 export const myPledges = (options) => request('/api/pledges/mine', options);
 

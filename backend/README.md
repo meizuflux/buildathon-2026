@@ -97,7 +97,7 @@ operator-only because family alerts expose operational household information.
 
 ## Donation distribution
 
-Community hubs (churches, fire stations, schools) hold donated supplies. Citizens find hubs, pledge drop-offs, and request goods. Hub staff confirm drop-offs and log stock. Government operators claim citizen requests, choose a source hub and whether to deliver or have the citizen pick up, and dispatch transport to clear full hubs.
+Community hubs (churches, fire stations, schools) hold donated supplies. Citizens never pick a hub. They say what they have or need, and the server matches them: a donation goes to the best drop-off hub, and a request goes to the best source hub, where its items are reserved. Hub staff confirm drop-offs and log stock. Government workers claim matched requests, choose delivery or pickup, and dispatch transport to clear full hubs.
 
 Roles: `family` (citizen), `hub_staff` (linked to one hub through the `hub_staff` table), and `operator`. The `users.role` check now includes `hub_staff`, so recreate development databases created before this change.
 
@@ -117,7 +117,7 @@ Hubs and back-office depots share one stock engine with the supply logistics API
 
 ### Citizen requests
 
-`open` → claim → `assigned` → fulfill → `fulfilled`. The assignee can release a request back to `open`; the citizen can cancel while it is `open` or `assigned`.
+`open` (waiting for supplies) → auto-match → `matched` (hub chosen, items reserved) → claim → `assigned` → fulfill → `fulfilled`. A request is matched the moment it's created if any hub can cover it. Otherwise it's matched automatically when stock arrives: a pledge is received, a hub or organization is restocked, or a shipment is delivered or cancelled. The assignee can release a claimed request back to `matched`, and the citizen can cancel until it's fulfilled, which returns the reserved items.
 
 | Endpoint | Auth | Purpose |
 |---|---|---|
@@ -125,12 +125,14 @@ Hubs and back-office depots share one stock engine with the supply logistics API
 | `GET /api/requests/limits` | family | `{"active", "base_cap", "resource_types": {id: {"cap", "level", "pressure"}}}` |
 | `GET /api/requests/mine` | family | The citizen's requests, with source `hub` and `method` once assigned |
 | `POST /api/requests/{id}/cancel` | family (owner) | 409 `request_closed` once fulfilled or cancelled |
-| `GET /api/requests?status=&assigned_to_me=true` | operator | Oldest first. Open requests include `suggested_hubs`: up to three ranked hubs with `score` and `reasons`; the first is recommended |
-| `POST /api/requests/{id}/claim` | operator | `{"hub_id", "method": "delivery" or "pickup"}`. 409 `insufficient_stock` if the hub can't cover it after other reservations |
-| `POST /api/requests/{id}/release` | assignee | Returns the request to the open queue |
+| `GET /api/requests?status=&assigned_to_me=true` | operator | Oldest first. Each request has `hub` and `match` (`distance_km`, `score`, `reasons`) once matched |
+| `POST /api/requests/{id}/claim` | operator | `{"method": "delivery" or "pickup"}`. Only for `matched` requests (409 `request_not_matched` otherwise) |
+| `POST /api/requests/{id}/release` | assignee | Back to `matched`; the hub and reservation are kept |
 | `POST /api/requests/{id}/fulfill` | assignee | Removes the items from the source hub's inventory |
 
-**Recommended source hubs** (`donations/planner.py`): each hub that can cover a request is scored in kilometre-equivalents as distance, plus 15 times the share of the drawn units that would push the hub below its target (pending pledges count as stock), minus 5 for hubs at 90% capacity or more (2 at 70% or more), since sending goods out frees space. All open requests are planned together with a regret heuristic, so suggestions never promise the same units twice and a request with few options is placed before one with many.
+**Request matching** (`donations/planner.py`, `donations/matching.py`): each hub that can cover a request is scored in kilometre-equivalents. The score is the distance, plus 15 times the share of the drawn units that would push the hub below its target (pending pledges count as stock), minus 5 for hubs at 90% capacity or more (2 at 70% or more), since sending goods out frees space. All waiting requests are matched together with a regret heuristic, so no two requests are promised the same units and a request with few options is placed before one with many.
+
+**Drop-off matching**: a donation goes to the active hub that minimises distance plus 10 times the share of donated units the hub doesn't need, plus 3 if the hub is 70% or more full. Hubs at 90% or more, or more than 50 km away, are skipped.
 
 **Fair-share cap** (`donations/fairness.py`): a citizen may hold 3 active (open or assigned) requests. For each resource type, pressure is open demand divided by available hub stock; below 0.25 the cap rises to 4, from 0.6 it drops to 2, and from 1.0 to 1. A request is limited by its scarcest resource type.
 
@@ -140,7 +142,8 @@ Hubs and back-office depots share one stock engine with the supply logistics API
 
 | Endpoint | Auth | Purpose |
 |---|---|---|
-| `POST /api/hubs/{hub_id}/pledges` | family | `{"items": [...], "notes"}`. 409 `hub_full` at 90% capacity or more |
+| `POST /api/pledges` | family | `{"items": [...], "latitude", "longitude", "notes"}`. The server picks the drop-off hub and returns the pledge with `hub` and `match`. 409 `no_hub_available` if no hub nearby has space |
+| `POST /api/hubs/{hub_id}/pledges` | family | Pledge to a specific hub (not used by the citizen app). 409 `hub_full` at 90% capacity or more |
 | `GET /api/pledges/mine` | family | The citizen's pledges |
 | `POST /api/pledges/{id}/cancel` | family (owner) | Pending pledges only |
 | `GET /api/hubs/{hub_id}/pledges?status=pending` | that hub's staff, operator | Oldest first, with `donor_email` |

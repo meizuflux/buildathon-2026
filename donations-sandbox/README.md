@@ -22,7 +22,7 @@ The Citizen app tab has a **Phone location** switch: *Simulated* places the phon
 
 ## Demo walkthrough
 
-1. **Citizen app** (`family@demo.example`): filter hubs with "I want to donate" → Formula, open Seminole Heights Community Center, and pledge. Then go to **Request supplies** and send a request.
-2. **Hub staff** (Seminole Heights Community Center): the pledge shows under Expected drop-offs. Click **Received** and watch On hand go up and Still needed go down.
-3. **Government dashboard** (`government@demo.example`): check the map and the over-capacity table, and dispatch a pickup. Under **Citizen requests**, claim the new request from a suggested hub, then **Mark delivered** under My assignments.
-4. **Citizen app → My activity**: the request shows Done and the pledge shows Received.
+1. **Citizen app** (`family@demo.example`). Under **Donate**, add baby formula and diapers and tap *Find where to drop off*. The app names the hub and explains why it was chosen. Under **Request supplies**, add some bottled water and send it; it's matched to a hub at once. Request a generator too: no hub has one, so it shows *Waiting for supplies*.
+2. **Hub staff** (sign in as the hub the donation was matched to). The donation shows under Expected drop-offs. Click **Received** and watch On hand go up and Still needed go down.
+3. **Government dashboard** (`government@demo.example`). Under **Citizen requests**, each request already has its matched hub and the reasons. Choose delivery or pickup, claim it, then click **Mark delivered** under My assignments. Under **Hubs & transport**, check the map and dispatch a pickup for a full hub.
+4. **Citizen app → My activity**: the water request shows Done, the generator request is waiting, and the donation shows Received.

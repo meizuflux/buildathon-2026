@@ -54,11 +54,12 @@ export const fetchRequests = ({ status, assignedToMe } = {}, options) => {
 };
 
 // method: 'delivery' | 'pickup'
-export const claimRequest = (requestId, hubId, method, options) =>
+// The hub is chosen by the server's matcher; the worker only picks delivery or pickup.
+export const claimRequest = (requestId, method, options) =>
   request(`/api/requests/${encodeURIComponent(requestId)}/claim`, {
     ...options,
     method: 'POST',
-    body: JSON.stringify({ hub_id: hubId, method }),
+    body: JSON.stringify({ method }),
   });
 
 export const releaseRequest = (requestId, options) =>

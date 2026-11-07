@@ -4,7 +4,8 @@ import { API_BASE, cancelPledge, cancelRequest, myPledges, myRequests } from './
 import { Button, colors, itemsText } from './shared';
 
 const REQUEST_STATUS = {
-  open: ['Waiting for a worker', colors.warn],
+  open: ['Waiting for supplies', colors.warn],
+  matched: ['Matched', colors.primary],
   assigned: ['On the way', colors.primary],
   fulfilled: ['Done', colors.ok],
   cancelled: ['Cancelled', colors.muted],
@@ -22,6 +23,8 @@ function Status({ map, status }) {
 }
 
 function requestDetail(r) {
+  if (r.status === 'open') return "No hub has these right now. You'll be matched as soon as one does.";
+  if (r.status === 'matched') return `Set aside at ${r.hub.name}. A worker will contact you to deliver or arrange pickup.`;
   if (r.status === 'assigned' && r.method === 'delivery') return `${r.hub.name} is delivering to you.`;
   if (r.status === 'assigned' && r.method === 'pickup') return `Ready for pickup at ${r.hub.name}, ${r.hub.address}.`;
   if (r.status === 'fulfilled' && r.hub) return `From ${r.hub.name}.`;
@@ -79,7 +82,7 @@ export default function MyActivity({ token, apiBase = API_BASE }) {
           </View>
           {requestDetail(r) && <Text style={styles.meta}>{requestDetail(r)}</Text>}
           <Text style={styles.meta}>{new Date(r.created_at).toLocaleString()}</Text>
-          {(r.status === 'open' || r.status === 'assigned') && (
+          {['open', 'matched', 'assigned'].includes(r.status) && (
             <Button title="Cancel request" variant="secondary" onPress={() => act(() => cancelRequest(r.id, { apiBase, token }))} />
           )}
         </View>
