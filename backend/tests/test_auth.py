@@ -65,7 +65,10 @@ def test_invalid_and_expired_credentials(client):
     assert client.get("/api/me").status_code == 401
     token = login(client).json()["access_token"]
     with closing(connect()) as connection, connection:
-        connection.execute("UPDATE sessions SET expires_at = ?", ((datetime.now(UTC) - timedelta(seconds=1)).isoformat(),))
+        connection.execute(
+            "UPDATE sessions SET expires_at = ?",
+            ((datetime.now(UTC) - timedelta(seconds=1)).isoformat(),),
+        )
     assert client.get("/api/me", headers={"Authorization": f"Bearer {token}"}).status_code == 401
 
 
@@ -93,5 +96,8 @@ def test_only_current_session_is_revoked(client):
     register(client)
     first = login(client).json()["access_token"]
     second = login(client).json()["access_token"]
-    assert client.post("/api/auth/logout", headers={"Authorization": f"Bearer {first}"}).status_code == 204
+    assert (
+        client.post("/api/auth/logout", headers={"Authorization": f"Bearer {first}"}).status_code
+        == 204
+    )
     assert client.get("/api/me", headers={"Authorization": f"Bearer {second}"}).status_code == 200

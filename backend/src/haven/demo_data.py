@@ -1,13 +1,14 @@
 """Create demo accounts for functionality currently available in the API."""
 
 import asyncio
-import secrets
 import json
+import secrets
 from uuid import uuid4
 
 from haven.allocation import recompute_disasters
 from haven.auth import hash_password, now, timestamp
-from haven.db import connect, initialize_database
+from haven.db import connect
+from haven.startup import initialize_database
 
 DEMO_ACCOUNTS = (
     ("family@demo.example", "family"),
@@ -22,7 +23,9 @@ async def seed_demo_data() -> dict[str, str | None]:
     pending = []
     async with connect() as connection:
         for email, role in DEMO_ACCOUNTS:
-            if await (await connection.execute("SELECT 1 FROM users WHERE email = ?", (email,))).fetchone():
+            if await (
+                await connection.execute("SELECT 1 FROM users WHERE email = ?", (email,))
+            ).fetchone():
                 created[email] = None
                 continue
             password = secrets.token_urlsafe(18)
@@ -49,52 +52,103 @@ async def seed_tampa_scenario() -> None:
         await connection.execute("BEGIN IMMEDIATE")
         try:
             # A marker prevents reruns from undoing operator edits or resurrecting records.
-            existing = await (await connection.execute(
-                "SELECT 1 FROM disasters WHERE id = ?", (DEMO_DISASTER_ID,),
-            )).fetchone()
+            existing = await (
+                await connection.execute(
+                    "SELECT 1 FROM disasters WHERE id = ?",
+                    (DEMO_DISASTER_ID,),
+                )
+            ).fetchone()
             if existing:
                 await connection.execute("COMMIT")
                 return
             stamp = timestamp(now())
             await connection.execute(
-                "INSERT INTO disasters VALUES (?, ?, ?, ?, ?, ?)",
-                (DEMO_DISASTER_ID, "hurricane", "Demo Hurricane Tampa", "active", "Tampa, Florida (fictional demo)", stamp),
+                "INSERT INTO disasters (id, type, name, status, affected_area, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    DEMO_DISASTER_ID,
+                    "hurricane",
+                    "Demo Hurricane Tampa",
+                    "active",
+                    "Tampa, Florida (fictional demo)",
+                    stamp,
+                ),
             )
             for i in range(20):
                 capacity = {"total_people": 200, "available_people": 200}
-                capabilities = {"pets_allowed": i % 3 != 0, "child_friendly": True,
-                                "wheelchair_accessible": i % 4 != 0,
-                                "medical_staff": ["General medical staff"] if i % 3 != 0 else [],
-                                "special_care_notes": "General special care" if i % 4 != 0 else None}
-                resources = {"food": "available", "water": "available",
-                             "medication": "available" if i % 3 != 0 else "unavailable",
-                             "clothes": "limited" if i % 2 else "available"}
+                capabilities = {
+                    "pets_allowed": i % 3 != 0,
+                    "child_friendly": True,
+                    "wheelchair_accessible": i % 4 != 0,
+                    "medical_staff": ["General medical staff"] if i % 3 != 0 else [],
+                    "special_care_notes": "General special care" if i % 4 != 0 else None,
+                }
+                resources = {
+                    "food": "available",
+                    "water": "available",
+                    "medication": "available" if i % 3 != 0 else "unavailable",
+                    "clothes": "limited" if i % 2 else "available",
+                }
                 await connection.execute(
-                    "INSERT INTO shelters VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    (f"demo_tampa_shelter_{i+1:02d}", DEMO_DISASTER_ID, f"Demo Shelter {i+1:02d}",
-                     f"Fictional location {i+1}, Tampa, FL", 27.87 + (i // 5) * .05,
-                     -82.55 + (i % 5) * .05, "open", json.dumps(capacity),
-                     json.dumps(capabilities), json.dumps(resources), stamp),
+                    "INSERT INTO shelters (id, disaster_id, name, address, latitude, longitude, status, "
+                    "capacity_json, capabilities_json, resources_json, updated_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        f"demo_tampa_shelter_{i + 1:02d}",
+                        DEMO_DISASTER_ID,
+                        f"Demo Shelter {i + 1:02d}",
+                        f"Fictional location {i + 1}, Tampa, FL",
+                        27.87 + (i // 5) * 0.05,
+                        -82.55 + (i % 5) * 0.05,
+                        "open",
+                        json.dumps(capacity),
+                        json.dumps(capabilities),
+                        json.dumps(resources),
+                        stamp,
+                    ),
                 )
             for i in range(1000):
-                user_id = f"demo_tampa_user_{i+1:04d}"
+                user_id = f"demo_tampa_user_{i + 1:04d}"
                 await connection.execute(
-                    "INSERT INTO users VALUES (?, ?, ?, ?, ?)",
-                    (user_id, f"synthetic-family-{i+1:04d}@demo.invalid", "!", "family", stamp),
+                    "INSERT INTO users (id, email, password_hash, role, created_at) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    (user_id, f"synthetic-family-{i + 1:04d}@demo.invalid", "!", "family", stamp),
                 )
-                needs = {"pets": i % 5 == 0, "immediate_medication": i % 17 == 0,
-                         "medical_notes": None, "accessibility_notes": "Mobility assistance" if i % 13 == 0 else None,
-                         "other_special_care": None}
+                needs = {
+                    "pets": i % 5 == 0,
+                    "immediate_medication": i % 17 == 0,
+                    "medical_notes": None,
+                    "accessibility_notes": "Mobility assistance" if i % 13 == 0 else None,
+                    "other_special_care": None,
+                }
                 await connection.execute(
-                    "INSERT INTO families VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    (f"demo_tampa_family_{i+1:04d}", user_id, DEMO_DISASTER_ID,
-                     1 + i % 2, i % 3, 27.86 + (i % 20) * .01, -82.57 + (i % 23) * .01,
-                     json.dumps(needs), json.dumps({"has_car": i % 4 != 0}), stamp, stamp),
+                    "INSERT INTO families (id, owner_user_id, disaster_id, adults, children, latitude, longitude, "
+                    "needs_json, resources_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        f"demo_tampa_family_{i + 1:04d}",
+                        user_id,
+                        DEMO_DISASTER_ID,
+                        1 + i % 2,
+                        i % 3,
+                        27.86 + (i % 20) * 0.01,
+                        -82.57 + (i % 23) * 0.01,
+                        json.dumps(needs),
+                        json.dumps({"has_car": i % 4 != 0}),
+                        stamp,
+                        stamp,
+                    ),
                 )
             await connection.execute(
-                "INSERT INTO disaster_updates VALUES (?, ?, ?, ?, ?, ?)",
-                ("demo_tampa_update", DEMO_DISASTER_ID, "Demo hurricane update",
-                 "Fictional exercise only. Follow instructions from local officials.", "warning", stamp),
+                "INSERT INTO disaster_updates (id, disaster_id, title, message, severity, published_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    "demo_tampa_update",
+                    DEMO_DISASTER_ID,
+                    "Demo hurricane update",
+                    "Fictional exercise only. Follow instructions from local officials.",
+                    "warning",
+                    stamp,
+                ),
             )
             await recompute_disasters(connection, (DEMO_DISASTER_ID,))
             await connection.execute("COMMIT")

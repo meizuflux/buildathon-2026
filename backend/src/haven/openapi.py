@@ -1,6 +1,6 @@
 """Shared API response types and Litestar OpenAPI metadata."""
 
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 from litestar.openapi import ResponseSpec
 
@@ -133,6 +133,19 @@ class PlanShelter(TypedDict):
     resources: ShelterResources
 
 
+class PlanAlert(TypedDict):
+    code: str
+    severity: Literal["warning", "critical"]
+    message: str
+    shelter_id: NotRequired[str]
+    shelter_name: NotRequired[str]
+    assigned_people: NotRequired[int]
+    total_people: NotRequired[int]
+    people_over_capacity: NotRequired[int]
+    people_over_allocation_budget: NotRequired[int]
+    unmet_requirements: NotRequired[list[str]]
+
+
 class Alert(TypedDict):
     id: str
     disaster_id: str
@@ -159,6 +172,7 @@ class Plan(TypedDict):
     shelter: PlanShelter | None
     reason: str
     instructions: list[str]
+    alerts: list[PlanAlert]
     capacity_reserved: bool
     version: int
     updated_at: str
@@ -178,6 +192,7 @@ class Update(TypedDict):
     message: str
     severity: Literal["info", "warning", "critical"]
     published_at: str
+    target: NotRequired[dict[str, str]]
 
 
 class UpdateList(TypedDict):
@@ -203,7 +218,16 @@ BEARER = [{"BearerAuth": []}]
 
 
 def errors(*statuses: int) -> dict[int, ResponseSpec]:
-    descriptions = {400: "Invalid request", 401: "Authentication required or invalid credentials",
-                    403: "Not authorized for this resource", 404: "Resource not found",
-                    409: "Conflict", 429: "Too many login attempts", 500: "Internal server error"}
-    return {status: ResponseSpec(data_container=ErrorResponse, description=descriptions[status]) for status in statuses}
+    descriptions = {
+        400: "Invalid request",
+        401: "Authentication required or invalid credentials",
+        403: "Not authorized for this resource",
+        404: "Resource not found",
+        409: "Conflict",
+        429: "Too many login attempts",
+        500: "Internal server error",
+    }
+    return {
+        status: ResponseSpec(data_container=ErrorResponse, description=descriptions[status])
+        for status in statuses
+    }

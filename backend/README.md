@@ -8,13 +8,16 @@ uv sync
 just dev
 ```
 
+Run the development checks with `just check`. The individual recipes are `just lint`,
+`just format-check`, `just typecheck`, and `just test`; use `just format` to apply Ruff formatting.
+
 The API listens on `http://127.0.0.1:8000`. Check `GET /health` or visit `/schema` for Swagger UI or `/schema/openapi.json` for the generated OpenAPI document. The Swagger UI loads its assets from a CDN and needs internet access. Run tests with `just test`.
 
 Use `just prod` to run without reload (configure `HOST`, `PORT`, and `WEB_CONCURRENCY` through environment variables). Run `just schema` to create missing tables without starting the server. Run `just` to list all recipes.
 
 Database operations use APSW’s async interface. Password hashing runs off the event loop.
 
-On startup, the application creates the tables in `src/haven/schema.sql`. The default database is `disaster_response.sqlite3` in the current working directory; set `DATABASE_PATH` to change it. This is an initial schema, not a migration system: changes to existing tables require recreating the development database or applying changes manually.
+On startup, the application creates the base tables in `src/haven/schema.sql`, applies versioned database migrations, and reconciles existing plans with the allocation ledger before serving requests. The default database is `disaster_response.sqlite3` in the current working directory; set `DATABASE_PATH` to change it. Run `just schema` to perform the same database setup without starting the server.
 
 ## Authentication
 
@@ -51,10 +54,27 @@ All paths below start with `/api`. Handlers are grouped in `haven/routers`, with
 | GET, POST | `/disasters/{disaster_id}/updates` | Read official updates or publish one as an operator. |
 | POST | `/families/{family_id}/reports` | Submit an idempotent family report. |
 | GET | `/disasters/{disaster_id}/reports` | List family reports as an operator. |
+| GET | `/disasters/{disaster_id}/activity` | Operator timeline of recorded actions, newest first; optional `limit` (1–1000, default 50). |
+| GET | `/resource-types` | List the seeded supply catalog (authenticated users). |
+| GET, POST | `/organizations` | List or create organizations for a disaster (operator only). |
+| GET, PATCH | `/organizations/{organization_id}` | Read or update an organization (operator only). |
+| GET | `/inventory` | List organization stock for a disaster (operator only). |
+| PATCH | `/organizations/{organization_id}/inventory` | Set stock quantities for an organization (operator only). |
+| GET, POST | `/needs` | List or create resource needs (operator only). |
+| PATCH | `/needs/{need_id}` | Update a need (operator only). |
+| GET, POST | `/shipments` | List or create shipments (operator only). |
+| PATCH | `/shipments/{shipment_id}` | Update a shipment's status, ETA, or notes (operator only). |
 
 Family and plan listings accept `limit` (1–1000, default 100) and `offset` (default 0), and return `total`, `limit`, and `offset`. Shelter listings already include resource availability, capabilities, and capacity.
 
 PATCH requests merge supplied nested fields, preserving omitted fields. Nullable notes may be cleared with `null`. Coordinates, counts, capacities, and enumerated values are validated. Errors use `{"error":{"code":"...","message":"..."}}` consistently.
+
+Official updates can target the families currently assigned to a shelter by adding
+`"target": {"type": "shelter", "shelter_id": "shelter_..."}` when publishing.
+Omit the target or use `{"type": "all"}` for a general update. Operators see all
+updates; anonymous visitors see general updates; authenticated families also see
+updates for their current assignment. Reassignment changes which targeted updates
+are visible. The shelter must belong to the same disaster.
 
 ## Coordinated allocation and plan changes
 

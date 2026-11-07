@@ -4,8 +4,9 @@ import asyncio
 from getpass import getpass
 from uuid import uuid4
 
-from haven.auth import hash_password, normalize_email, require_password, timestamp, now
-from haven.db import connect, initialize_database
+from haven.auth import hash_password, normalize_email, now, require_password, timestamp
+from haven.db import connect
+from haven.startup import initialize_database
 
 
 async def main() -> None:

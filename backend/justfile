@@ -10,13 +10,30 @@ dev:
 prod:
     uv run --locked --no-dev uvicorn haven.app:app --no-proxy-headers --host "${HOST:-0.0.0.0}" --port "${PORT:-8000}"
 
-# Create missing database tables from the initial schema.
+# Initialize the schema, apply migrations, and reconcile stored plans.
 schema:
-    uv run --locked python -c 'import asyncio; from haven.db import initialize_database; asyncio.run(initialize_database())'
+    uv run --locked python -c 'import asyncio; from haven.startup import initialize_database; asyncio.run(initialize_database())'
 
 # Run the test suite.
 test:
     uv run --locked pytest -q
+
+# Check Python lint rules and formatting.
+lint:
+    uv run --locked ruff check src tests
+
+format-check:
+    uv run --locked ruff format --check src tests
+
+format:
+    uv run --locked ruff format src tests
+
+# Check source types.
+typecheck:
+    uv run --locked ty check src
+
+# Run all development checks.
+check: lint format-check typecheck test
 
 # Create an operator interactively (password is not echoed).
 create-operator:
