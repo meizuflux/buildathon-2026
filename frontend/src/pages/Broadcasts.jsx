@@ -125,9 +125,6 @@ export default function Broadcasts() {
             <select className="select-sm" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter history">
               <option value="all">All</option>
               <option value="published">Live</option>
-              <option value="scheduled" disabled>Scheduled (unavailable)</option>
-              <option value="retracted" disabled>Retracted (unavailable)</option>
-              <option value="expired" disabled>Expired (unavailable)</option>
               <option value="critical">Critical only</option>
             </select>
           </div>
@@ -161,7 +158,6 @@ export default function Broadcasts() {
                       {u.status === 'scheduled' ? `Sends ${timeAgo(u.scheduled_for)}` : `Sent ${timeAgo(u.published_at)}`}
                       {u.expires_at && ` · expires ${timeAgo(u.expires_at)}`}
                     </span>
-                    <button className="btn btn-ghost btn-sm danger" disabled title="Unavailable with the current server">Retract</button>
                   </div>
                 </li>
               )
