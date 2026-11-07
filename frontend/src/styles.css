@@ -383,6 +383,8 @@ a.badge:hover { text-decoration: none; filter: brightness(0.95); }
 
 /* ---------- broadcasts ---------- */
 .broadcast-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.broadcast-template { display: flex; align-items: end; gap: 8px; flex-wrap: wrap; }
+.broadcast-template .field { flex: 1 1 220px; margin-bottom: 0; }
 .target { display: flex; flex-direction: column; gap: 8px; }
 .target-map { position: relative; height: 240px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
 .preview { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; margin: 8px 0; }

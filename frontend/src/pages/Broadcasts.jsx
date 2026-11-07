@@ -15,6 +15,7 @@ export default function Broadcasts() {
   const [error, setError] = useState(null)
   const [sent, setSent] = useState(null)
   const [filter, setFilter] = useState('all')
+  const [templateId, setTemplateId] = useState('')
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }))
 
   const target = f.target
@@ -36,6 +37,7 @@ export default function Broadcasts() {
       }))
       setSent(created)
       setF(blank)
+      setTemplateId('')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -56,11 +58,18 @@ export default function Broadcasts() {
         <form className="card-panel compose" onSubmit={submit}>
           <div className="panel-title">
             <h2>New broadcast</h2>
-            <select className="select-sm" value="" onChange={(e) => applyTemplate(e.target.value)} aria-label="Apply a template">
-              <option value="">Apply a template…</option>
-              {BROADCAST_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
           </div>
+          <div className="broadcast-template">
+            <label className="field">
+              <span>Template</span>
+              <select value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+              <option value="">Choose a template…</option>
+              {BROADCAST_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </label>
+            <button type="button" className="btn" disabled={!templateId} onClick={() => applyTemplate(templateId)}>Apply template</button>
+          </div>
+          <p className="hint">Applying a template replaces the title, message and severity. You can edit them afterward.</p>
 
           <div className="field">
             <span>Severity</span>
