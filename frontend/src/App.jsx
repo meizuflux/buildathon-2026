@@ -5,6 +5,8 @@ import Login from './components/Login.jsx'
 import Layout from './components/Layout.jsx'
 import CommandCenter from './pages/CommandCenter.jsx'
 import Alerts from './pages/Alerts.jsx'
+import Families from './pages/Families.jsx'
+import FamilyDetail from './pages/FamilyDetail.jsx'
 import MapPage from './pages/MapPage.jsx'
 import Broadcasts from './pages/Broadcasts.jsx'
 import Needs from './pages/Needs.jsx'
@@ -22,6 +24,8 @@ export default function App() {
         <Route element={<Layout />}>
           <Route index element={<CommandCenter />} />
           <Route path="alerts" element={<Alerts />} />
+          <Route path="families" element={<Families />} />
+          <Route path="families/:id" element={<FamilyDetail />} />
           <Route path="map" element={<MapPage />} />
           <Route path="citizens" element={<Unavailable name="Citizen assistance" />} />
           <Route path="comms" element={<Navigate to="/comms/broadcasts" replace />} />

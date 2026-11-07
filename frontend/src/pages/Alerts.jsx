@@ -35,6 +35,7 @@ export default function Alerts() {
               <Icon size={16} className="att-icon" aria-hidden="true" />
               <div className="att-body"><div className="att-title">{alert.message}</div><span className="muted small">{cap(alert.severity)}{alert.family_id ? ` · Family ${alert.family_id}` : ''}</span></div>
               <span className="muted small nowrap" title={fullTime(alert.updated_at)}>{timeAgo(alert.updated_at)}</span>
+              {alert.family_id && <Link className="btn btn-sm" to={`/families/${encodeURIComponent(alert.family_id)}`}>View family</Link>}
               {alert.shelter_id && <Link className="btn btn-sm" to={`/map?shelter=${encodeURIComponent(alert.shelter_id)}`}>View shelter</Link>}
             </li>
           })}
