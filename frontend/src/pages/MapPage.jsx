@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useData } from '../data.jsx'
+import { api } from '../api/index.js'
 import { emptyShelter } from '../lib/constants.js'
 import ShelterMap from '../components/ShelterMap.jsx'
 import ShelterList from '../components/ShelterList.jsx'
@@ -13,8 +14,38 @@ export default function MapPage() {
   const [tab, setTab] = useState(params.get('tab') === 'reports' || params.get('report') ? 'reports' : 'shelters')
   const [selectedId, setSelectedId] = useState(params.get('shelter'))
   const [focus, setFocus] = useState(null)
-  const [layers, setLayers] = useState({ shelters: true, organizations: true, reports: true, shipments: true })
+  const [layers, setLayers] = useState({ shelters: true, families: true, organizations: true, reports: true, shipments: true })
+  const [families, setFamilies] = useState([])
+  const [familyError, setFamilyError] = useState(null)
   const [form, setForm] = useState(null) // { id|null, draft }
+
+  useEffect(() => {
+    let active = true
+    let loading = false
+    setFamilies([])
+    setFamilyError(null)
+    if (!d.disasterId || !layers.families) return () => { active = false }
+    async function loadFamilies() {
+      if (loading) return
+      loading = true
+      try {
+        let offset = 0
+        let page
+        const all = []
+        do {
+          page = await api.listFamilies(d.disasterId, 1000, offset)
+          all.push(...page.families)
+          offset += page.families.length
+        } while (page.families.length && offset < page.total)
+        if (active) { setFamilies(all); setFamilyError(null) }
+      } catch (error) {
+        if (active) setFamilyError(error.message)
+      } finally { loading = false }
+    }
+    loadFamilies()
+    const timer = setInterval(loadFamilies, 12_000)
+    return () => { active = false; clearInterval(timer) }
+  }, [d.disasterId, layers.families])
 
   // Deep links from other pages: ?shelter=… or ?report=…
   useEffect(() => {
@@ -75,6 +106,8 @@ export default function MapPage() {
     <div className="map-page">
       <ShelterMap
         shelters={d.shelters}
+        families={families}
+        familyError={familyError}
         reports={d.reports}
         organizations={d.organizations}
         shipments={d.shipments}
