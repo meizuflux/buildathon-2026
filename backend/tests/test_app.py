@@ -2,7 +2,7 @@ import sqlite3
 
 from litestar.testing import TestClient
 
-from disaster_response_api.app import app
+from haven.app import app
 
 
 def test_startup_creates_schema_and_health_endpoint(tmp_path, monkeypatch):

@@ -4,7 +4,7 @@ from contextlib import closing
 
 from litestar import Litestar, get
 
-from disaster_response_api.db import connect, initialize_database
+from haven.db import connect, initialize_database
 
 
 @get("/health", sync_to_thread=True)
