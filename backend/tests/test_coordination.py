@@ -305,6 +305,22 @@ def test_report_retries_conflicts_and_operator_listing(coordination_client):
     )
     with sqlite3.connect(database) as connection:
         assert connection.execute("SELECT COUNT(*) FROM reports").fetchone()[0] == 1
+    activity_url = "/api/disasters/disaster/activity"
+    assert client.get(activity_url).status_code == 401
+    assert client.get(activity_url, headers=headers()).status_code == 403
+    events = client.get(activity_url, headers=headers("operator")).json()["activity"]
+    assert len(events) == 1
+    assert events[0]["type"] == "report_received"
+    assert events[0]["ref"] == {"kind": "report", "id": first.json()["id"]}
+    assert events[0]["actor"] == {"kind": "family", "id": "family", "name": "Household"}
+    assert client.get("/api/disasters/other/activity", headers=headers("operator")).json() == {
+        "activity": []
+    }
+    assert (
+        client.get("/api/disasters/missing/activity", headers=headers("operator")).status_code
+        == 404
+    )
+    assert client.get(activity_url + "?limit=0", headers=headers("operator")).status_code == 400
     for change in (
         {"type": "invalid"},
         {"message": " "},

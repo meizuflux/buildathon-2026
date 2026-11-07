@@ -12,6 +12,7 @@ from litestar.openapi import ResponseSpec
 from litestar.params import FromPath, JSONBody, QueryParameter
 from litestar.response import Response
 
+from haven.activity import record_activity
 from haven.allocation import public_plan, recompute_disasters
 from haven.api_common import error, require_disaster, require_family
 from haven.auth import (
@@ -173,7 +174,7 @@ async def create_report(
         user = get_authenticated_user(request)
         await connection.execute("BEGIN IMMEDIATE")
         try:
-            await require_family(connection, family_id, user)
+            family = await require_family(connection, family_id, user)
             row = await (
                 await connection.execute(
                     f"SELECT {projection(REPORT_COLUMNS)} FROM reports "
@@ -217,6 +218,15 @@ async def create_report(
                         "received",
                         report["created_at"],
                     ),
+                )
+                await record_activity(
+                    connection,
+                    disaster_id=family["disaster_id"],
+                    event_type="report_received",
+                    summary="Family report received",
+                    ref_kind="report",
+                    ref_id=report["id"],
+                    user=user,
                 )
             await connection.execute("COMMIT")
         except BaseException:
