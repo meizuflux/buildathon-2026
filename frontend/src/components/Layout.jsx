@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Building2, HandHeart, KeyRound, LayoutDashboard, Map, Megaphone, MessagesSquare, PackageSearch, RefreshCw, Truck, Warehouse } from 'lucide-react'
+import { Building2, HandHeart, KeyRound, LayoutDashboard, Map, Megaphone, PackageSearch, RefreshCw, Truck, Warehouse } from 'lucide-react'
 import { useAuth } from '../auth.jsx'
 import { useData } from '../data.jsx'
 import { DISASTER_TYPES } from '../lib/constants.js'
@@ -10,7 +10,6 @@ export default function Layout() {
   const { user, logout } = useAuth()
   const d = useData()
 
-  const unread = d.conversations.reduce((n, c) => n + (c.unread_count || 0), 0)
   const criticalNeeds = d.needs.filter((n) => n.status === 'open' && n.priority === 'critical' && needProgress(n, d.shipments).uncovered > 0).length
   const late = d.shipments.filter(isLate).length
   const pendingApproval = d.shipments.filter((s) => s.status === 'requested').length
@@ -25,7 +24,6 @@ export default function Layout() {
     ] },
     { section: 'Communications', items: [
       { to: '/comms/broadcasts', label: 'Broadcasts', icon: Megaphone },
-      { to: '/comms/messages', label: 'Messages', icon: MessagesSquare, badge: unread, tone: 'info' },
     ] },
     { section: 'Logistics', items: [
       { to: '/logistics/needs', label: 'Needs', icon: PackageSearch, badge: criticalNeeds, tone: 'alert' },
