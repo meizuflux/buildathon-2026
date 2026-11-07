@@ -9,12 +9,14 @@ from uuid import uuid4
 import msgspec
 from litestar import Request, Router, get, post
 from litestar.params import FromPath, FromQuery, JSONBody
+from litestar.openapi import ResponseSpec
 from litestar.response import Response
 
 from haven.api_common import current_user, error, require_disaster, require_family, require_operator
 from haven.auth import now, timestamp
 from haven.allocation import public_plan, recompute_disasters
 from haven.db import connect
+from haven.openapi import BEARER, Plan, PlanPage, Report, ReportList, errors
 
 
 class ReportLocation(msgspec.Struct, forbid_unknown_fields=True):
@@ -37,8 +39,8 @@ def report_from_row(row: tuple) -> dict:
     }
 
 
-@get("/disasters/{disaster_id:str}/plans", tags=["Plans"])
-async def list_plans(disaster_id: FromPath[str], request: Request, limit: FromQuery[int] = 100, offset: FromQuery[int] = 0) -> dict:
+@get("/disasters/{disaster_id:str}/plans", tags=["Plans"], security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Operator only. List the latest plan per family, ordered by family creation time and ID. limit must be 1–1000; offset must be nonnegative.")
+async def list_plans(disaster_id: FromPath[str], request: Request, limit: FromQuery[int] = 100, offset: FromQuery[int] = 0) -> PlanPage:
     if not 1 <= limit <= 1000 or offset < 0:
         error(400, "invalid_request", "limit must be between 1 and 1000 and offset must be nonnegative.")
     async with connect() as connection:
@@ -57,8 +59,8 @@ async def list_plans(disaster_id: FromPath[str], request: Request, limit: FromQu
     return {"plans": [public_plan(json.loads(row[0])) for row in rows], "total": total, "limit": limit, "offset": offset}
 
 
-@post("/families/{family_id:str}/plan/generate", status_code=200, tags=["Plans"])
-async def generate_plan(family_id: FromPath[str], request: Request) -> dict:
+@post("/families/{family_id:str}/plan/generate", status_code=200, tags=["Plans"], security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Family owner or operator only. Reallocate the disaster and return this family’s latest plan.")
+async def generate_plan(family_id: FromPath[str], request: Request) -> Plan:
     async with connect() as connection:
         user = await current_user(request, connection)
         await connection.execute("BEGIN IMMEDIATE")
@@ -78,8 +80,8 @@ async def generate_plan(family_id: FromPath[str], request: Request) -> dict:
     return plan
 
 
-@get("/families/{family_id:str}/plan", tags=["Plans"])
-async def get_plan(family_id: FromPath[str], request: Request, after_version: FromQuery[int | None] = None, wait_seconds: FromQuery[int] = 0) -> dict | Response:
+@get("/families/{family_id:str}/plan", tags=["Plans"], security=BEARER, responses={**errors(400, 401, 403, 404, 500), 200: ResponseSpec(data_container=Plan, description="Latest plan"), 204: ResponseSpec(data_container=None, description="No newer plan before timeout")}, description="Family owner or operator only. Supply after_version and wait_seconds (0–25) to long-poll for a newer plan.")
+async def get_plan(family_id: FromPath[str], request: Request, after_version: FromQuery[int | None] = None, wait_seconds: FromQuery[int] = 0) -> Plan | Response:
     if (after_version is not None and after_version < 0) or not 0 <= wait_seconds <= 25:
         error(400, "invalid_request", "after_version must be nonnegative and wait_seconds must be between 0 and 25.")
     deadline = time.monotonic() + wait_seconds
@@ -99,8 +101,8 @@ async def get_plan(family_id: FromPath[str], request: Request, after_version: Fr
         await asyncio.sleep(min(0.25, remaining))
 
 
-@post("/families/{family_id:str}/reports", tags=["Reports"])
-async def create_report(family_id: FromPath[str], data: JSONBody[ReportCreate], request: Request) -> dict:
+@post("/families/{family_id:str}/reports", tags=["Reports"], security=BEARER, responses=errors(400, 401, 403, 404, 409, 500), description="Family owner or operator only. Reusing a client_request_id with the same payload returns the original report; a different payload conflicts.")
+async def create_report(family_id: FromPath[str], data: JSONBody[ReportCreate], request: Request) -> Report:
     if not data.message.strip() or not data.client_request_id.strip():
         error(400, "invalid_request", "message and client_request_id must not be blank.")
     async with connect() as connection:
@@ -124,8 +126,8 @@ async def create_report(family_id: FromPath[str], data: JSONBody[ReportCreate], 
     return report
 
 
-@get("/disasters/{disaster_id:str}/reports", tags=["Reports"])
-async def list_reports(disaster_id: FromPath[str], request: Request) -> dict:
+@get("/disasters/{disaster_id:str}/reports", tags=["Reports"], security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Operator only. List reports for a disaster.")
+async def list_reports(disaster_id: FromPath[str], request: Request) -> ReportList:
     async with connect() as connection:
         user = await current_user(request, connection)
         require_operator(user)

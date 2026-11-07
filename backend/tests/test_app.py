@@ -59,3 +59,29 @@ def test_errors_share_contract_shape(tmp_path, monkeypatch):
         response = client.get("/health")
         assert response.status_code == 500
         assert response.json() == {"error": {"code": "server_error", "message": "Internal server error."}}
+
+
+def test_openapi_documents_types_security_and_polling(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "contract.sqlite3"))
+    with TestClient(app=app) as client:
+        schema = client.get('/schema/openapi.json').json()
+    paths = schema['paths']
+    assert schema['components']['securitySchemes']['BearerAuth']['scheme'] == 'bearer'
+    assert not paths['/api/auth/login']['post'].get('security')
+    assert not paths['/api/shelters']['get'].get('security')
+    assert paths['/api/families']['get']['security'] == [{'BearerAuth': []}]
+    assert paths['/api/shelters']['post']['security'] == [{'BearerAuth': []}]
+    for path, method, status, model in (
+        ('/api/auth/login', 'post', '200', 'Session'),
+        ('/api/families', 'get', '200', 'FamilyPage'),
+        ('/api/shelters', 'get', '200', 'ShelterList'),
+        ('/api/families/{family_id}/plan', 'get', '200', 'Plan'),
+        ('/api/disasters/{disaster_id}/reports', 'get', '200', 'ReportList'),
+    ):
+        response = paths[path][method]['responses'][status]
+        assert response['content']['application/json']['schema']['$ref'] == '#/components/schemas/' + model
+    poll = paths['/api/families/{family_id}/plan']['get']['responses']
+    assert '204' in poll and 'content' not in poll['204']
+    assert poll['403']['content']['application/json']['schema']['$ref'] == '#/components/schemas/ErrorResponse'
+    assert '429' in paths['/api/auth/login']['post']['responses']
+    assert {'version', 'shelter', 'capacity_reserved'} <= set(schema['components']['schemas']['Plan']['required'])

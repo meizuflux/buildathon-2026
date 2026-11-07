@@ -13,6 +13,7 @@ from haven.api_common import current_user, error, require_disaster, require_fami
 from haven.auth import now, timestamp
 from haven.allocation import recompute_disasters
 from haven.db import connect
+from haven.openapi import BEARER, Family, FamilyPage, errors
 
 Count = Annotated[int, msgspec.Meta(ge=0)]
 Latitude = Annotated[float, msgspec.Meta(ge=-90, le=90)]
@@ -87,8 +88,8 @@ def require_people(adults: int, children: int) -> None:
         error(400, "invalid_request", "A family must contain at least one person.")
 
 
-@get("")
-async def list_families(request: Request, disaster_id: FromQuery[str], limit: FromQuery[int] = 100, offset: FromQuery[int] = 0) -> dict:
+@get("", security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Operator only. List a disaster’s family profiles, ordered by creation time and ID. limit must be 1–1000; offset must be nonnegative.")
+async def list_families(request: Request, disaster_id: FromQuery[str], limit: FromQuery[int] = 100, offset: FromQuery[int] = 0) -> FamilyPage:
     if not 1 <= limit <= 1000 or offset < 0:
         error(400, "invalid_request", "limit must be between 1 and 1000 and offset must be nonnegative.")
     async with connect() as connection:
@@ -102,8 +103,8 @@ async def list_families(request: Request, disaster_id: FromQuery[str], limit: Fr
     return {"families": [family_from_row(row) for row in rows], "total": total, "limit": limit, "offset": offset}
 
 
-@post("")
-async def create_family(data: JSONBody[FamilyCreate], request: Request) -> dict:
+@post("", security=BEARER, responses=errors(400, 401, 403, 404, 409, 500), description="Family account only. Creates a profile and automatically allocates a plan.")
+async def create_family(data: JSONBody[FamilyCreate], request: Request) -> Family:
     async with connect() as connection:
         user = await current_user(request, connection)
         if user[1] != "family":
@@ -134,15 +135,15 @@ async def create_family(data: JSONBody[FamilyCreate], request: Request) -> dict:
         return family
 
 
-@get("/{family_id:str}")
-async def get_family(family_id: FromPath[str], request: Request) -> dict:
+@get("/{family_id:str}", security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Family owner or operator only.")
+async def get_family(family_id: FromPath[str], request: Request) -> Family:
     async with connect() as connection:
         user = await current_user(request, connection)
         return await require_family(connection, family_id, user)
 
 
-@patch("/{family_id:str}")
-async def patch_family(family_id: FromPath[str], data: JSONBody[FamilyPatch], request: Request) -> dict:
+@patch("/{family_id:str}", security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Family owner or operator only. Nested fields are merged; relevant changes trigger reallocation.")
+async def patch_family(family_id: FromPath[str], data: JSONBody[FamilyPatch], request: Request) -> Family:
     async with connect() as connection:
         user = await current_user(request, connection)
         await connection.execute("BEGIN IMMEDIATE")

@@ -16,6 +16,7 @@ from litestar.exceptions import HTTPException
 from litestar.params import JSONBody
 
 from haven.db import connect
+from haven.openapi import BEARER, Registration, Session, User, errors
 
 SESSION_LIFETIME = timedelta(hours=24)
 LOGIN_WINDOW = timedelta(minutes=15)
@@ -114,8 +115,8 @@ async def check_login_limit(connection: apsw.AsyncConnection, email: str, client
         raise
 
 
-@post("/register")
-async def register(data: JSONBody[Credentials]) -> dict:
+@post("/register", responses=errors(400, 409, 500), description="Register a family account. Passwords must be at least 8 characters and at most 1024 UTF-8 bytes.")
+async def register(data: JSONBody[Credentials]) -> Registration:
     email = normalize_email(data.email)
     require_password(data.password, registration=True)
     user_id = "user_" + uuid4().hex
@@ -129,8 +130,8 @@ async def register(data: JSONBody[Credentials]) -> dict:
     return {"user_id": user_id, "role": "family"}
 
 
-@post("/login", status_code=200)
-async def login(data: JSONBody[Credentials], request: Request) -> dict:
+@post("/login", status_code=200, responses=errors(400, 401, 429, 500), description="Sign in and receive an opaque bearer token valid for 24 hours.")
+async def login(data: JSONBody[Credentials], request: Request) -> Session:
     email = normalize_email(data.email)
     require_password(data.password)
     client = request.client.host if request.client else "unknown"
@@ -150,14 +151,14 @@ async def login(data: JSONBody[Credentials], request: Request) -> dict:
         return {"access_token": token, "token_type": "Bearer", "expires_at": expires, "user": info}
 
 
-@get("/me")
-async def me(request: Request) -> dict:
+@get("/me", security=BEARER, responses=errors(401, 500))
+async def me(request: Request) -> User:
     async with connect() as connection:
         user, _ = await authenticate(request.headers.get("authorization", ""), connection)
         return await user_info(connection, user)
 
 
-@post("/logout", status_code=204)
+@post("/logout", status_code=204, security=BEARER, responses=errors(401, 500))
 async def logout(request: Request) -> None:
     async with connect() as connection:
         async with connection:

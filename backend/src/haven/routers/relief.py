@@ -12,6 +12,7 @@ from haven.api_common import current_user, error, require_disaster, require_oper
 from haven.auth import now, timestamp
 from haven.allocation import recompute_disasters, set_shelter_allocation_budget
 from haven.db import connect
+from haven.openapi import BEARER, DisasterList, Shelter, ShelterList, Update, UpdateList, errors
 
 NonNegative = Annotated[int, msgspec.Meta(ge=0)]
 Text = Annotated[str, msgspec.Meta(min_length=1, max_length=10000)]
@@ -118,24 +119,24 @@ def update_from_row(row: tuple) -> dict:
     return dict(zip(("id", "disaster_id", "title", "message", "severity", "published_at"), row))
 
 
-@get("/disasters", tags=["Disasters"])
-async def list_disasters() -> dict:
+@get("/disasters", tags=["Disasters"], responses=errors(500), description="List active disasters.")
+async def list_disasters() -> DisasterList:
     async with connect() as connection:
         rows = await (await connection.execute("SELECT * FROM disasters WHERE status = 'active' ORDER BY updated_at DESC, id")).fetchall()
     fields = ("id", "type", "name", "status", "affected_area", "updated_at")
     return {"disasters": [dict(zip(fields, row)) for row in rows]}
 
 
-@get("/shelters", tags=["Shelters"])
-async def list_shelters(disaster_id: FromQuery[str]) -> dict:
+@get("/shelters", tags=["Shelters"], responses=errors(400, 404, 500), description="Public listing with available capacity, capabilities and resource availability labels; labels are not quantities.")
+async def list_shelters(disaster_id: FromQuery[str]) -> ShelterList:
     async with connect() as connection:
         await require_disaster(connection, disaster_id)
         rows = await (await connection.execute("SELECT * FROM shelters WHERE disaster_id = ? ORDER BY name, id", (disaster_id,))).fetchall()
     return {"shelters": [shelter_from_row(row) for row in rows]}
 
 
-@post("/shelters", tags=["Shelters"])
-async def create_shelter(data: JSONBody[ShelterCreate], request: Request) -> dict:
+@post("/shelters", tags=["Shelters"], security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Operator only. Creating a shelter triggers reallocation.")
+async def create_shelter(data: JSONBody[ShelterCreate], request: Request) -> Shelter:
     shelter = msgspec.to_builtins(data)
     async with connect() as connection:
         require_operator(await current_user(request, connection))
@@ -160,8 +161,8 @@ async def create_shelter(data: JSONBody[ShelterCreate], request: Request) -> dic
     return shelter
 
 
-@patch("/shelters/{shelter_id:str}", tags=["Shelters"])
-async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch], request: Request) -> dict:
+@patch("/shelters/{shelter_id:str}", tags=["Shelters"], security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Operator only. Nested fields merge and relevant changes trigger reallocation.")
+async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch], request: Request) -> Shelter:
     async with connect() as connection:
         require_operator(await current_user(request, connection))
         await connection.execute("BEGIN IMMEDIATE")
@@ -223,8 +224,8 @@ async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch]
     return shelter
 
 
-@get("/disasters/{disaster_id:str}/updates", tags=["Updates"])
-async def list_updates(disaster_id: FromPath[str]) -> dict:
+@get("/disasters/{disaster_id:str}/updates", tags=["Updates"], responses=errors(400, 404, 500))
+async def list_updates(disaster_id: FromPath[str]) -> UpdateList:
     async with connect() as connection:
         await require_disaster(connection, disaster_id)
         rows = await (await connection.execute(
@@ -233,8 +234,8 @@ async def list_updates(disaster_id: FromPath[str]) -> dict:
     return {"updates": [update_from_row(row) for row in rows]}
 
 
-@post("/disasters/{disaster_id:str}/updates", tags=["Updates"])
-async def publish_update(disaster_id: FromPath[str], data: JSONBody[UpdateCreate], request: Request) -> dict:
+@post("/disasters/{disaster_id:str}/updates", tags=["Updates"], security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Operator only. Publish an official update.")
+async def publish_update(disaster_id: FromPath[str], data: JSONBody[UpdateCreate], request: Request) -> Update:
     async with connect() as connection:
         require_operator(await current_user(request, connection))
         await require_disaster(connection, disaster_id)

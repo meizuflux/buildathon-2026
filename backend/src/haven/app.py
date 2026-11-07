@@ -4,16 +4,18 @@ from litestar import Litestar, Request, Router, get
 from litestar.exceptions import HTTPException
 from litestar.openapi import OpenAPIConfig
 from litestar.openapi.plugins import SwaggerRenderPlugin
+from litestar.openapi.spec import Components, SecurityScheme
 from litestar.response import Response
 
 from haven.db import connect, initialize_database
+from haven.openapi import errors
 from haven.routers.accounts import router as accounts_router
 from haven.routers.coordination import router as coordination_router
 from haven.routers.families import router as families_router
 from haven.routers.relief import router as relief_router
 
 
-@get("/health")
+@get("/health", responses=errors(500))
 async def health() -> dict[str, str]:
     """Report whether the API can reach its database."""
     async with connect() as connection:
@@ -38,6 +40,7 @@ app = Litestar(
     openapi_config=OpenAPIConfig(
         title="Haven API",
         version="0.1.0",
+        components=Components(security_schemes={"BearerAuth": SecurityScheme(type="http", scheme="bearer", description="Opaque session token returned by login.")}),
         render_plugins=[SwaggerRenderPlugin()],
     ),
 )
