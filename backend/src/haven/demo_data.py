@@ -1,16 +1,13 @@
-"""Create demo accounts and donation hubs for functionality currently available in the API."""
+"""Create demo accounts, donation hubs, and sample activity for functionality currently available in the API."""
 
 import asyncio
+import json
+import os
 import secrets
 from uuid import uuid4
 
 from haven.auth import hash_password, now, timestamp
 from haven.db import connect, initialize_database
-
-DEMO_ACCOUNTS = (
-    ("family@demo.example", "family"),
-    ("government@demo.example", "operator"),
-)
 
 # Placeholder demo region (Houston, TX); change once the team picks a region.
 DEMO_CENTER = (29.7604, -95.3698)
@@ -33,27 +30,63 @@ DEMO_HUBS = (
 )
 
 
+def staff_email(hub_id: str) -> str:
+    return f"staff.{hub_id.removeprefix('hub_demo_').replace('_', '-')}@demo.example"
+
+
+# (email, role, hub_id for hub staff)
+DEMO_ACCOUNTS = (
+    ("family@demo.example", "family", None),
+    ("government@demo.example", "operator", None),
+    *((staff_email(hub[0]), "hub_staff", hub[0]) for hub in DEMO_HUBS),
+)
+
+# Sample activity from the demo family so queues aren't empty.
+# (id, items, lat, lng, address, notes)
+DEMO_REQUESTS = (
+    ("request_demo_formula", [{"category": "formula", "quantity": 4}, {"category": "diapers", "quantity": 2}],
+     29.7500, -95.3600, "2100 Travis St, Apt 4B", "Infant, 3 months. No car."),
+    ("request_demo_water", [{"category": "water", "quantity": 24}], 29.7810, -95.3850, "815 W 19th St", ""),
+    ("request_demo_blankets", [{"category": "blankets", "quantity": 3}, {"category": "canned_goods", "quantity": 10}],
+     29.7200, -95.3400, "4400 Lyons Ave", "Family of five, can pick up."),
+)
+# (id, hub_id, items, notes)
+DEMO_PLEDGES = (
+    ("pledge_demo_heights", "hub_demo_heights_cc", [{"category": "formula", "quantity": 12}], "Dropping off after 5pm"),
+    ("pledge_demo_station_26", "hub_demo_station_26",
+     [{"category": "water", "quantity": 48}, {"category": "diapers", "quantity": 30}], ""),
+)
+
+
 async def seed_demo_data() -> dict[str, str | None]:
-    """Create missing accounts and return generated passwords only for new accounts."""
-    await initialize_database()
+    """Create hubs, missing accounts, and sample activity; return passwords only for new accounts.
+
+    New accounts get a generated password each, or `DEMO_PASSWORD` for all of them when that is set.
+    """
+    await seed_hubs()
+    shared = os.environ.get("DEMO_PASSWORD")
     created = {}
     pending = []
     async with connect() as connection:
-        for email, role in DEMO_ACCOUNTS:
+        for email, role, hub_id in DEMO_ACCOUNTS:
             if await (await connection.execute("SELECT 1 FROM users WHERE email = ?", (email,))).fetchone():
                 created[email] = None
                 continue
-            password = secrets.token_urlsafe(18)
+            password = shared or secrets.token_urlsafe(18)
             password_hash = await asyncio.to_thread(hash_password, password)
-            pending.append((email, role, password, password_hash))
+            pending.append((email, role, hub_id, password, password_hash))
         async with connection:
-            for email, role, password, password_hash in pending:
+            for email, role, hub_id, password, password_hash in pending:
+                user_id = "user_" + uuid4().hex
                 await connection.execute(
                     "INSERT INTO users (id, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?) "
                     "ON CONFLICT(email) DO NOTHING",
-                    ("user_" + uuid4().hex, email, password_hash, role, timestamp(now())),
+                    (user_id, email, password_hash, role, timestamp(now())),
                 )
                 created[email] = password if await connection.changes() else None
+                if created[email] and hub_id:
+                    await connection.execute("INSERT INTO hub_staff (user_id, hub_id) VALUES (?, ?)", (user_id, hub_id))
+    await seed_activity()
     return created
 
 
@@ -80,6 +113,30 @@ async def seed_hubs() -> int:
     return created
 
 
+async def seed_activity() -> None:
+    """Sample open requests and pending pledges from the demo family; existing rows are left unchanged."""
+    async with connect() as connection:
+        family = await (await connection.execute(
+            "SELECT id FROM users WHERE email = 'family@demo.example'"
+        )).fetchone()
+        if family is None:
+            return
+        stamp = timestamp(now())
+        async with connection:
+            for request_id, items, lat, lng, address, notes in DEMO_REQUESTS:
+                await connection.execute(
+                    "INSERT INTO supply_requests (id, user_id, items_json, latitude, longitude, address, notes, status, "
+                    "created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'open', ?, ?) ON CONFLICT(id) DO NOTHING",
+                    (request_id, family[0], json.dumps(items), lat, lng, address, notes, stamp, stamp),
+                )
+            for pledge_id, hub_id, items, notes in DEMO_PLEDGES:
+                await connection.execute(
+                    "INSERT INTO pledges (id, user_id, hub_id, items_json, notes, status, created_at, updated_at) "
+                    "VALUES (?, ?, ?, ?, ?, 'pending', ?, ?) ON CONFLICT(id) DO NOTHING",
+                    (pledge_id, family[0], hub_id, json.dumps(items), notes, stamp, stamp),
+                )
+
+
 async def main() -> None:
     for email, password in (await seed_demo_data()).items():
         if password is None:
@@ -87,7 +144,7 @@ async def main() -> None:
         else:
             print(f"{email}: created; password: {password}")
     print("Passwords are shown only when accounts are created.")
-    print(f"Donation hubs: {await seed_hubs()} created, {len(DEMO_HUBS)} total in demo set.")
+    print(f"Seeded {len(DEMO_HUBS)} donation hubs, {len(DEMO_REQUESTS)} sample requests, {len(DEMO_PLEDGES)} sample pledges.")
 
 
 if __name__ == "__main__":
