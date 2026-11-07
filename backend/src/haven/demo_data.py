@@ -7,7 +7,8 @@ from uuid import uuid4
 
 from haven.allocation import recompute_disasters
 from haven.auth import hash_password, now, timestamp
-from haven.db import connect, initialize_database
+from haven.db import connect
+from haven.startup import initialize_database
 
 DEMO_ACCOUNTS = (
     ("family@demo.example", "family"),
@@ -62,7 +63,8 @@ async def seed_tampa_scenario() -> None:
                 return
             stamp = timestamp(now())
             await connection.execute(
-                "INSERT INTO disasters VALUES (?, ?, ?, ?, ?, ?)",
+                "INSERT INTO disasters (id, type, name, status, affected_area, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
                 (
                     DEMO_DISASTER_ID,
                     "hurricane",
@@ -88,7 +90,9 @@ async def seed_tampa_scenario() -> None:
                     "clothes": "limited" if i % 2 else "available",
                 }
                 await connection.execute(
-                    "INSERT INTO shelters VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO shelters (id, disaster_id, name, address, latitude, longitude, status, "
+                    "capacity_json, capabilities_json, resources_json, updated_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         f"demo_tampa_shelter_{i + 1:02d}",
                         DEMO_DISASTER_ID,
@@ -106,7 +110,8 @@ async def seed_tampa_scenario() -> None:
             for i in range(1000):
                 user_id = f"demo_tampa_user_{i + 1:04d}"
                 await connection.execute(
-                    "INSERT INTO users VALUES (?, ?, ?, ?, ?)",
+                    "INSERT INTO users (id, email, password_hash, role, created_at) "
+                    "VALUES (?, ?, ?, ?, ?)",
                     (user_id, f"synthetic-family-{i + 1:04d}@demo.invalid", "!", "family", stamp),
                 )
                 needs = {
@@ -117,7 +122,8 @@ async def seed_tampa_scenario() -> None:
                     "other_special_care": None,
                 }
                 await connection.execute(
-                    "INSERT INTO families VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO families (id, owner_user_id, disaster_id, adults, children, latitude, longitude, "
+                    "needs_json, resources_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         f"demo_tampa_family_{i + 1:04d}",
                         user_id,
@@ -133,7 +139,8 @@ async def seed_tampa_scenario() -> None:
                     ),
                 )
             await connection.execute(
-                "INSERT INTO disaster_updates VALUES (?, ?, ?, ?, ?, ?)",
+                "INSERT INTO disaster_updates (id, disaster_id, title, message, severity, published_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
                 (
                     "demo_tampa_update",
                     DEMO_DISASTER_ID,

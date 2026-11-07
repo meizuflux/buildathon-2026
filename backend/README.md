@@ -17,7 +17,7 @@ Use `just prod` to run without reload (configure `HOST`, `PORT`, and `WEB_CONCUR
 
 Database operations use APSW’s async interface. Password hashing runs off the event loop.
 
-On startup, the application creates the tables in `src/haven/schema.sql`. The default database is `disaster_response.sqlite3` in the current working directory; set `DATABASE_PATH` to change it. This is an initial schema, not a migration system: changes to existing tables require recreating the development database or applying changes manually.
+On startup, the application creates the base tables in `src/haven/schema.sql`, applies versioned database migrations, and reconciles existing plans with the allocation ledger before serving requests. The default database is `disaster_response.sqlite3` in the current working directory; set `DATABASE_PATH` to change it. Run `just schema` to perform the same database setup without starting the server.
 
 ## Authentication
 
