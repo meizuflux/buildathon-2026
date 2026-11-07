@@ -134,3 +134,63 @@ def test_cancellation_releases_stock_and_rejects_duplicate_items(relief_client):
     )
     item = client.get("/api/inventory?disaster_id=active", headers=operator).json()["items"][0]
     assert (item["quantity"], item["reserved"]) == (10, 0)
+
+
+def test_invalid_logistics_inputs_return_client_errors(relief_client):  # noqa: F811
+    client, headers = relief_client
+    operator = headers["operator"]
+    org = {
+        "disaster_id": "active",
+        "name": "Depot",
+        "type": "government",
+        "services": [{}],
+        "status": "active",
+        "address": "10 Main",
+        "location": {"latitude": 0, "longitude": 0},
+        "contact": {},
+    }
+    assert client.post("/api/organizations", headers=operator, json=org).status_code == 400
+    assert (
+        client.post(
+            "/api/needs",
+            headers=operator,
+            json={
+                "disaster_id": [],
+                "requester": {},
+                "resource_type_id": "food_mre",
+                "quantity_needed": 1,
+                "priority": "high",
+            },
+        ).status_code
+        == 400
+    )
+    assert (
+        client.post(
+            "/api/needs",
+            headers=operator,
+            json={
+                "disaster_id": "active",
+                "requester": {},
+                "resource_type_id": "food_mre",
+                "quantity_needed": 1,
+                "priority": "high",
+                "needed_by": "tomorrow",
+            },
+        ).status_code
+        == 400
+    )
+    assert (
+        client.post(
+            "/api/shipments",
+            headers=operator,
+            json={
+                "disaster_id": "active",
+                "from": {},
+                "to": {},
+                "items": [{}],
+                "priority": "high",
+                "eta": "2026-11-07T15:00:00-05:00",
+            },
+        ).status_code
+        == 400
+    )

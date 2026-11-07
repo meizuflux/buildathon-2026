@@ -2,20 +2,28 @@
 
 import json
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
 from typing import Any, NoReturn
 from uuid import uuid4
 
 import apsw
 from litestar import Request, Router, get, patch, post
+from litestar.connection import ASGIConnection
+from litestar.handlers import BaseRouteHandler
 from litestar.params import FromPath, JSONBody
 
 from haven.activity import record_activity
 from haven.api_common import error, require_disaster
-from haven.auth import authenticated_guard, get_authenticated_user, now, operator_guard, timestamp
+from haven.auth import authenticated_guard, get_authenticated_user, now, timestamp
 from haven.db import connect
 from haven.openapi import BEARER
 
 PRIORITIES = {"low", "medium", "high", "critical"}
+
+
+def logistics_operator_guard(connection: ASGIConnection, _: BaseRouteHandler) -> None:
+    if get_authenticated_user(connection).role != "operator":
+        error(403, "not_permitted", "Operator access required.")
 
 
 def invalid(message: str) -> NoReturn:
@@ -27,6 +35,18 @@ def text_value(value: Any, name: str, nullable: bool = False) -> None:
         return
     if not isinstance(value, str) or not value.strip():
         invalid(f"{name} must be a non-empty string.")
+
+
+def utc_timestamp(value: Any, name: str) -> None:
+    if value is None:
+        return
+    text_value(value, name)
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.tzinfo is None or parsed.utcoffset() != timedelta(0):
+            raise ValueError
+    except ValueError:
+        invalid(f"{name} must be an ISO 8601 UTC timestamp.")
 
 
 def quantity(value: Any, name: str, minimum: int = 0) -> None:
@@ -112,7 +132,8 @@ def validate_org(data: dict) -> None:
         invalid("Invalid organization status.")
     services = data.get("services")
     if not isinstance(services, list) or any(
-        x not in {"distribution", "food", "medical", "transport", "shelter_support", "logistics"}
+        not isinstance(x, str)
+        or x not in {"distribution", "food", "medical", "transport", "shelter_support", "logistics"}
         for x in services
     ):
         invalid("Invalid organization services.")
@@ -144,7 +165,7 @@ async def list_resource_types() -> dict:
     return {"resource_types": [dict(zip(("id", "name", "category", "unit"), r)) for r in rows]}
 
 
-@get("/organizations", guards=[operator_guard], security=BEARER)
+@get("/organizations", guards=[logistics_operator_guard], security=BEARER)
 async def list_organizations(disaster_id: str) -> dict:
     async with connect() as connection:
         await require_disaster(connection, disaster_id)
@@ -157,13 +178,13 @@ async def list_organizations(disaster_id: str) -> dict:
     return {"organizations": [{"id": r[0], **json.loads(r[1]), "updated_at": r[2]} for r in rows]}
 
 
-@get("/organizations/{organization_id:str}", guards=[operator_guard], security=BEARER)
+@get("/organizations/{organization_id:str}", guards=[logistics_operator_guard], security=BEARER)
 async def get_organization(organization_id: FromPath[str]) -> dict:
     async with connect() as connection:
         return await organization(connection, organization_id)
 
 
-@post("/organizations", guards=[operator_guard], security=BEARER)
+@post("/organizations", guards=[logistics_operator_guard], security=BEARER)
 async def create_organization(data: JSONBody[dict[str, Any]], request: Request) -> dict:
     allowed = {
         "disaster_id",
@@ -199,7 +220,7 @@ async def create_organization(data: JSONBody[dict[str, Any]], request: Request) 
     return {"id": org_id, **data, "updated_at": at}
 
 
-@patch("/organizations/{organization_id:str}", guards=[operator_guard], security=BEARER)
+@patch("/organizations/{organization_id:str}", guards=[logistics_operator_guard], security=BEARER)
 async def update_organization(
     organization_id: FromPath[str], data: JSONBody[dict[str, Any]], request: Request
 ) -> dict:
@@ -258,7 +279,7 @@ async def inventory_rows(
     ]
 
 
-@get("/inventory", guards=[operator_guard], security=BEARER)
+@get("/inventory", guards=[logistics_operator_guard], security=BEARER)
 async def list_inventory(
     disaster_id: str, holder_kind: str | None = None, holder_id: str | None = None
 ) -> dict:
@@ -271,7 +292,11 @@ async def list_inventory(
         return {"items": await inventory_rows(connection, disaster_id, holder_id)}
 
 
-@patch("/organizations/{organization_id:str}/inventory", guards=[operator_guard], security=BEARER)
+@patch(
+    "/organizations/{organization_id:str}/inventory",
+    guards=[logistics_operator_guard],
+    security=BEARER,
+)
 async def update_inventory(
     organization_id: FromPath[str], data: JSONBody[dict[str, Any]], request: Request
 ) -> dict:
@@ -346,7 +371,7 @@ async def need(connection: apsw.AsyncConnection, need_id: str) -> dict:
     return result
 
 
-@get("/needs", guards=[operator_guard], security=BEARER)
+@get("/needs", guards=[logistics_operator_guard], security=BEARER)
 async def list_needs(disaster_id: str, status: str | None = None) -> dict:
     if status is not None and status not in {"open", "fulfilled", "cancelled"}:
         invalid("Invalid need status.")
@@ -361,15 +386,16 @@ async def list_needs(disaster_id: str, status: str | None = None) -> dict:
         return {"needs": [await need(connection, r[0]) for r in rows]}
 
 
-@post("/needs", guards=[operator_guard], security=BEARER)
+@post("/needs", guards=[logistics_operator_guard], security=BEARER)
 async def create_need(data: JSONBody[dict[str, Any]], request: Request) -> dict:
     required = {"disaster_id", "requester", "resource_type_id", "quantity_needed", "priority"}
     if not required <= set(data) or set(data) - (required | {"needed_by", "notes"}):
         invalid("Invalid need fields.")
+    text_value(data["disaster_id"], "disaster_id")
     quantity(data["quantity_needed"], "quantity_needed", 1)
     if not isinstance(data["priority"], str) or data["priority"] not in PRIORITIES:
         invalid("Invalid priority.")
-    text_value(data.get("needed_by"), "needed_by", True)
+    utc_timestamp(data.get("needed_by"), "needed_by")
     text_value(data.get("notes"), "notes", True)
     need_id, at = "need_" + uuid4().hex, timestamp(now())
     async with transaction() as connection:
@@ -405,7 +431,7 @@ async def create_need(data: JSONBody[dict[str, Any]], request: Request) -> dict:
     return result
 
 
-@patch("/needs/{need_id:str}", guards=[operator_guard], security=BEARER)
+@patch("/needs/{need_id:str}", guards=[logistics_operator_guard], security=BEARER)
 async def update_need(
     need_id: FromPath[str], data: JSONBody[dict[str, Any]], request: Request
 ) -> dict:
@@ -432,9 +458,10 @@ async def update_need(
             not isinstance(data["status"], str) or data["status"] not in {"cancelled", "fulfilled"}
         ):
             invalid("Invalid need status.")
-        for key in ("needed_by", "notes"):
-            if key in data:
-                text_value(data[key], key, True)
+        if "needed_by" in data:
+            utc_timestamp(data["needed_by"], "needed_by")
+        if "notes" in data:
+            text_value(data["notes"], "notes", True)
         current.update(data)
         if (
             current["status"] != "cancelled"
@@ -511,7 +538,7 @@ async def shipment(connection: apsw.AsyncConnection, shipment_id: str) -> dict:
     return result
 
 
-@get("/shipments", guards=[operator_guard], security=BEARER)
+@get("/shipments", guards=[logistics_operator_guard], security=BEARER)
 async def list_shipments(disaster_id: str) -> dict:
     async with connect() as connection:
         await require_disaster(connection, disaster_id)
@@ -542,11 +569,12 @@ async def reserve(
         )
 
 
-@post("/shipments", guards=[operator_guard], security=BEARER)
+@post("/shipments", guards=[logistics_operator_guard], security=BEARER)
 async def create_shipment(data: JSONBody[dict[str, Any]], request: Request) -> dict:
     required = {"disaster_id", "from", "to", "items", "priority"}
     if not required <= set(data) or set(data) - (required | {"need_ids", "eta", "notes"}):
         invalid("Invalid shipment fields.")
+    text_value(data["disaster_id"], "disaster_id")
     if not isinstance(data["priority"], str) or data["priority"] not in PRIORITIES:
         invalid("Invalid priority.")
     if not isinstance(data["items"], list) or not data["items"]:
@@ -558,8 +586,8 @@ async def create_shipment(data: JSONBody[dict[str, Any]], request: Request) -> d
         or len(set(need_ids)) != len(need_ids)
     ):
         invalid("Invalid need_ids.")
-    for key in ("eta", "notes"):
-        text_value(data.get(key), key, True)
+    utc_timestamp(data.get("eta"), "eta")
+    text_value(data.get("notes"), "notes", True)
     shipment_id, at = "shipment_" + uuid4().hex, timestamp(now())
     async with transaction() as connection:
         await require_disaster(connection, data["disaster_id"])
@@ -623,15 +651,16 @@ async def create_shipment(data: JSONBody[dict[str, Any]], request: Request) -> d
     return result
 
 
-@patch("/shipments/{shipment_id:str}", guards=[operator_guard], security=BEARER)
+@patch("/shipments/{shipment_id:str}", guards=[logistics_operator_guard], security=BEARER)
 async def update_shipment(
     shipment_id: FromPath[str], data: JSONBody[dict[str, Any]], request: Request
 ) -> dict:
     if not data or set(data) - {"status", "eta", "notes"}:
         invalid("Invalid shipment fields.")
-    for key in ("eta", "notes"):
-        if key in data:
-            text_value(data[key], key, True)
+    if "eta" in data:
+        utc_timestamp(data["eta"], "eta")
+    if "notes" in data:
+        text_value(data["notes"], "notes", True)
     async with transaction() as connection:
         current = await shipment(connection, shipment_id)
         at = timestamp(now())
