@@ -26,23 +26,15 @@ Organizations only see citizen requests if operations has approved them for citi
 
 ## Run
 
-You need the government dashboard's dev server running (frontend branch). It hosts the shared mock API:
+Start the backend as described in [backend/README.md](../backend/README.md), then start the portal:
 
 ```sh
-# terminal 1 — frontend branch
-cd frontend && npm install && npm run dev      # http://localhost:5173
-
-# terminal 2 — 3rdparty branch
-cd 3rdparty && npm install && npm run dev      # http://localhost:5174
+cd 3rdparty
+npm install
+npm run dev
 ```
 
-The portal proxies `/api` to the dashboard's dev server (`http://localhost:5173`). To point it elsewhere, set `HAVEN_API_URL`:
-- `HAVEN_API_URL=http://127.0.0.1:8000`: the real backend, once it implements Part 2 §10
-- `HAVEN_API_URL=http://127.0.0.1:8787`: the standalone mock (`npm run mock-api` in `frontend/`)
-
-**Demo logins** (shared mock only; fictional; password `haven-demo`):
-- `bayside@demo.example`: Bayside Food Bank (organization)
-- `stluke@demo.example`: St. Luke Medical Annex (shelter)
+Open http://localhost:5174. The portal proxies `/api` to `http://127.0.0.1:8000` by default; set `HAVEN_API_URL` before starting Vite to use another API. The current backend does not yet implement the partner-specific endpoints required by the portal.
 
 ## API
 
