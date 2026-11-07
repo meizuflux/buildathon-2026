@@ -42,5 +42,7 @@ Community hubs (churches, fire stations, schools) report storage capacity and su
 | `GET /api/hubs?min_capacity=0` | public | Hubs at or above a capacity percentage, fullest first |
 | `PUT /api/hubs/{hub_id}/inventory` | operator | `{"capacity_pct": 0-100, "supplies": [{"category","quantity","target"}]}` sets capacity and upserts the listed supplies |
 | `POST /api/hubs/{hub_id}/pickups` | operator | `{"notes": "..."}` (optional). Dispatches a transport pickup; returns 409 `pickup_already_open` if one is already dispatched |
+| `GET /api/pickups?status=dispatched` | operator | Pickups newest first (up to 200), with `hub_name` |
+| `PATCH /api/pickups/{pickup_id}` | operator | `{"status": "completed" or "cancelled", "capacity_pct": 25}` closes a dispatched pickup. `capacity_pct` is optional and applies only when completed. Returns 409 `pickup_closed` if the pickup is already closed |
 
 Hub responses include `open_pickup` (the dispatched pickup, or `null`). CORS allows all origins by default; set `CORS_ORIGINS` to a comma-separated list to restrict it. Drop-in UI components live in `app/src/donations/` (React Native) and `frontend/src/donations/` (React + Tailwind).

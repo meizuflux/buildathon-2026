@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { API_BASE, dispatchPickup, fetchHubs } from './api';
+import { API_BASE, closePickup, dispatchPickup, fetchHubs } from './api';
 
 const THRESHOLDS = [70, 80, 90];
 const TYPES = {
@@ -22,9 +22,10 @@ function formatTime(iso) {
 
 /**
  * Government view: hubs at or above a capacity threshold, with a dispatch action.
- * Props: token (operator bearer token, needed to dispatch), apiBase, pollMs.
+ * Props: token (operator bearer token, needed to dispatch), apiBase, pollMs,
+ * clearedCapacityPct (hub capacity recorded when a pickup is marked cleared).
  */
-export default function OverCapacityHubs({ token, apiBase = API_BASE, pollMs = 30000 }) {
+export default function OverCapacityHubs({ token, apiBase = API_BASE, pollMs = 30000, clearedCapacityPct = 25 }) {
   const [threshold, setThreshold] = useState(90);
   const [hubs, setHubs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,12 +51,11 @@ export default function OverCapacityHubs({ token, apiBase = API_BASE, pollMs = 3
     return () => clearInterval(id);
   }, [load, pollMs]);
 
-  const dispatch = async (hub) => {
+  const run = async (hub, action) => {
     setPending((p) => ({ ...p, [hub.id]: true }));
     setRowErrors((e) => ({ ...e, [hub.id]: null }));
     try {
-      const pickup = await dispatchPickup(hub.id, '', { apiBase, token });
-      setHubs((list) => list.map((h) => (h.id === hub.id ? { ...h, open_pickup: pickup } : h)));
+      await action();
     } catch (e) {
       if (e.status === 409) {
         await load();
@@ -67,6 +67,18 @@ export default function OverCapacityHubs({ token, apiBase = API_BASE, pollMs = 3
       setPending((p) => ({ ...p, [hub.id]: false }));
     }
   };
+
+  const dispatch = (hub) =>
+    run(hub, async () => {
+      const pickup = await dispatchPickup(hub.id, '', { apiBase, token });
+      setHubs((list) => list.map((h) => (h.id === hub.id ? { ...h, open_pickup: pickup } : h)));
+    });
+
+  const markCleared = (hub) =>
+    run(hub, async () => {
+      await closePickup(hub.open_pickup.id, 'completed', clearedCapacityPct, { apiBase, token });
+      await load();
+    });
 
   return (
     <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -152,6 +164,14 @@ export default function OverCapacityHubs({ token, apiBase = API_BASE, pollMs = 3
                           Dispatched ✓
                         </span>
                         <div className="mt-1 text-xs text-gray-500">{formatTime(hub.open_pickup.created_at)}</div>
+                        <button
+                          type="button"
+                          disabled={pending[hub.id]}
+                          onClick={() => markCleared(hub)}
+                          className="mt-1 text-xs font-medium text-blue-700 hover:underline disabled:opacity-50"
+                        >
+                          Mark cleared
+                        </button>
                       </div>
                     ) : (
                       <button

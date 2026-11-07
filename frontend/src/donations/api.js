@@ -28,3 +28,19 @@ export const dispatchPickup = (hubId, notes = '', options) =>
     method: 'POST',
     body: JSON.stringify({ notes }),
   });
+
+// status: 'completed' | 'cancelled'. capacityPct resets the hub's capacity when completed.
+export const closePickup = (pickupId, status, capacityPct, options) =>
+  request(`/api/pickups/${encodeURIComponent(pickupId)}`, {
+    ...options,
+    method: 'PATCH',
+    body: JSON.stringify(capacityPct == null ? { status } : { status, capacity_pct: capacityPct }),
+  });
+
+// supplies: [{ category, quantity, target }]
+export const updateInventory = (hubId, capacityPct, supplies, options) =>
+  request(`/api/hubs/${encodeURIComponent(hubId)}/inventory`, {
+    ...options,
+    method: 'PUT',
+    body: JSON.stringify({ capacity_pct: capacityPct, supplies }),
+  });
