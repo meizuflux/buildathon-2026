@@ -56,20 +56,21 @@ export default function Broadcasts() {
 
       <div className="broadcast-grid">
         <form className="card-panel compose" onSubmit={submit}>
-          <div className="panel-title">
+          <div className="broadcast-compose-header">
             <h2>New broadcast</h2>
+            <div className="broadcast-template">
+              <div className="broadcast-template-controls">
+                <label className="field">
+                  <span className="sr-only">Broadcast template</span>
+                  <select value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+                    <option value="">Choose a template…</option>
+                    {BROADCAST_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                </label>
+                <button type="button" className="btn" disabled={!templateId} onClick={() => applyTemplate(templateId)}>Apply</button>
+              </div>
+            </div>
           </div>
-          <div className="broadcast-template">
-            <label className="field">
-              <span>Template</span>
-              <select value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
-              <option value="">Choose a template…</option>
-              {BROADCAST_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
-            </label>
-            <button type="button" className="btn" disabled={!templateId} onClick={() => applyTemplate(templateId)}>Apply template</button>
-          </div>
-          <p className="hint">Applying a template replaces the title, message and severity. You can edit them afterward.</p>
 
           <div className="field">
             <span>Severity</span>
