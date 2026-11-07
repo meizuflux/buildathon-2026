@@ -4,10 +4,8 @@ import asyncio
 import secrets
 from uuid import uuid4
 
-import apsw
-
 from haven.auth import hash_password, now, timestamp
-from haven.db import initialize_database, run_db
+from haven.db import connect, initialize_database
 
 DEMO_ACCOUNTS = (
     ("family@demo.example", "family"),
@@ -18,22 +16,25 @@ DEMO_ACCOUNTS = (
 async def seed_demo_data() -> dict[str, str | None]:
     """Create missing accounts and return generated passwords only for new accounts."""
     await initialize_database()
-    def seed(connection: apsw.Connection) -> dict[str, str | None]:
-        created = {}
-        with connection:
-            for email, role in DEMO_ACCOUNTS:
-                if connection.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
-                    created[email] = None
-                    continue
-                password = secrets.token_urlsafe(18)
-                connection.execute(
+    created = {}
+    pending = []
+    async with connect() as connection:
+        for email, role in DEMO_ACCOUNTS:
+            if await (await connection.execute("SELECT 1 FROM users WHERE email = ?", (email,))).fetchone():
+                created[email] = None
+                continue
+            password = secrets.token_urlsafe(18)
+            password_hash = await asyncio.to_thread(hash_password, password)
+            pending.append((email, role, password, password_hash))
+        async with connection:
+            for email, role, password, password_hash in pending:
+                await connection.execute(
                     "INSERT INTO users (id, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?) "
                     "ON CONFLICT(email) DO NOTHING",
-                    ("user_" + uuid4().hex, email, hash_password(password), role, timestamp(now())),
+                    ("user_" + uuid4().hex, email, password_hash, role, timestamp(now())),
                 )
-                created[email] = password if connection.changes() else None
-        return created
-    return await run_db(seed)
+                created[email] = password if await connection.changes() else None
+    return created
 
 
 async def main() -> None:

@@ -12,7 +12,7 @@ The API listens on `http://127.0.0.1:8000`. Check `GET /health` or visit `/schem
 
 Use `just prod` to run without reload (configure `HOST`, `PORT`, and `WEB_CONCURRENCY` through environment variables). Run `just schema` to create missing tables without starting the server. Run `just` to list all recipes.
 
-Database operations and password hashing run in worker threads so they do not block the async event loop.
+Database operations use APSW’s async interface. Password hashing runs off the event loop.
 
 On startup, the application creates the tables in `src/haven/schema.sql`. The default database is `disaster_response.sqlite3` in the current working directory; set `DATABASE_PATH` to change it. This is an initial schema, not a migration system: changes to existing tables require recreating the development database or applying changes manually.
 

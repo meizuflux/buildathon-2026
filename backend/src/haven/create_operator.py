@@ -4,10 +4,8 @@ import asyncio
 from getpass import getpass
 from uuid import uuid4
 
-import apsw
-
 from haven.auth import hash_password, normalize_email, require_password, timestamp, now
-from haven.db import run_db, initialize_database
+from haven.db import connect, initialize_database
 
 
 async def main() -> None:
@@ -18,13 +16,11 @@ async def main() -> None:
     require_password(password, registration=True)
     await initialize_database()
     password_hash = await asyncio.to_thread(hash_password, password)
-    def insert(connection: apsw.Connection) -> None:
-        with connection:
-            connection.execute(
-                "INSERT INTO users (id, email, password_hash, role, created_at) VALUES (?, ?, ?, 'operator', ?)",
-                ("user_" + uuid4().hex, email, password_hash, timestamp(now())),
-            )
-    await run_db(insert)
+    async with connect() as connection:
+        await connection.execute(
+            "INSERT INTO users (id, email, password_hash, role, created_at) VALUES (?, ?, ?, 'operator', ?)",
+            ("user_" + uuid4().hex, email, password_hash, timestamp(now())),
+        )
     print("Operator created.")
 
 

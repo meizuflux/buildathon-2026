@@ -7,13 +7,14 @@ from litestar.openapi.plugins import SwaggerRenderPlugin
 from litestar.response import Response
 
 from haven.auth import login, logout, me, register
-from haven.db import initialize_database, run_db
+from haven.db import connect, initialize_database
 
 
 @get("/health")
 async def health() -> dict[str, str]:
     """Report whether the API can reach its database."""
-    await run_db(lambda connection: connection.execute("SELECT 1").fetchone())
+    async with connect() as connection:
+        await (await connection.execute("SELECT 1")).fetchone()
     return {"status": "ok"}
 
 
