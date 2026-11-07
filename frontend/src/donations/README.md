@@ -1,19 +1,26 @@
-# Donation hubs (dashboard)
+# Donations (dashboard)
 
-Drop-in React components styled with Tailwind. The quickest integration is the full tab:
+React components styled with Tailwind for the government and hub staff side of donation distribution.
 
 ```jsx
 import DonationsTab from './donations/DonationsTab';
+import HubStaffConsole from './donations/HubStaffConsole';
 
-<DonationsTab token={session.access_token} />
+<DonationsTab token={session.access_token} />                    // operator
+<HubStaffConsole hubId={me.hub_id} token={session.access_token} />  // hub_staff
 ```
 
 | Component | What it does |
 |---|---|
-| `DonationsTab` | Over-capacity table and hub check-in form side by side. Saving a check-in refreshes the table |
-| `OverCapacityHubs` | Hubs at or above 70, 80 or 90% capacity. **Dispatch Transport Pickup** sends a truck; **Mark cleared** completes the pickup and resets the hub to `clearedCapacityPct` (default 25). Polls every 30 seconds |
-| `HubInventoryEditor` | Hub check-in: storage slider plus on-hand and target counts for each supply category. Pass `hubId` to lock it to one hub; otherwise it shows a hub picker |
+| `DonationsTab` | Government view with three sections: **Hubs & transport** (map plus over-capacity table), **Citizen requests** (queue plus my assignments), and **Edit a hub** |
+| `HubMap` | Leaflet/OpenStreetMap map. Hubs are colored and sized by capacity, open requests appear as blue dots, and each hub's popup can dispatch transport |
+| `OverCapacityHubs` | Hubs at or above 70, 80 or 90% capacity, with **Dispatch Transport Pickup** and **Mark cleared** |
+| `RequestQueue` | Open citizen requests with suggested source hubs. Pick delivery or pickup, then claim |
+| `MyAssignments` | The worker's claimed requests: where to collect, where to deliver, a directions link, and **Mark delivered**/**Mark picked up** (which deducts stock) or **Release to queue** |
+| `HubStaffConsole` | One hub's live summary, incoming pledges, and check-in form |
+| `PledgeInbox` | Pending drop-offs for a hub. **Received** adds the items to inventory |
+| `HubInventoryEditor` | Check-in: capacity slider plus on-hand and target counts. Pass `hubId` to lock it to one hub |
 
-Common props: `token` (an operator bearer token from `POST /api/auth/login`, required for every write) and `apiBase` (defaults to `VITE_API_BASE`, then `http://127.0.0.1:8000`).
+Common props: `token` and `apiBase` (defaults to `VITE_API_BASE`, then `http://127.0.0.1:8000`).
 
-Requires Tailwind CSS. Make sure Tailwind's `content` globs include `src/donations/**/*.jsx`.
+Dependencies: Tailwind CSS (include `src/donations/**/*.jsx` in `content`), plus `leaflet@1.9.4` and `react-leaflet@4.2.1` for `HubMap`. Run it through `donations-sandbox/`.

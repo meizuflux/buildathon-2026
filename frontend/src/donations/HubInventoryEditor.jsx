@@ -117,7 +117,9 @@ export default function HubInventoryEditor({ token, apiBase = API_BASE, hubId, o
         <tbody>
           {CATEGORIES.map(([key, label]) => {
             const { quantity, target } = form.supplies[key];
-            const need = Math.max(target - quantity, 0);
+            // Matches the API: pledged drop-offs already count toward the target.
+            const incoming = hub?.supplies.find((s) => s.category === key)?.pledged ?? 0;
+            const need = Math.max(target - quantity - incoming, 0);
             return (
               <tr key={key}>
                 <td className="py-1 pr-2 font-medium text-gray-700">{label}</td>
