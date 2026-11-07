@@ -208,7 +208,10 @@ async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch]
                      shelter["location"]["longitude"], shelter["status"], json.dumps(shelter["capacity"]),
                      json.dumps(shelter["capabilities"]), json.dumps(shelter["resources"]), shelter["updated_at"], shelter_id),
                 )
-                if has_requested_available:
+                if (
+                    has_requested_available
+                    and requested_available != original["capacity"]["available_people"]
+                ):
                     await set_shelter_allocation_budget(connection, shelter_id, requested_available)
                 await recompute_disasters(connection, sorted({old_disaster_id, shelter["disaster_id"]}))
                 updated_row = await (await connection.execute("SELECT * FROM shelters WHERE id = ?", (shelter_id,))).fetchone()
