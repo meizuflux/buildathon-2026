@@ -42,6 +42,7 @@ from haven.donations.common import (
     validate_items,
     write_transaction,
 )
+from haven.donations.matching import match_waiting_requests
 
 Text = Annotated[str, msgspec.Meta(min_length=1, max_length=500)]
 LongText = Annotated[str, msgspec.Meta(max_length=2000)]
@@ -418,6 +419,7 @@ async def set_inventory(
                     "quantity = excluded.quantity, updated_at = excluded.updated_at",
                     (organization_id, item.resource_type_id, item.quantity, stamp),
                 )
+            await match_waiting_requests(connection)
         return {
             "items": await inventory_rows(
                 connection, "WHERE i.organization_id = ?", (organization_id,)
@@ -702,9 +704,11 @@ async def update_shipment(
                     await consume(connection, source, items)
                 elif new == "cancelled" and current == "approved":
                     await release(connection, source, items)
+                    await match_waiting_requests(connection)
                 elif new == "delivered":
                     if row[3] == "organization":
                         await add_stock(connection, str(row[4]), items)
+                        await match_waiting_requests(connection)
                     await credit_needs(connection, msgspec.json.decode(row[6]), items)
                 history.append({"status": new, "at": stamp})
             eta = row[9] if isinstance(data.eta, msgspec.UnsetType) else data.eta

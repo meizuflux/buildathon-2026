@@ -74,10 +74,10 @@ def test_shared_demo_password_and_sample_activity(tmp_path, monkeypatch):
         )
         headers = {"Authorization": f"Bearer {operator.json()['access_token']}"}
         open_requests = client.get(
-            "/api/requests", params={"status": "open"}, headers=headers
+            "/api/requests", params={"status": "matched"}, headers=headers
         ).json()
         assert len(open_requests) == len(DEMO_REQUESTS)
-        assert all(r["suggested_hubs"] for r in open_requests)
+        assert all(r["hub"] and r["match"] for r in open_requests)
         pending = [
             p
             for _, hub_id, _, _ in DEMO_PLEDGES

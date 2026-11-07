@@ -1,14 +1,15 @@
 """Citizen supply requests and the operator workflow that fulfills them.
 
-open --claim(hub, method)--> assigned --fulfill--> fulfilled
-   ^------------release------------'
-open/assigned --cancel (citizen)--> cancelled
+open --auto-match--> matched --claim(method)--> assigned --fulfill--> fulfilled
+                       ^--------release---------'
+open/matched/assigned --cancel (citizen)--> cancelled
 
-Claiming reserves the items at the source hub; releasing or cancelling returns them; fulfilling
-removes them from stock. All three go through the shared stock engine in common.py.
+Citizens never pick a hub: matching.py assigns the best source hub and reserves the items as soon
+as one can cover the request. A worker then claims it and chooses delivery or pickup. Cancelling
+returns reserved items to stock; fulfilling removes them.
 """
 
-from typing import Annotated, Literal, cast
+from typing import Annotated, Literal
 from uuid import uuid4
 
 import apsw
@@ -24,21 +25,18 @@ from haven.donations.common import (
     catalog,
     consume,
     error,
-    hub_exists,
     named_items,
     not_found,
     parse_items,
-    pledged,
     release,
     require_role,
-    reserve,
     validate_items,
     write_transaction,
 )
 from haven.donations.fairness import BASE_CAP, active_count, cap_for_items, demand_pressure, limits
-from haven.donations.planner import HubState, OpenRequest, plan
+from haven.donations.matching import match_waiting_requests
 
-Status = Literal["open", "assigned", "fulfilled", "cancelled"]
+Status = Literal["open", "matched", "assigned", "fulfilled", "cancelled"]
 Method = Literal["delivery", "pickup"]
 
 
@@ -51,14 +49,13 @@ class RequestCreate(msgspec.Struct, forbid_unknown_fields=True):
 
 
 class RequestClaim(msgspec.Struct, forbid_unknown_fields=True):
-    hub_id: str
     method: Method
 
 
 _COLUMNS = (
     "r.id, r.user_id, r.items_json, r.latitude, r.longitude, r.address, r.notes, r.status, "
     "r.hub_id, r.method, r.assigned_to, r.created_at, r.updated_at, h.name, h.address, "
-    "h.latitude, h.longitude, u.email"
+    "h.latitude, h.longitude, u.email, r.match_json"
 )
 _FROM = (
     "FROM supply_requests r LEFT JOIN organizations h ON h.id = r.hub_id "
@@ -87,6 +84,7 @@ def request_info(row: tuple, names: dict[str, dict]) -> dict:
         "notes": row[6],
         "status": row[7],
         "hub": hub,
+        "match": msgspec.json.decode(row[18]) if row[18] else None,
         "method": row[9],
         "assigned_to": row[10],
         "assigned_to_email": row[17],
@@ -116,65 +114,10 @@ async def set_status(connection, request_id: str, status: str, **fields) -> None
     )
 
 
-async def suggest_hubs(connection: apsw.AsyncConnection, requests: list[dict]) -> None:
-    """Attach ranked `suggested_hubs` to each open request in `requests`.
-
-    Every open request is planned together (see planner.py) so suggestions never double-book
-    stock; the first suggestion is the planned assignment. Only active public hubs are considered.
-    """
-    if not any(r["status"] == "open" for r in requests):
-        return
-    hubs = cast(
-        list[tuple[str, str, float, float, int]],
-        await (
-            await connection.execute(
-                "SELECT id, name, latitude, longitude, capacity_pct FROM organizations "
-                "WHERE site_type IS NOT NULL AND status != 'inactive'"
-            )
-        ).fetchall(),
-    )
-    incoming = await pledged(connection, tuple(h[0] for h in hubs))
-    available: dict[str, dict[str, int]] = {}
-    targets: dict[str, dict[str, int]] = {}
-    async for hub_id, resource_type_id, quantity, held, target in await connection.execute(
-        "SELECT organization_id, resource_type_id, quantity, reserved, target FROM inventory"
-    ):
-        available.setdefault(str(hub_id), {})[str(resource_type_id)] = int(quantity) - int(held)
-        targets.setdefault(str(hub_id), {})[str(resource_type_id)] = int(target)
-    states = [
-        HubState(
-            id=hub_id,
-            name=name,
-            latitude=lat,
-            longitude=lng,
-            capacity_pct=capacity,
-            available=available.get(hub_id, {}),
-            target=targets.get(hub_id, {}),
-            pledged=incoming.get(hub_id, {}),
-        )
-        for hub_id, name, lat, lng, capacity in hubs
-    ]
-    open_rows = cast(
-        list[tuple[str, float, float, str]],
-        await (
-            await connection.execute(
-                "SELECT id, latitude, longitude, items_json FROM supply_requests "
-                "WHERE status = 'open' ORDER BY created_at, id"
-            )
-        ).fetchall(),
-    )
-    plans = plan(
-        [OpenRequest(row[0], row[1], row[2], parse_items(row[3])) for row in open_rows],
-        states,
-    )
-    for item in requests:
-        if item["status"] == "open":
-            item["suggested_hubs"] = plans.get(item["id"], [])
-
-
 @post("/requests")
 async def create_request(data: JSONBody[RequestCreate], request: Request) -> dict:
-    """A citizen asks for goods to be delivered or made ready for pickup.
+    """A citizen asks for goods. The request is matched to the best hub straight away when one can
+    cover it (status `matched`), otherwise it waits (`open`) and is matched when stock arrives.
 
     Limited to a demand-adjusted number of active requests per citizen (see fairness.py).
     """
@@ -218,6 +161,7 @@ async def create_request(data: JSONBody[RequestCreate], request: Request) -> dic
                     stamp,
                 ),
             )
+            await match_waiting_requests(connection)
         return await fetch_info(connection, request_id)
 
 
@@ -246,18 +190,20 @@ async def my_requests(request: Request) -> list[dict]:
 
 @post("/requests/{request_id:str}/cancel", status_code=200)
 async def cancel_request(request_id: FromPath[str], request: Request) -> dict:
-    """The citizen withdraws a request; a claimed request's reservation is released."""
+    """The citizen withdraws a request. Its reserved items return to stock, which may let a
+    waiting request be matched."""
     async with connect() as connection:
         actor = await require_role(request, connection, "family")
         async with write_transaction(connection):
             row = await fetch(connection, request_id)
             if row[1] != actor.user_id:
                 raise not_found("Request")
-            if row[7] not in ("open", "assigned"):
+            if row[7] not in ("open", "matched", "assigned"):
                 raise error(409, "request_closed", "This request is already closed.")
-            if row[7] == "assigned":
+            if row[7] in ("matched", "assigned"):
                 await release(connection, row[8], parse_items(row[2]))
             await set_status(connection, request_id, "cancelled")
+            await match_waiting_requests(connection)
         return await fetch_info(connection, request_id)
 
 
@@ -267,7 +213,7 @@ async def list_requests(
     status: FromQuery[Status | None] = None,
     assigned_to_me: FromQuery[bool] = False,
 ) -> list[dict]:
-    """Operator queue. Open requests include ranked `suggested_hubs` (best first)."""
+    """Operator queue: `matched` requests are ready to claim; `open` ones wait for stock."""
     async with connect() as connection:
         actor = await require_role(request, connection, "operator")
         clauses, params = [], []
@@ -285,42 +231,27 @@ async def list_requests(
             )
         ).fetchall()
         names = await catalog(connection)
-        items = [request_info(row, names) for row in rows]
-        await suggest_hubs(connection, items)
-    return items
+    return [request_info(row, names) for row in rows]
 
 
 @post("/requests/{request_id:str}/claim", status_code=200)
 async def claim_request(
     request_id: FromPath[str], data: JSONBody[RequestClaim], request: Request
 ) -> dict:
-    """An operator takes an open request, choosing the source hub and how the goods reach the
-    citizen. The items are reserved at that hub.
-    """
+    """A worker takes a matched request and chooses delivery or citizen pickup. The source hub was
+    chosen by the matcher and its items are already reserved."""
     async with connect() as connection:
         actor = await require_role(request, connection, "operator")
         async with write_transaction(connection):
             row = await fetch(connection, request_id)
-            if row[7] != "open":
+            if row[7] != "matched":
                 raise error(
-                    409, "request_not_open", "This request has already been claimed or closed."
+                    409,
+                    "request_not_matched",
+                    "Only requests matched to a hub and not yet claimed can be claimed.",
                 )
-            if not await hub_exists(connection, data.hub_id):
-                raise not_found()
-            await reserve(
-                connection,
-                data.hub_id,
-                parse_items(row[2]),
-                code="insufficient_stock",
-                holder="This hub",
-            )
             await set_status(
-                connection,
-                request_id,
-                "assigned",
-                hub_id=data.hub_id,
-                method=data.method,
-                assigned_to=actor.user_id,
+                connection, request_id, "assigned", method=data.method, assigned_to=actor.user_id
             )
         return await fetch_info(connection, request_id)
 
@@ -336,15 +267,12 @@ async def assigned_to_actor(connection, request_id: str, user_id: str) -> tuple:
 
 @post("/requests/{request_id:str}/release", status_code=200)
 async def release_request(request_id: FromPath[str], request: Request) -> dict:
-    """Return an assigned request to the open queue and free its reservation (assignee only)."""
+    """Hand a claimed request back to the queue; it stays matched to its hub (assignee only)."""
     async with connect() as connection:
         actor = await require_role(request, connection, "operator")
         async with write_transaction(connection):
-            row = await assigned_to_actor(connection, request_id, actor.user_id)
-            await release(connection, row[8], parse_items(row[2]))
-            await set_status(
-                connection, request_id, "open", hub_id=None, method=None, assigned_to=None
-            )
+            await assigned_to_actor(connection, request_id, actor.user_id)
+            await set_status(connection, request_id, "matched", method=None, assigned_to=None)
         return await fetch_info(connection, request_id)
 
 

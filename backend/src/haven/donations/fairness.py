@@ -1,6 +1,6 @@
 """Demand-adjusted cap on how many active requests one citizen may hold.
 
-A citizen's active requests are those open or assigned. The cap starts at BASE_CAP and moves with
+A citizen's active requests are those waiting, matched, or assigned. The cap starts at BASE_CAP and moves with
 demand pressure for each resource type: units wanted by open requests divided by units available
 (on hand minus reserved) across public hubs. A request is limited by its scarcest resource type,
 so a formula shortage tightens formula requests without restricting people asking for water.
@@ -61,7 +61,7 @@ async def active_count(connection: apsw.AsyncConnection, user_id: str) -> int:
     row = await (
         await connection.execute(
             "SELECT COUNT(*) FROM supply_requests "
-            "WHERE user_id = ? AND status IN ('open', 'assigned')",
+            "WHERE user_id = ? AND status IN ('open', 'matched', 'assigned')",
             (user_id,),
         )
     ).fetchone()

@@ -10,6 +10,7 @@ from uuid import uuid4
 from haven.allocation import recompute_disasters
 from haven.auth import hash_password, now, timestamp
 from haven.db import connect, initialize_database
+from haven.donations.matching import match_waiting_requests
 
 # Demo region: the fictional Tampa hurricane scenario (see seed_tampa_scenario). Hubs are
 # fictional sites in real Tampa neighbourhoods, inside the scenario's shelter and family area.
@@ -369,7 +370,8 @@ async def seed_hubs() -> int:
 
 
 async def seed_activity() -> None:
-    """Sample open requests and pending pledges from the demo family; existing rows are left unchanged."""
+    """Sample requests (matched to hubs) and pending pledges from the demo family; existing rows
+    are left unchanged."""
     async with connect() as connection:
         family = await (
             await connection.execute("SELECT id FROM users WHERE email = 'family@demo.example'")
@@ -377,7 +379,8 @@ async def seed_activity() -> None:
         if family is None:
             return
         stamp = timestamp(now())
-        async with connection:
+        await connection.execute("BEGIN IMMEDIATE")
+        try:
             for request_id, items, lat, lng, address, notes in DEMO_REQUESTS:
                 await connection.execute(
                     "INSERT INTO supply_requests (id, user_id, items_json, latitude, longitude, address, notes, status, "
@@ -400,6 +403,11 @@ async def seed_activity() -> None:
                     "VALUES (?, ?, ?, ?, ?, 'pending', ?, ?) ON CONFLICT(id) DO NOTHING",
                     (pledge_id, family[0], hub_id, json.dumps(items), notes, stamp, stamp),
                 )
+            await match_waiting_requests(connection)
+            await connection.execute("COMMIT")
+        except BaseException:
+            await connection.execute("ROLLBACK")
+            raise
 
 
 DEMO_DISASTER_ID = "demo_tampa_hurricane"

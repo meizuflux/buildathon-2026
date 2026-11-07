@@ -281,45 +281,29 @@ def test_shipment_errors_and_cancel_releases(client, op):
 
 
 def test_hub_stock_is_shared_between_shipments_and_citizen_requests(client, op, family):
-    """A shipment reservation at a hub reduces what citizens can be given, and vice versa."""
-    # hub_near starts with 10 bottled water (target 50).
-    assert ship(client, op, "hub_near", water_bottled=8).status_code == 201
+    """A shipment reservation at a hub limits what citizens can be matched to, and vice versa."""
+    # hub_near is the only hub with bottled water: 10 on hand.
+    shipment = ship(client, op, "hub_near", water_bottled=8).json()
     hub = client.get("/api/hubs/hub_near").json()
     water = next(s for s in hub["supplies"] if s["resource_type_id"] == "water_bottled")
     assert (water["quantity"], water["reserved"], water["available"]) == (10, 8, 2)
 
-    request_body = {
+    body = {
         "items": [{"resource_type_id": "water_bottled", "quantity": 3}],
         "latitude": CENTER[0],
         "longitude": CENTER[1],
     }
-    request_id = client.post("/api/requests", json=request_body, headers=family).json()["id"]
-    claim = client.post(
-        f"/api/requests/{request_id}/claim",
-        json={"hub_id": "hub_near", "method": "pickup"},
-        headers=op,
-    )
-    assert claim.status_code == 409
-    assert claim.json()["error"]["code"] == "insufficient_stock"
-    # Water is now scarce, so the fair-share cap is 1: withdraw before asking for less.
-    client.post(f"/api/requests/{request_id}/cancel", headers=family)
+    waiting = client.post("/api/requests", json=body, headers=family).json()
+    assert waiting["status"] == "open"  # only 2 free: waits for stock
 
-    small = client.post(
-        "/api/requests",
-        json=request_body | {"items": [{"resource_type_id": "water_bottled", "quantity": 2}]},
-        headers=family,
-    ).json()["id"]
-    claimed = client.post(
-        f"/api/requests/{small}/claim",
-        json={"hub_id": "hub_near", "method": "pickup"},
-        headers=op,
-    )
-    assert claimed.status_code == 200
-    assert ship(client, op, "hub_near", water_bottled=1).json()["error"]["code"] == (
-        "insufficient_inventory"
-    )
-    client.post(f"/api/requests/{small}/release", headers=op)
-    assert inventory(client, op, "hub_near")["water_bottled"] == (10, 8)
+    # Cancelling the shipment frees 8, so the waiting request is matched and reserves 3.
+    client.patch(f"/api/shipments/{shipment['id']}", json={"status": "cancelled"}, headers=op)
+    mine = client.get("/api/requests/mine", headers=family).json()[0]
+    assert (mine["status"], mine["hub"]["id"]) == ("matched", "hub_near")
+    assert inventory(client, op, "hub_near")["water_bottled"] == (10, 3)
+    short = ship(client, op, "hub_near", water_bottled=8)
+    assert short.json()["error"]["code"] == "insufficient_inventory"
+    assert ship(client, op, "hub_near", water_bottled=7).status_code == 201
 
 
 def test_citizens_cannot_request_clinical_items(client, family):

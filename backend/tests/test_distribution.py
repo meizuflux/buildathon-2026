@@ -92,98 +92,87 @@ def test_nearby_filters_by_need_and_availability(client, h):
 # Supply requests -------------------------------------------------------------
 
 
-def test_request_lifecycle_claim_fulfill_deducts_stock(client, h):
+def test_request_is_matched_at_once_and_reserves_stock(client, h):
     stock_hub(client, h["op"], "hub_mid", baby_formula=(10, 10), water_bottled=(3, 0))
     created = new_request(client, h["family"], baby_formula=4, water_bottled=2)
     assert created.status_code == 201
-    request_id = created.json()["id"]
-    assert created.json()["status"] == "open"
+    body = created.json()
+    assert body["status"] == "matched"
+    assert body["hub"]["name"] == "Mid Fire Station"  # the only hub with enough formula
+    assert body["match"]["reasons"][0].endswith("km away")
+    formula = supply(hub(client, "hub_mid"), "baby_formula")
+    assert (formula["quantity"], formula["reserved"], formula["available"]) == (10, 4, 6)
     assert new_request(client, h["op"], water_bottled=1).status_code == 403
 
-    queue = client.get("/api/requests", params={"status": "open"}, headers=h["op"]).json()
+
+def test_worker_claims_matched_request_and_fulfils_it(client, h):
+    stock_hub(client, h["op"], "hub_mid", baby_formula=(10, 10))
+    request_id = new_request(client, h["family"], baby_formula=4).json()["id"]
+    queue = client.get("/api/requests", params={"status": "matched"}, headers=h["op"]).json()
     assert [r["id"] for r in queue] == [request_id]
-    assert [s["id"] for s in queue[0]["suggested_hubs"]] == [
-        "hub_mid"
-    ]  # only hub with enough formula
     assert client.get("/api/requests", headers=h["family"]).status_code == 403
 
     claim = client.post(
-        f"/api/requests/{request_id}/claim",
-        json={"hub_id": "hub_mid", "method": "delivery"},
-        headers=h["op"],
+        f"/api/requests/{request_id}/claim", json={"method": "delivery"}, headers=h["op"]
     )
     assert claim.status_code == 200
-    assert claim.json()["status"] == "assigned"
-    assert claim.json()["hub"]["name"] == "Mid Fire Station"
+    assert (claim.json()["status"], claim.json()["method"]) == ("assigned", "delivery")
     assert claim.json()["assigned_to_email"] == "op@example.com"
-    assert supply(hub(client, "hub_mid"), "baby_formula")["reserved"] == 4
-    assert supply(hub(client, "hub_mid"), "baby_formula")["available"] == 6
-
     again = client.post(
-        f"/api/requests/{request_id}/claim",
-        json={"hub_id": "hub_mid", "method": "pickup"},
-        headers=h["op2"],
+        f"/api/requests/{request_id}/claim", json={"method": "pickup"}, headers=h["op2"]
     )
     assert again.status_code == 409
     assert client.post(f"/api/requests/{request_id}/fulfill", headers=h["op2"]).status_code == 403
     mine = client.get("/api/requests", params={"assigned_to_me": True}, headers=h["op"]).json()
     assert [r["id"] for r in mine] == [request_id]
 
+    released = client.post(f"/api/requests/{request_id}/release", headers=h["op"]).json()
+    assert (released["status"], released["hub"]["id"]) == ("matched", "hub_mid")
+    assert supply(hub(client, "hub_mid"), "baby_formula")["reserved"] == 4
+    client.post(f"/api/requests/{request_id}/claim", json={"method": "pickup"}, headers=h["op"])
+
     done = client.post(f"/api/requests/{request_id}/fulfill", headers=h["op"])
-    assert done.status_code == 200
     assert done.json()["status"] == "fulfilled"
-    after = hub(client, "hub_mid")
-    assert (
-        supply(after, "baby_formula")["quantity"],
-        supply(after, "baby_formula")["reserved"],
-    ) == (6, 0)
-    assert supply(after, "water_bottled")["quantity"] == 1
+    formula = supply(hub(client, "hub_mid"), "baby_formula")
+    assert (formula["quantity"], formula["reserved"]) == (6, 0)
     assert client.get("/api/requests/mine", headers=h["family"]).json()[0]["status"] == "fulfilled"
     assert client.get("/api/requests/mine", headers=h["family2"]).json() == []
 
 
-def test_claim_respects_reservations_and_release(client, h):
-    stock_hub(client, h["op"], "hub_mid", blankets=(5, 0))
-    first = new_request(client, h["family"], blankets=4).json()["id"]
-    second = new_request(client, h["family2"], blankets=4).json()["id"]
-    claim = {"hub_id": "hub_mid", "method": "pickup"}
-    assert (
-        client.post(f"/api/requests/{first}/claim", json=claim, headers=h["op"]).status_code == 200
+def test_request_waits_then_matches_when_stock_arrives(client, h):
+    waiting = new_request(client, h["family"], blankets=4).json()
+    assert (waiting["status"], waiting["hub"]) == ("open", None)
+    claim = client.post(
+        f"/api/requests/{waiting['id']}/claim", json={"method": "pickup"}, headers=h["op"]
     )
-    short = client.post(f"/api/requests/{second}/claim", json=claim, headers=h["op"])
-    assert short.status_code == 409
-    assert short.json()["error"]["code"] == "insufficient_stock"
-    assert (
-        client.get("/api/requests", params={"status": "open"}, headers=h["op"]).json()[0][
-            "suggested_hubs"
-        ]
-        == []
-    )
+    assert claim.json()["error"]["code"] == "request_not_matched"
+    # Hub staff restock blankets: the waiting request is matched in the same transaction.
+    stock_hub(client, h["staff"], "hub_near", capacity=50, blankets=(5, 0))
+    mine = client.get("/api/requests/mine", headers=h["family"]).json()[0]
+    assert (mine["status"], mine["hub"]["id"]) == ("matched", "hub_near")
+    assert supply(hub(client, "hub_near"), "blankets")["reserved"] == 4
 
-    assert client.post(f"/api/requests/{first}/release", headers=h["op2"]).status_code == 403
-    released = client.post(f"/api/requests/{first}/release", headers=h["op"])
-    assert released.json()["status"] == "open"
-    assert released.json()["hub"] is None
-    assert (
-        client.post(f"/api/requests/{second}/claim", json=claim, headers=h["op"]).status_code == 200
-    )
+
+def test_scarce_stock_goes_to_the_earliest_request(client, h):
+    stock_hub(client, h["op"], "hub_mid", blankets=(5, 0))
+    first = new_request(client, h["family"], blankets=4).json()
+    second = new_request(client, h["family2"], blankets=4).json()
+    assert (first["status"], second["status"]) == ("matched", "open")
+    # Cancelling the first returns its blankets, so the second is matched.
+    client.post(f"/api/requests/{first['id']}/cancel", headers=h["family"])
+    assert client.get("/api/requests/mine", headers=h["family2"]).json()[0]["status"] == "matched"
 
 
 def test_citizen_cancels_own_request(client, h):
+    stock_hub(client, h["op"], "hub_mid", water_bottled=(5, 0))
     request_id = new_request(client, h["family"], water_bottled=1).json()["id"]
     assert (
         client.post(f"/api/requests/{request_id}/cancel", headers=h["family2"]).status_code == 404
     )
-    assert (
-        client.post(f"/api/requests/{request_id}/cancel", headers=h["family"]).json()["status"]
-        == "cancelled"
-    )
+    cancelled = client.post(f"/api/requests/{request_id}/cancel", headers=h["family"]).json()
+    assert cancelled["status"] == "cancelled"
+    assert supply(hub(client, "hub_mid"), "water_bottled")["reserved"] == 0
     assert client.post(f"/api/requests/{request_id}/cancel", headers=h["family"]).status_code == 409
-    claim = {"hub_id": "hub_near", "method": "pickup"}
-    assert (
-        client.post(f"/api/requests/{request_id}/claim", json=claim, headers=h["op"]).status_code
-        == 409
-    )
 
 
 def test_request_validation(client, h):
@@ -287,30 +276,71 @@ def test_cap_loosens_when_supply_is_plentiful(client, h):
 
 def test_cap_tightens_for_scarce_items_only(client, h):
     stock_hub(client, h["op"], "hub_mid", baby_formula=(4, 0), water_bottled=(100, 0))
-    assert (
-        new_request(client, h["family2"], baby_formula=4).status_code == 201
-    )  # formula demand now equals supply
-    assert new_request(client, h["family"], baby_formula=1).status_code == 201
+    assert new_request(client, h["family2"], baby_formula=4).json()["status"] == "matched"
+    # No free formula is left, so formula requests are capped at one per person.
+    assert new_request(client, h["family"], baby_formula=1).json()["status"] == "open"
     blocked = new_request(client, h["family"], baby_formula=1)
     assert blocked.status_code == 409
     assert "baby formula" in blocked.json()["error"]["message"]
-    assert (
-        new_request(client, h["family"], water_bottled=2).status_code == 201
-    )  # water is still plentiful
+    assert new_request(client, h["family"], water_bottled=2).status_code == 201  # still plentiful
     limits = client.get("/api/requests/limits", headers=h["family"]).json()
     assert limits["resource_types"]["baby_formula"] == {
         "cap": 1,
         "level": "critical",
-        "pressure": 1.25,
+        "pressure": None,
     }
-    assert limits["resource_types"]["blankets"]["pressure"] is None  # no stock anywhere
 
 
-def test_cancelled_and_fulfilled_requests_free_a_slot(client, h):
+def test_cancelled_requests_free_a_slot(client, h):
     stock_hub(client, h["op"], "hub_mid", baby_formula=(2, 0))
-    first = new_request(client, h["family"], baby_formula=2).json()[
-        "id"
-    ]  # pressure now 1.0 -> cap 1
+    first = new_request(client, h["family"], baby_formula=2).json()["id"]  # uses all formula
     assert new_request(client, h["family"], baby_formula=1).status_code == 409
     client.post(f"/api/requests/{first}/cancel", headers=h["family"])
     assert new_request(client, h["family"], baby_formula=1).status_code == 201
+
+
+# Donations matched to a drop-off hub -----------------------------------------
+
+
+def donate(client, headers, lat=None, **items):
+    body = {
+        "items": [{"resource_type_id": k, "quantity": v} for k, v in items.items()],
+        "latitude": CENTER[0] if lat is None else lat,
+        "longitude": CENTER[1],
+    }
+    return client.post("/api/pledges", json=body, headers=headers)
+
+
+def test_donation_goes_to_the_hub_that_needs_it(client, h):
+    # hub_near (closest) is 95% full, so it is never chosen. hub_mid needs diapers.
+    stock_hub(client, h["op"], "hub_mid", diapers=(0, 40))
+    pledge = donate(client, h["family"], diapers=10)
+    assert pledge.status_code == 201
+    body = pledge.json()
+    assert (body["hub"]["id"], body["status"]) == ("hub_mid", "pending")
+    assert "needs everything you're bringing" in body["match"]["reasons"]
+    assert supply(hub(client, "hub_mid"), "diapers")["pledged"] == 10
+
+
+def test_unneeded_donation_goes_to_nearest_hub_with_space(client, h):
+    pledge = donate(client, h["family"], cots=2).json()
+    assert pledge["hub"]["id"] == "hub_mid"  # nearest hub that isn't full
+    assert "has room for it" in pledge["match"]["reasons"]
+
+
+def test_donation_without_any_hub_in_range(client, h):
+    far_away = donate(client, h["family"], lat=-45.0, cots=1)
+    assert far_away.status_code == 409
+    assert far_away.json()["error"]["code"] == "no_hub_available"
+    clinical = donate(client, h["family"], insulin=1)
+    assert clinical.json()["error"]["code"] == "not_citizen_requestable"
+
+
+def test_received_donation_matches_a_waiting_request(client, h):
+    waiting = new_request(client, h["family2"], diapers=5).json()
+    assert waiting["status"] == "open"
+    stock_hub(client, h["op"], "hub_mid", diapers=(0, 40))
+    pledge_id = donate(client, h["family"], diapers=10).json()["id"]
+    client.post(f"/api/pledges/{pledge_id}/receive", headers=h["op"])
+    mine = client.get("/api/requests/mine", headers=h["family2"]).json()[0]
+    assert (mine["status"], mine["hub"]["id"]) == ("matched", "hub_mid")

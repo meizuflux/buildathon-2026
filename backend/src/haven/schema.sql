@@ -213,8 +213,9 @@ CREATE TABLE IF NOT EXISTS hub_staff (
     user_id TEXT PRIMARY KEY REFERENCES users(id),
     hub_id TEXT NOT NULL REFERENCES organizations(id)
 );
--- Citizen requests for goods. An operator claims one, picks a source hub and delivery method, and
--- fulfills it; claiming reserves the items at the hub. items_json: [{"resource_type_id", "quantity"}]
+-- Citizen requests for goods. The matcher assigns the best source hub and reserves the items
+-- (open -> matched); an operator then claims it, chooses delivery or pickup, and fulfills it.
+-- items_json: [{"resource_type_id", "quantity"}]; match_json: {"distance_km", "score", "reasons"}
 CREATE TABLE IF NOT EXISTS supply_requests (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id),
@@ -223,8 +224,10 @@ CREATE TABLE IF NOT EXISTS supply_requests (
     longitude REAL NOT NULL CHECK (longitude BETWEEN -180 AND 180),
     address TEXT NOT NULL DEFAULT '',
     notes TEXT NOT NULL DEFAULT '',
-    status TEXT NOT NULL CHECK (status IN ('open', 'assigned', 'fulfilled', 'cancelled')),
+    status TEXT NOT NULL CHECK (status IN ('open', 'matched', 'assigned', 'fulfilled',
+        'cancelled')),
     hub_id TEXT REFERENCES organizations(id),
+    match_json TEXT,
     method TEXT CHECK (method IN ('delivery', 'pickup')),
     assigned_to TEXT REFERENCES users(id),
     created_at TEXT NOT NULL,
@@ -232,12 +235,14 @@ CREATE TABLE IF NOT EXISTS supply_requests (
 );
 CREATE INDEX IF NOT EXISTS supply_requests_status_idx ON supply_requests(status, created_at);
 CREATE INDEX IF NOT EXISTS supply_requests_user_idx ON supply_requests(user_id);
--- Citizen pledges to drop goods off at a hub; staff confirm receipt, which adds the items to stock.
+-- Citizen pledges to drop goods off at a hub, usually the one the matcher picked; staff confirm
+-- receipt, which adds the items to stock. match_json: {"distance_km", "score", "reasons"} or NULL.
 CREATE TABLE IF NOT EXISTS pledges (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id),
     hub_id TEXT NOT NULL REFERENCES organizations(id),
     items_json TEXT NOT NULL,
+    match_json TEXT,
     notes TEXT NOT NULL DEFAULT '',
     status TEXT NOT NULL CHECK (status IN ('pending', 'received', 'no_show', 'cancelled')),
     created_at TEXT NOT NULL,

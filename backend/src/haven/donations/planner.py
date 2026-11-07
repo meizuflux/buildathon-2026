@@ -1,4 +1,6 @@
-"""Source-hub recommendations for open citizen requests.
+"""Matching citizens to hubs: source hubs for supply requests and drop-off hubs for donations.
+
+Supply requests:
 
 Each (request, hub) pair gets a cost in kilometre-equivalents, lower is better:
 
@@ -36,6 +38,7 @@ class HubState:
     available: dict[str, int]  # on hand minus already-reserved
     target: dict[str, int] = field(default_factory=dict)
     pledged: dict[str, int] = field(default_factory=dict)
+    reserved: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass
@@ -122,3 +125,59 @@ def plan(requests: list[OpenRequest], hubs: list[HubState]) -> dict[str, list[di
     for request_id in pending:
         result[request_id] = []
     return result
+
+
+# Donations -------------------------------------------------------------------------------------
+
+FULL_PCT = 90
+UNNEEDED_PENALTY_KM = 10.0
+NEARLY_FULL_PENALTY_KM = 3.0
+MAX_DROP_OFF_KM = 50.0
+
+
+def need(hub: HubState, resource_type_id: str) -> int:
+    """Units still wanted: target minus what's on hand (incl. reserved) and already pledged."""
+    on_hand = hub.available.get(resource_type_id, 0) + hub.reserved.get(resource_type_id, 0)
+    wanted = hub.target.get(resource_type_id, 0) - on_hand - hub.pledged.get(resource_type_id, 0)
+    return max(wanted, 0)
+
+
+def evaluate_drop_off(items: list[dict], lat: float, lng: float, hub: HubState) -> dict | None:
+    """Cost of dropping `items` off at `hub`, or None if the hub is full or too far.
+
+    cost = distance_km + UNNEEDED_PENALTY_KM * (share of units the hub doesn't need)
+           + NEARLY_FULL_PENALTY_KM if the hub is 70%+ full
+    """
+    if hub.capacity_pct >= FULL_PCT:
+        return None
+    distance = haversine_km(lat, lng, hub.latitude, hub.longitude)
+    if distance > MAX_DROP_OFF_KM:
+        return None
+    total = sum(item["quantity"] for item in items)
+    useful = sum(min(item["quantity"], need(hub, item["resource_type_id"])) for item in items)
+    unneeded_share = 1 - useful / total
+    crowded = hub.capacity_pct >= 70
+    cost = (
+        distance + UNNEEDED_PENALTY_KM * unneeded_share + (NEARLY_FULL_PENALTY_KM if crowded else 0)
+    )
+    reasons = [f"{distance:.1f} km away"]
+    if useful == total:
+        reasons.append("needs everything you're bringing")
+    elif useful:
+        reasons.append("needs some of what you're bringing")
+    else:
+        reasons.append("has room for it")
+    reasons.append(f"{hub.capacity_pct}% full" if crowded else "plenty of storage space")
+    return {
+        "id": hub.id,
+        "name": hub.name,
+        "distance_km": round(distance, 2),
+        "score": round(cost, 2),
+        "reasons": reasons,
+    }
+
+
+def best_drop_off(items: list[dict], lat: float, lng: float, hubs: list[HubState]) -> dict | None:
+    """The lowest-cost hub for a donation, or None when no hub within range has space."""
+    options = [o for hub in hubs if (o := evaluate_drop_off(items, lat, lng, hub))]
+    return min(options, key=lambda o: o["score"]) if options else None

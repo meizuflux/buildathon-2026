@@ -23,6 +23,7 @@ from haven.donations.common import (
     stock,
     write_transaction,
 )
+from haven.donations.matching import match_waiting_requests
 
 NonNegative = Annotated[int, msgspec.Meta(ge=0, le=1_000_000)]
 
@@ -224,6 +225,7 @@ async def update_inventory(
                     "updated_at = excluded.updated_at",
                     (hub_id, s.resource_type_id, s.quantity, s.target, stamp),
                 )
+            await match_waiting_requests(connection)
         return await load_hub(connection, hub_id)
 
 
