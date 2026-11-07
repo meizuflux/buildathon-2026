@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
 import { AlertTriangle, ArrowRight, Info, Siren } from 'lucide-react'
 import { useData } from '../data.jsx'
 import { PageHeader, Empty } from '../components/ui.jsx'
@@ -20,7 +19,6 @@ const REF_LINK = {
 
 export default function CommandCenter() {
   const d = useData()
-  const [showAllAlerts, setShowAllAlerts] = useState(false)
   const sheltersActive = d.shelters.filter((s) => s.status !== 'closed')
   const total = sheltersActive.reduce((n, s) => n + (s.capacity.total_people || 0), 0)
   const free = sheltersActive.reduce((n, s) => n + Math.max(0, s.capacity.available_people || 0), 0)
@@ -53,24 +51,21 @@ export default function CommandCenter() {
       <section className="card-panel operational-alerts">
         <div className="panel-title">
           <h2>Operational alerts</h2>
-          <span className="muted">{d.alerts ? `${d.alerts.total} current` : '—'}</span>
+          <Link to="/alerts" className="link-sm">View all <ArrowRight size={13} /></Link>
         </div>
-        {d.errors.alerts ? <p className="muted">Alerts could not be loaded.</p> : !d.alerts ? <p className="muted">Loading alerts…</p> : (
+        {d.errors.alerts ? <p className="muted">Alerts could not be loaded.</p> : !d.alerts ? <p className="muted">Loading alerts…</p> : d.alerts.total === 0 ? <p className="muted">No current operational alerts.</p> : (
           <>
+            <p className="muted small">{d.alerts.total} current alerts · Showing the highest priority</p>
             <ul className="attention">
-              {d.alerts.alerts.length === 0 && <Empty>No current operational alerts.</Empty>}
-              {d.alerts.alerts.slice(0, showAllAlerts ? undefined : 10).map((alert) => {
+              {d.alerts.alerts.slice(0, 3).map((alert) => {
                 const Icon = LEVEL_ICON[alert.severity] || Info
                 return <li key={alert.id} className={`att att-${alert.severity}`}>
                   <Icon size={16} className="att-icon" aria-hidden="true" />
-                  <div className="att-body"><div className="att-title">{alert.message}</div><span className="muted small">{cap(alert.severity)}{alert.family_id ? ` · Family ${alert.family_id}` : ''}</span></div>
+                  <div className="att-body"><div className="att-title">{alert.message}</div><span className="muted small">{cap(alert.severity)}</span></div>
                   <span className="muted small nowrap" title={fullTime(alert.updated_at)}>{timeAgo(alert.updated_at)}</span>
-                  {alert.shelter_id && <Link className="btn btn-sm" to={`/map?shelter=${encodeURIComponent(alert.shelter_id)}`}>View shelter</Link>}
                 </li>
               })}
             </ul>
-            {d.alerts.alerts.length > 10 && <button className="btn btn-sm" onClick={() => setShowAllAlerts((v) => !v)}>{showAllAlerts ? 'Show fewer' : `Show all ${d.alerts.alerts.length} loaded alerts`}</button>}
-            {d.alerts.total > d.alerts.alerts.length && <p className="muted small">Showing the first {d.alerts.alerts.length} of {d.alerts.total} alerts, ordered by severity and recency.</p>}
           </>
         )}
       </section>

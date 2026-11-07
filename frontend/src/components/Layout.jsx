@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Building2, HandHeart, KeyRound, LayoutDashboard, Map, Megaphone, PackageSearch, RefreshCw, Truck, Warehouse } from 'lucide-react'
+import { Bell, Building2, HandHeart, KeyRound, LayoutDashboard, Map, Megaphone, PackageSearch, RefreshCw, Truck, Warehouse } from 'lucide-react'
 import { useAuth } from '../auth.jsx'
 import { useData } from '../data.jsx'
 import { DISASTER_TYPES } from '../lib/constants.js'
@@ -19,6 +19,7 @@ export default function Layout() {
   const nav = [
     { section: null, items: [
       { to: '/', label: 'Command Center', icon: LayoutDashboard, end: true },
+      { to: '/alerts', label: 'Alerts', icon: Bell, badge: d.alerts?.total, tone: 'alert' },
       { to: '/map', label: 'Operations Map', icon: Map, badge: helpOpen, tone: 'alert' },
       { to: '/citizens', label: 'Citizen requests', icon: HandHeart, badge: citizenCritical, tone: 'alert' },
     ] },
