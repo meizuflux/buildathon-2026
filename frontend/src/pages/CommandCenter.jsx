@@ -26,7 +26,6 @@ export default function CommandCenter() {
   const inTransit = d.shipments.filter((s) => s.status === 'in_transit')
   const late = d.shipments.filter(isLate).length
   const help = d.reports.filter((r) => r.type === 'need_help' && r.status === 'received').length
-  const unread = d.conversations.reduce((n, c) => n + c.unread_count, 0)
 
   const attention = attentionItems({ ...d, rt: d.rt })
   const coverage = coverageByResource(d).filter((r) => r.needed > 0).sort((a, b) => b.uncovered / (b.needed || 1) - a.uncovered / (a.needed || 1))
@@ -46,7 +45,7 @@ export default function CommandCenter() {
         <Kpi label="Open needs" value={openNeeds.length} tone={openNeeds.some((n) => n.priority === 'critical') ? 'alert' : ''}
           sub={`${openNeeds.filter((n) => n.priority === 'critical').length} critical`} to="/logistics/needs" />
         <Kpi label="Shipments in transit" value={inTransit.length} tone={late ? 'warn' : ''} sub={late ? `${late} running late` : 'all on time'} to="/logistics/dispatch" />
-        <Kpi label="Unread messages" value={unread} tone={unread ? 'info' : ''} sub={`${d.conversations.length} conversations`} to="/comms/messages" />
+        <Kpi label="Unread messages" value="—" sub="Unavailable" to="/comms/messages" />
       </section>
 
       <div className="cc-grid">
@@ -136,8 +135,8 @@ export default function CommandCenter() {
                   <span className="muted small">{timeAgo(u.published_at)}</span>
                 </div>
                 <div className="reach">
-                  <div className="meter meter-sm"><span style={{ width: `${u.recipient_count ? (u.read_count / u.recipient_count) * 100 : 0}%` }} /></div>
-                  <span className="muted small">{u.read_count}/{u.recipient_count} read{u.status !== 'published' ? ` · ${u.status}` : ''}</span>
+                  {u.read_count != null && <div className="meter meter-sm"><span style={{ width: `${u.recipient_count ? (u.read_count / u.recipient_count) * 100 : 0}%` }} /></div>}
+                  <span className="muted small">{u.read_count == null ? 'Read count unavailable' : `${u.read_count}/${u.recipient_count} read`}</span>
                 </div>
               </li>
             ))}

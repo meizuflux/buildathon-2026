@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { useAuth } from '../auth.jsx'
-import { USE_MOCK, SHARED_MOCK } from '../api/index.js'
 
 export default function Login() {
   const { login } = useAuth()
-  const demo = USE_MOCK || SHARED_MOCK
-  const [email, setEmail] = useState(demo ? 'government@demo.example' : '')
-  const [password, setPassword] = useState(demo ? 'haven-demo' : '')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
 
@@ -30,8 +28,6 @@ export default function Login() {
           Haven <span className="brand-sub">Operations</span>
         </div>
         <p className="muted">Sign in with your operator account to manage relief locations, communications and logistics.</p>
-        {USE_MOCK && <p className="notice">Browser demo mode: any email and password work.</p>}
-        {SHARED_MOCK && <p className="notice">Shared demo API: sign in as <strong>government@demo.example</strong> / <strong>haven-demo</strong>. Partners use the portal with their own logins.</p>}
         <label className="field">
           <span>Email</span>
           <input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />

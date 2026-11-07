@@ -2,7 +2,6 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { Building2, HandHeart, KeyRound, LayoutDashboard, Map, Megaphone, MessagesSquare, PackageSearch, RefreshCw, Truck, Warehouse } from 'lucide-react'
 import { useAuth } from '../auth.jsx'
 import { useData } from '../data.jsx'
-import { USE_MOCK, SHARED_MOCK, resetDemoData } from '../api/index.js'
 import { DISASTER_TYPES } from '../lib/constants.js'
 import { timeAgo } from '../lib/format.js'
 import { isLate, needProgress } from '../lib/logistics.js'
@@ -79,17 +78,6 @@ export default function Layout() {
             {d.disaster?.status === 'active' && <span className="live-dot" title="Active incident">Active</span>}
           </div>
           <div className="topbar-right">
-            {(USE_MOCK || SHARED_MOCK) && (
-              <button className="badge badge-mock" title={SHARED_MOCK ? 'Shared mock API (also used by the partner portal). Click to reset to the demo seed.' : 'Browser-only mock data. Click to reset.'}
-                onClick={async () => {
-                  if (!confirm(SHARED_MOCK ? 'Reset all demo data for the dashboard AND partner portal? Portal logins you created will be removed and everyone is signed out.' : 'Reset all mock data?')) return
-                  try { await resetDemoData() } catch (e) { alert(e.message) }
-                  if (SHARED_MOCK) logout()
-                  else d.refresh()
-                }}>
-                {SHARED_MOCK ? 'Shared demo data ↺' : 'Mock data ↺'}
-              </button>
-            )}
             <button className="sync" onClick={d.refresh} title="Refresh now">
               <RefreshCw size={13} aria-hidden="true" /> Synced {d.lastSync ? timeAgo(d.lastSync) : '…'}
             </button>

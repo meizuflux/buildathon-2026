@@ -1,6 +1,4 @@
-// Live client for the Haven REST API — Part 1 contract plus the Part 2
-// operations add-on (docs/api-contract-part-2.md). Paths are relative to /api,
-// which Vite proxies to the backend in dev.
+// Paths are relative to /api, which Vite proxies to the backend in development.
 
 export class ApiError extends Error {
   constructor(status, code, message) {
@@ -99,5 +97,4 @@ export const liveApi = {
   updatePartnerAccount: (id, patch) => request('PATCH', `/partner-accounts/${e(id)}`, patch),
   resetPartnerPassword: (id) => request('POST', `/partner-accounts/${e(id)}/reset-password`),
 
-  resetMock: () => request('POST', '/_mock/reset'),
 }

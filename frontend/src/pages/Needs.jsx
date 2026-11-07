@@ -203,7 +203,7 @@ export default function Needs() {
                           <button className="btn btn-sm danger" onClick={() => confirm('Cancel this need?') && patch(n, { status: 'cancelled' })}>Cancel need</button>
                         </>
                       ) : (
-                        <button className="btn btn-sm" onClick={() => patch(n, { status: 'open' })}>Reopen</button>
+                        <button className="btn btn-sm" disabled title="Reopening needs is not supported by the server">Reopen</button>
                       )}
                     </div>
                   </div>

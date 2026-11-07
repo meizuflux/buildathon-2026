@@ -37,13 +37,19 @@ export default function ShipmentDialog({ initial = {}, onClose, onCreated }) {
     const clean = items.filter((i) => i.resource_type_id && i.quantity > 0)
     if (!from || !to) return setError('Choose where the shipment comes from and where it goes.')
     if (!clean.length) return setError('Add at least one item.')
+    if (from.kind === to.kind && from.id === to.id) return setError('Choose a destination different from the source.')
+    if (new Set(clean.map((i) => i.resource_type_id)).size !== clean.length) return setError('Each resource can appear only once.')
+    if (initial.need_ids?.length && initial.need_ids.some((id) => {
+      const need = d.needs.find((n) => n.id === id)
+      return !need || need.status !== 'open' || need.requester.kind !== to.kind || need.requester.id !== to.id || !clean.some((item) => item.resource_type_id === need.resource_type_id)
+    })) return setError('Linked needs must be open and match the destination and shipment items.')
     const short = clean.find((i) => i.quantity > (stock[i.resource_type_id] || 0))
     if (short) return setError(`${src.name} only has ${stock[short.resource_type_id] || 0} ${d.rt(short.resource_type_id).name} available.`)
     setBusy(true)
     try {
       const created = await d.mutate((api, disasterId) => api.createShipment({
         disaster_id: disasterId, from, to, items: clean, need_ids: initial.need_ids || [], priority,
-        eta: new Date(Date.now() + etaMin * 60_000).toISOString(), notes,
+        eta: new Date(Date.now() + etaMin * 60_000).toISOString(), notes: notes.trim() || null,
       }))
       onCreated?.(created)
       onClose()

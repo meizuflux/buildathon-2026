@@ -61,12 +61,7 @@ export default function Organizations() {
                   <td><span className={`badge ost-${o.status}`}>{cap(o.status)}</span></td>
                   <td className="small">{o.contact?.name}<div className="muted">{o.contact?.phone}</div></td>
                   <td>
-                    {(() => {
-                      const accts = d.partnerAccounts.filter((a) => a.site.kind === 'organization' && a.site.id === o.id && a.status === 'active')
-                      if (!accts.length) return <Link to={`/organizations/${o.id}`} className="muted small">No login</Link>
-                      const seen = accts.map((a) => a.last_login_at).filter(Boolean).sort().at(-1)
-                      return <><span className="badge lvl-ok">Active</span><div className="muted small">{seen ? `seen ${timeAgo(seen)}` : 'not signed in yet'}</div></>
-                    })()}
+                    <span className="muted small">Unavailable</span>
                   </td>
                   <td className="num">{stock.length ? <>{units.toLocaleString()}<div className="muted small">{stock.length} items</div></> : <span className="muted">—</span>}</td>
                   <td className="num">{needs || <span className="muted">—</span>}</td>

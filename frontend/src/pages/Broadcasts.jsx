@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { MapPin, Users } from 'lucide-react'
 import { useData } from '../data.jsx'
-import { api } from '../api/index.js'
 import { PageHeader, Segmented, Empty } from '../components/ui.jsx'
 import TargetPicker from '../components/TargetPicker.jsx'
 import { AUDIENCE_NEEDS, BROADCAST_TEMPLATES, SEVERITIES } from '../lib/constants.js'
@@ -12,31 +11,13 @@ const blank = { title: '', message: '', severity: 'info', target: { type: 'all' 
 export default function Broadcasts() {
   const d = useData()
   const [f, setF] = useState(blank)
-  const [reach, setReach] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [sent, setSent] = useState(null)
   const [filter, setFilter] = useState('all')
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }))
 
-  const target = useMemo(() => {
-    if (f.target.type !== 'radius') return { type: 'all' }
-    const { center, radius_km, label } = f.target
-    return { type: 'radius', center, radius_km, label }
-  }, [f.target])
-
-  // Live reach estimate (Part 2 §6 preview endpoint), debounced.
-  useEffect(() => {
-    if (!d.disasterId) return
-    let alive = true
-    const t = setTimeout(() => {
-      api.previewUpdate(d.disasterId, { target, audience: { needs: f.needs } })
-        .then((r) => alive && setReach(r.recipient_count))
-        .catch(() => alive && setReach(null))
-    }, 250)
-    return () => { alive = false; clearTimeout(t) }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [d.disasterId, target, f.needs])
+  const target = f.target
 
   const applyTemplate = (id) => {
     const t = BROADCAST_TEMPLATES.find((x) => x.id === id)
@@ -47,14 +28,12 @@ export default function Broadcasts() {
     e.preventDefault()
     setError(null)
     if (f.when === 'later' && !f.scheduled_for) return setError('Pick a time to send.')
-    const where = target.type === 'radius' ? target.label : 'every family in this disaster'
-    if (f.severity === 'critical' && !confirm(`Send a CRITICAL alert to ${reach ?? 'all'} families (${where})?`)) return
+    const where = target.type === 'shelter' ? 'families assigned to the selected shelter' : 'every family in this disaster'
+    if (f.severity === 'critical' && !confirm(`Publish a CRITICAL alert to ${where}?`)) return
     setBusy(true)
     try {
       const created = await d.mutate((api, disasterId) => api.publishUpdate(disasterId, {
-        title: f.title.trim(), message: f.message.trim(), severity: f.severity, target, audience: { needs: f.needs },
-        scheduled_for: f.when === 'later' ? new Date(f.scheduled_for).toISOString() : null,
-        expires_at: f.expires_in ? new Date(Date.now() + Number(f.expires_in) * 3600_000).toISOString() : null,
+        title: f.title.trim(), message: f.message.trim(), severity: f.severity, target,
       }))
       setSent(created)
       setF(blank)
@@ -65,15 +44,10 @@ export default function Broadcasts() {
     }
   }
 
-  const retract = async (u) => {
-    if (!confirm(`Retract "${u.title}"? Families will no longer see it.`)) return
-    await d.mutate((api) => api.retractUpdate(u.id)).catch((err) => alert(err.message))
-  }
-
   const history = [...d.updates]
-    .filter((u) => filter === 'all' || u.status === filter || u.severity === filter)
+    .filter((u) => filter === 'all' || (filter === 'published' && !u.status) || u.status === filter || u.severity === filter)
     .sort((a, b) => (b.published_at || b.scheduled_for || '').localeCompare(a.published_at || a.scheduled_for || ''))
-  const totals = d.updates.reduce((a, u) => ({ sent: a.sent + (u.status !== 'scheduled' ? 1 : 0), reached: a.reached + (u.status !== 'scheduled' ? u.recipient_count : 0), read: a.read + u.read_count }), { sent: 0, reached: 0, read: 0 })
+  const totals = { sent: d.updates.length }
 
   return (
     <div className="page">
@@ -107,8 +81,8 @@ export default function Broadcasts() {
             <TargetPicker target={f.target} setTarget={(t) => set('target', t)} shelters={d.shelters} />
           </fieldset>
 
-          <fieldset>
-            <legend><Users size={12} /> Who</legend>
+          <fieldset disabled>
+            <legend><Users size={12} /> Who (unavailable)</legend>
             <p className="hint">Leave all unchecked to reach every family in the area. Otherwise, families matching <em>any</em> checked need.</p>
             <div className="filters">
               {Object.entries(AUDIENCE_NEEDS).map(([k, label]) => (
@@ -118,8 +92,8 @@ export default function Broadcasts() {
             </div>
           </fieldset>
 
-          <fieldset>
-            <legend>When</legend>
+          <fieldset disabled>
+            <legend>When (unavailable)</legend>
             <div className="row">
               <div className="field">
                 <Segmented size="sm" value={f.when} onChange={(v) => set('when', v)} label="Send time" options={[['now', 'Send now'], ['later', 'Schedule']]} />
@@ -139,9 +113,9 @@ export default function Broadcasts() {
           </div>
 
           {error && <p className="error" role="alert">{error}</p>}
-          {sent && <p className="success" role="status">{sent.status === 'scheduled' ? 'Scheduled' : 'Sent'} "{sent.title}" to {sent.recipient_count} families.</p>}
+          {sent && <p className="success" role="status">Published "{sent.title}".</p>}
           <div className="form-actions">
-            <span className="reach-est"><Users size={15} /> <strong>{reach ?? '—'}</strong> families will receive this</span>
+            <span className="reach-est"><Users size={15} /> <strong>—</strong> recipient count unavailable</span>
             <button className={`btn ${f.severity === 'critical' ? 'btn-danger' : 'btn-primary'}`} disabled={busy || !f.title.trim() || !f.message.trim()}>
               {busy ? 'Sending…' : f.when === 'later' ? 'Schedule broadcast' : `Send ${f.severity} broadcast`}
             </button>
@@ -154,16 +128,16 @@ export default function Broadcasts() {
             <select className="select-sm" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter history">
               <option value="all">All</option>
               <option value="published">Live</option>
-              <option value="scheduled">Scheduled</option>
-              <option value="retracted">Retracted</option>
-              <option value="expired">Expired</option>
+              <option value="scheduled" disabled>Scheduled (unavailable)</option>
+              <option value="retracted" disabled>Retracted (unavailable)</option>
+              <option value="expired" disabled>Expired (unavailable)</option>
               <option value="critical">Critical only</option>
             </select>
           </div>
           <div className="mini-stats">
             <div><strong>{totals.sent}</strong><span>sent</span></div>
-            <div><strong>{totals.reached.toLocaleString()}</strong><span>deliveries</span></div>
-            <div><strong>{totals.reached ? Math.round((totals.read / totals.reached) * 100) : 0}%</strong><span>read rate</span></div>
+            <div><strong>—</strong><span>deliveries</span></div>
+            <div><strong>—</strong><span>read rate</span></div>
           </div>
           <ul className="list">
             {history.length === 0 && <Empty>No broadcasts match.</Empty>}
@@ -174,23 +148,23 @@ export default function Broadcasts() {
                   <div className="card-head">
                     <span className={`badge sev-${u.severity}`}>{cap(u.severity)}</span>
                     <span className="card-title">{u.title}</span>
-                    <span className={`badge st-${u.status}`}>{u.status === 'published' ? 'Live' : cap(u.status)}</span>
+                    <span className={`badge st-${u.status}`}>{u.status ? (u.status === 'published' ? 'Live' : cap(u.status)) : 'Published'}</span>
                   </div>
                   <p className="report-msg">{u.message}</p>
                   <div className="tags">
-                    <span className="tag"><MapPin size={11} /> {u.target?.type === 'radius' ? u.target.label : 'Entire area'}</span>
+                    <span className="tag"><MapPin size={11} /> {u.target?.type === 'shelter' ? (d.shelters.find((s) => s.id === u.target.shelter_id)?.name || u.target.shelter_id) : 'Entire area'}</span>
                     {(u.audience?.needs || []).map((n) => <span key={n} className="tag">{AUDIENCE_NEEDS[n]}</span>)}
                   </div>
                   <div className="reach">
-                    <div className="meter meter-sm"><span style={{ width: `${pct}%` }} /></div>
-                    <span className="muted small nowrap">{u.read_count}/{u.recipient_count} read ({pct}%)</span>
+                    {u.read_count != null && <div className="meter meter-sm"><span style={{ width: `${pct}%` }} /></div>}
+                    <span className="muted small nowrap">{u.read_count == null ? 'Read count unavailable' : `${u.read_count}/${u.recipient_count} read (${pct}%)`}</span>
                   </div>
                   <div className="card-foot flush">
                     <span className="muted small" title={fullTime(u.published_at || u.scheduled_for)}>
                       {u.status === 'scheduled' ? `Sends ${timeAgo(u.scheduled_for)}` : `Sent ${timeAgo(u.published_at)}`}
                       {u.expires_at && ` · expires ${timeAgo(u.expires_at)}`}
                     </span>
-                    {['published', 'scheduled'].includes(u.status) && <button className="btn btn-ghost btn-sm danger" onClick={() => retract(u)}>Retract</button>}
+                    <button className="btn btn-ghost btn-sm danger" disabled title="Unavailable with the current server">Retract</button>
                   </div>
                 </li>
               )

@@ -25,7 +25,7 @@ export default function NeedDialog({ initial = {}, onClose }) {
     setBusy(true)
     try {
       await d.mutate((api, disasterId) => api.createNeed({
-        disaster_id: disasterId, requester, resource_type_id: rtId, quantity_needed: qty, priority, notes,
+        disaster_id: disasterId, requester, resource_type_id: rtId, quantity_needed: qty, priority, notes: notes.trim() || null,
         needed_by: neededIn ? new Date(Date.now() + Number(neededIn) * 3600_000).toISOString() : null,
       }))
       onClose()

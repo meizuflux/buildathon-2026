@@ -14,7 +14,7 @@ export default function OrgDialog({ org, onClose, onSaved }) {
   })
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
-  const [portal, setPortal] = useState({ enabled: !org, email: '' })
+  const [portal, setPortal] = useState({ enabled: false, email: '' })
   const [creds, setCreds] = useState(null)
 
   const set = (k, v) => setDraft((x) => ({ ...x, [k]: v }))
@@ -26,7 +26,8 @@ export default function OrgDialog({ org, onClose, onSaved }) {
     if (!draft.name.trim()) return setError('Name is required.')
     setBusy(true)
     try {
-      const saved = await d.mutate((api) => (org ? api.updateOrganization(org.id, draft) : api.createOrganization(draft)))
+      const { disaster_id, ...patch } = draft
+      const saved = await d.mutate((api) => (org ? api.updateOrganization(org.id, patch) : api.createOrganization({ ...patch, disaster_id })))
       onSaved?.(saved)
       const loginEmail = (portal.email || draft.contact.email).trim()
       if (!org && portal.enabled && loginEmail) {
@@ -75,7 +76,7 @@ export default function OrgDialog({ org, onClose, onSaved }) {
         </div>
         <label className="field">
           <span>Address</span>
-          <input value={draft.address} onChange={(e) => set('address', e.target.value)} />
+          <input value={draft.address} onChange={(e) => set('address', e.target.value)} required />
         </label>
         <div className="row row-3">
           <label className="field">
@@ -106,8 +107,8 @@ export default function OrgDialog({ org, onClose, onSaved }) {
         {!org && (
           <fieldset className="portal-opt">
             <label className="check">
-              <input type="checkbox" checked={portal.enabled} onChange={(e) => setPortal((p) => ({ ...p, enabled: e.target.checked }))} />
-              Create a partner portal login for this organization
+              <input type="checkbox" disabled checked={portal.enabled} onChange={(e) => setPortal((p) => ({ ...p, enabled: e.target.checked }))} />
+              Create a partner portal login for this organization (unavailable)
             </label>
             {portal.enabled && (
               <label className="field" style={{ marginTop: 8 }}>

@@ -60,11 +60,12 @@ export default function MapPage() {
   const setDraft = (fn) => setForm((f) => ({ ...f, draft: fn(f.draft) }))
 
   const saveShelter = async (draft) => {
-    const { name, address, location, status, capacity, capabilities, resources } = draft
+    const { name, address, location, status, capacity, resources } = draft
+    const capabilities = { ...draft.capabilities, special_care_notes: draft.capabilities.special_care_notes?.trim() || null }
     const saved = await d.mutate((api, disasterId) =>
       form.id
         ? api.updateShelter(form.id, { name, address, location, status, capacity, capabilities, resources })
-        : api.createShelter({ ...draft, disaster_id: disasterId }),
+        : api.createShelter({ ...draft, capabilities, disaster_id: disasterId }),
     )
     setForm(null)
     setSelectedId(saved.id)

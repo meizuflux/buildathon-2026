@@ -33,8 +33,9 @@ export default function TargetPicker({ target, setTarget, shelters }) {
 
   return (
     <div className="target">
-      <Segmented value={target.type} label="Target area" onChange={(v) => (v === 'all' ? setTarget({ type: 'all' }) : setArea({}))}
-        options={[['all', 'Entire disaster area'], ['radius', 'Specific area']]} />
+      <fieldset disabled><legend>Radius targeting (unavailable)</legend><Segmented value={target.type} label="Target area" onChange={(v) => (v === 'all' ? setTarget({ type: 'all' }) : setArea({}))}
+        options={[['all', 'Entire disaster area'], ['radius', 'Specific area']]} /></fieldset>
+      <label className="field"><span>Recipients</span><select value={target.type === 'shelter' ? target.shelter_id : ''} onChange={(e) => setTarget(e.target.value ? { type: 'shelter', shelter_id: e.target.value } : { type: 'all' })}><option value="">Entire disaster area</option>{shelters.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
       {isArea && (
         <>
           <div className="row">
