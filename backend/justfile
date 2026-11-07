@@ -22,6 +22,6 @@ test:
 create-operator:
     uv run --locked python -m haven.create_operator
 
-# Create demo accounts; existing accounts are left unchanged.
+# Create demo accounts and the fictional Tampa scenario; existing data is preserved.
 demo-data:
     uv run --locked python -m haven.demo_data

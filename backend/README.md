@@ -30,7 +30,7 @@ Existing accounts created with the earlier scrypt implementation cannot sign in;
 
 Run `just demo-data` to create a family account (`family@demo.example`) and a government operator (`government@demo.example`) in the configured database. The script generates a separate password for each account and prints it once when the account is created. Save those passwords for the demo. Re-running the script leaves existing accounts and passwords unchanged. These accounts are intended for demo databases.
 
-The demo script creates accounts only. Load disaster records into the database before creating family profiles or shelters; disaster creation is outside the REST contract.
+The script also creates a fictional active Tampa hurricane, 20 fictional shelters and 1,000 synthetic family profiles with allocated plans, plus an official demo update. Synthetic family accounts cannot sign in; use the demo family account to exercise registration/profile creation independently. Locations and addresses are fictional and must not be used for emergency response. The scenario is inserted only when its disaster ID is absent, so reruns preserve edits. Use a separate `DATABASE_PATH` for a fresh demo. Disaster creation is otherwise outside the REST contract.
 
 ## Disaster response API
 

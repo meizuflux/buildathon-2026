@@ -24,3 +24,21 @@ def test_demo_accounts_can_sign_in_and_reseeding_preserves_them(tmp_path, monkey
             response = client.post("/api/auth/login", json={"email": email, "password": created[email]})
             assert response.status_code == 200
             assert response.json()["user"]["role"] == role
+
+
+def test_tampa_scenario_is_complete_and_preserves_edits(tmp_path, monkeypatch):
+    from haven.demo_data import DEMO_DISASTER_ID, seed_tampa_scenario
+
+    monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "scenario.sqlite3"))
+    asyncio.run(seed_tampa_scenario())
+    with closing(sqlite3.connect(database_path())) as connection:
+        assert connection.execute("SELECT count(*) FROM shelters WHERE disaster_id = ?", (DEMO_DISASTER_ID,)).fetchone()[0] == 20
+        assert connection.execute("SELECT count(*) FROM families WHERE disaster_id = ?", (DEMO_DISASTER_ID,)).fetchone()[0] == 1000
+        assert connection.execute("SELECT count(*) FROM current_assignments WHERE disaster_id = ?", (DEMO_DISASTER_ID,)).fetchone()[0] == 1000
+        assert connection.execute("SELECT count(*) FROM plans").fetchone()[0] == 1000
+        connection.execute("UPDATE shelters SET name = 'Edited' WHERE id = 'demo_tampa_shelter_01'")
+        connection.commit()
+    asyncio.run(seed_tampa_scenario())
+    with closing(sqlite3.connect(database_path())) as connection:
+        assert connection.execute("SELECT name FROM shelters WHERE id = 'demo_tampa_shelter_01'").fetchone()[0] == 'Edited'
+        assert connection.execute("SELECT count(*) FROM families").fetchone()[0] == 1000
