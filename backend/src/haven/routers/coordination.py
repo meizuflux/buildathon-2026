@@ -2,7 +2,6 @@
 
 import asyncio
 import json
-import math
 import time
 from typing import Annotated, Literal
 from uuid import uuid4
@@ -14,8 +13,8 @@ from litestar.response import Response
 
 from haven.api_common import current_user, error, require_disaster, require_family, require_operator
 from haven.auth import now, timestamp
+from haven.allocation import recompute_disasters
 from haven.db import connect
-from haven.routers.relief import shelter_from_row
 
 
 class ReportLocation(msgspec.Struct, forbid_unknown_fields=True):
@@ -38,53 +37,6 @@ def report_from_row(row: tuple) -> dict:
     }
 
 
-def matches(family: dict, shelter: dict) -> bool:
-    needs, capabilities = family["needs"], shelter["capabilities"]
-    if shelter["status"] != "open" or shelter["capacity"]["available_people"] < family["adults"] + family["children"]:
-        return False
-    requirements = (
-        (needs.get("pets"), capabilities.get("pets_allowed")),
-        (family["children"] > 0, capabilities.get("child_friendly")),
-        (bool(needs.get("accessibility_notes")), capabilities.get("wheelchair_accessible")),
-        (needs.get("immediate_medication") or bool(needs.get("medical_notes")), bool(capabilities.get("medical_staff"))),
-        (bool(needs.get("other_special_care")), bool(capabilities.get("special_care_notes"))),
-    )
-    if any(required and not supported for required, supported in requirements):
-        return False
-    return not needs.get("immediate_medication") or shelter["resources"].get("medication") in {"available", "limited"}
-
-
-def distance(family: dict, shelter: dict) -> float:
-    """Great-circle angular distance, sufficient to rank candidates."""
-    start, end = family["location"], shelter["location"]
-    lat1, lat2 = math.radians(start["latitude"]), math.radians(end["latitude"])
-    dlat = lat2 - lat1
-    dlon = math.radians(end["longitude"] - start["longitude"])
-    return math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
-
-
-def recommendation(family: dict, shelters: list[dict], version: int) -> dict:
-    candidates = [shelter for shelter in shelters if matches(family, shelter)]
-    selected = min(candidates, key=lambda shelter: (distance(family, shelter), shelter["id"])) if candidates else None
-    instructions = ["Check official local emergency updates."]
-    reason = "No currently listed shelter meets your family's requirements."
-    if selected:
-        reason = "Has space for your family and meets your listed shelter requirements."
-        instructions = [f"Travel to {selected['name']} if local officials say it is safe to do so."]
-        if family["needs"].get("immediate_medication") or family["needs"].get("medical_notes"):
-            instructions.append("Bring your medication and any required medical supplies.")
-        if family["needs"].get("pets"):
-            instructions.append("Bring supplies for your pets.")
-        if not family["resources"].get("has_car"):
-            instructions.append("Check official transportation assistance before traveling.")
-    return {
-        "family_id": family["id"], "disaster_id": family["disaster_id"], "version": version,
-        "status": "recommended" if selected else "no_match",
-        "shelter": {key: selected[key] for key in ("id", "name", "address", "location")} if selected else None,
-        "reason": reason, "instructions": instructions, "capacity_reserved": False, "updated_at": timestamp(now()),
-    }
-
-
 @post("/families/{family_id:str}/plan/generate", status_code=200, tags=["Plans"])
 async def generate_plan(family_id: FromPath[str], request: Request) -> dict:
     async with connect() as connection:
@@ -92,12 +44,13 @@ async def generate_plan(family_id: FromPath[str], request: Request) -> dict:
         await connection.execute("BEGIN IMMEDIATE")
         try:
             family = await require_family(connection, family_id, user)
-            cursor = await connection.execute("SELECT * FROM shelters WHERE disaster_id = ? AND status = 'open'", (family["disaster_id"],))
-            shelters = [shelter_from_row(row) async for row in cursor]
-            row = await (await connection.execute("SELECT COALESCE(MAX(version), 0) FROM plans WHERE family_id = ?", (family_id,))).fetchone()
-            plan = recommendation(family, shelters, row[0] + 1)
-            await connection.execute("INSERT INTO plans (id, family_id, version, plan_json, updated_at) VALUES (?, ?, ?, ?, ?)",
-                                     ("plan_" + uuid4().hex, family_id, plan["version"], json.dumps(plan), plan["updated_at"]))
+            await recompute_disasters(connection, (family["disaster_id"],))
+            row = await (await connection.execute(
+                "SELECT plan_json FROM plans WHERE family_id = ? ORDER BY version DESC LIMIT 1", (family_id,),
+            )).fetchone()
+            if row is None:
+                error(500, "plan_unavailable", "The allocation service did not persist a plan for this family.")
+            plan = json.loads(row[0])
             await connection.execute("COMMIT")
         except BaseException:
             await connection.execute("ROLLBACK")

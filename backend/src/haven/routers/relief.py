@@ -10,6 +10,7 @@ from litestar.params import FromPath, FromQuery, JSONBody
 
 from haven.api_common import current_user, error, require_disaster, require_operator
 from haven.auth import now, timestamp
+from haven.allocation import recompute_disasters, set_shelter_allocation_budget
 from haven.db import connect
 
 NonNegative = Annotated[int, msgspec.Meta(ge=0)]
@@ -105,9 +106,9 @@ def shelter_from_row(row: tuple) -> dict:
     }
 
 
-def validate_shelter(shelter: dict) -> None:
+def validate_shelter(shelter: dict, *, allow_derived_capacity_overflow: bool = False) -> None:
     capacity = shelter["capacity"]
-    if capacity["available_people"] > capacity["total_people"]:
+    if not allow_derived_capacity_overflow and capacity["available_people"] > capacity["total_people"]:
         error(400, "invalid_request", "Available capacity cannot exceed total capacity.")
     if not shelter["name"].strip() or not shelter["address"].strip():
         error(400, "invalid_request", "Shelter name and address must not be blank.")
@@ -138,15 +139,24 @@ async def create_shelter(data: JSONBody[ShelterCreate], request: Request) -> dic
     shelter = msgspec.to_builtins(data)
     async with connect() as connection:
         require_operator(await current_user(request, connection))
-        await require_disaster(connection, data.disaster_id)
-        validate_shelter(shelter)
-        shelter.update(id="shelter_" + uuid4().hex, updated_at=timestamp(now()))
-        await connection.execute(
-            "INSERT INTO shelters VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (shelter["id"], data.disaster_id, data.name, data.address, data.location.latitude,
-             data.location.longitude, data.status, json.dumps(shelter["capacity"]),
-             json.dumps(shelter["capabilities"]), json.dumps(shelter["resources"]), shelter["updated_at"]),
-        )
+        await connection.execute("BEGIN IMMEDIATE")
+        try:
+            await require_disaster(connection, data.disaster_id)
+            validate_shelter(shelter)
+            shelter.update(id="shelter_" + uuid4().hex, updated_at=timestamp(now()))
+            await connection.execute(
+                "INSERT INTO shelters VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (shelter["id"], data.disaster_id, data.name, data.address, data.location.latitude,
+                 data.location.longitude, data.status, json.dumps(shelter["capacity"]),
+                 json.dumps(shelter["capabilities"]), json.dumps(shelter["resources"]), shelter["updated_at"]),
+            )
+            await recompute_disasters(connection, (data.disaster_id,))
+            row = await (await connection.execute("SELECT * FROM shelters WHERE id = ?", (shelter["id"],))).fetchone()
+            shelter = shelter_from_row(row)
+            await connection.execute("COMMIT")
+        except BaseException:
+            await connection.execute("ROLLBACK")
+            raise
     return shelter
 
 
@@ -160,21 +170,49 @@ async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch]
             if row is None:
                 error(404, "shelter_not_found", "Shelter not found.")
             shelter = shelter_from_row(row)
+            original = {
+                "disaster_id": shelter["disaster_id"], "name": shelter["name"], "address": shelter["address"],
+                "location": shelter["location"].copy(), "status": shelter["status"],
+                "capacity": shelter["capacity"].copy(), "capabilities": shelter["capabilities"].copy(),
+                "resources": shelter["resources"].copy(),
+            }
             for key, value in msgspec.to_builtins(data).items():
                 if isinstance(value, dict):
                     shelter[key].update(value)
                 else:
                     shelter[key] = value
-            await require_disaster(connection, shelter["disaster_id"])
-            validate_shelter(shelter)
-            shelter["updated_at"] = timestamp(now())
-            await connection.execute(
-                "UPDATE shelters SET disaster_id = ?, name = ?, address = ?, latitude = ?, longitude = ?, "
-                "status = ?, capacity_json = ?, capabilities_json = ?, resources_json = ?, updated_at = ? WHERE id = ?",
-                (shelter["disaster_id"], shelter["name"], shelter["address"], shelter["location"]["latitude"],
-                 shelter["location"]["longitude"], shelter["status"], json.dumps(shelter["capacity"]),
-                 json.dumps(shelter["capabilities"]), json.dumps(shelter["resources"]), shelter["updated_at"], shelter_id),
+            capacity_patch = data.capacity
+            has_capacity_patch = capacity_patch is not msgspec.UNSET
+            requested_available = (
+                capacity_patch.available_people if has_capacity_patch else msgspec.UNSET
             )
+            has_requested_available = requested_available is not msgspec.UNSET
+            has_requested_total = (
+                has_capacity_patch and capacity_patch.total_people is not msgspec.UNSET
+            )
+            lowering_total_only = (
+                has_requested_total
+                and not has_requested_available
+                and shelter["capacity"]["available_people"] > shelter["capacity"]["total_people"]
+            )
+            await require_disaster(connection, shelter["disaster_id"])
+            validate_shelter(shelter, allow_derived_capacity_overflow=lowering_total_only)
+            current = {key: shelter[key] for key in original}
+            if current != original:
+                old_disaster_id = original["disaster_id"]
+                shelter["updated_at"] = timestamp(now())
+                await connection.execute(
+                    "UPDATE shelters SET disaster_id = ?, name = ?, address = ?, latitude = ?, longitude = ?, "
+                    "status = ?, capacity_json = ?, capabilities_json = ?, resources_json = ?, updated_at = ? WHERE id = ?",
+                    (shelter["disaster_id"], shelter["name"], shelter["address"], shelter["location"]["latitude"],
+                     shelter["location"]["longitude"], shelter["status"], json.dumps(shelter["capacity"]),
+                     json.dumps(shelter["capabilities"]), json.dumps(shelter["resources"]), shelter["updated_at"], shelter_id),
+                )
+                if has_requested_available:
+                    await set_shelter_allocation_budget(connection, shelter_id, requested_available)
+                await recompute_disasters(connection, sorted({old_disaster_id, shelter["disaster_id"]}))
+                updated_row = await (await connection.execute("SELECT * FROM shelters WHERE id = ?", (shelter_id,))).fetchone()
+                shelter = shelter_from_row(updated_row)
             await connection.execute("COMMIT")
         except BaseException:
             await connection.execute("ROLLBACK")

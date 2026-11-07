@@ -11,6 +11,7 @@ from litestar.params import FromPath, JSONBody
 
 from haven.api_common import current_user, error, require_disaster, require_family
 from haven.auth import now, timestamp
+from haven.allocation import recompute_disasters
 from haven.db import connect
 
 Count = Annotated[int, msgspec.Meta(ge=0)]
@@ -92,22 +93,30 @@ async def create_family(data: JSONBody[FamilyCreate], request: Request) -> dict:
         user = await current_user(request, connection)
         if user[1] != "family":
             error(403, "forbidden", "Only family accounts can create their own family profile.")
-        require_people(data.adults, data.children)
-        await require_disaster(connection, data.disaster_id)
-        family_id = "family_" + uuid4().hex
-        created_at = timestamp(now())
+        await connection.execute("BEGIN IMMEDIATE")
         try:
-            await connection.execute(
-                "INSERT INTO families (id, owner_user_id, disaster_id, adults, children, latitude, longitude, "
-                "needs_json, resources_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (family_id, user[0], data.disaster_id, data.adults, data.children,
-                 data.location.latitude, data.location.longitude,
-                 msgspec.json.encode(data.needs).decode(), msgspec.json.encode(data.resources).decode(),
-                 created_at, created_at),
-            )
-        except apsw.ConstraintError:
-            error(409, "family_exists", "This account already has a family profile.")
-        return await require_family(connection, family_id, user)
+            require_people(data.adults, data.children)
+            await require_disaster(connection, data.disaster_id)
+            family_id = "family_" + uuid4().hex
+            created_at = timestamp(now())
+            try:
+                await connection.execute(
+                    "INSERT INTO families (id, owner_user_id, disaster_id, adults, children, latitude, longitude, "
+                    "needs_json, resources_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (family_id, user[0], data.disaster_id, data.adults, data.children,
+                     data.location.latitude, data.location.longitude,
+                     msgspec.json.encode(data.needs).decode(), msgspec.json.encode(data.resources).decode(),
+                     created_at, created_at),
+                )
+            except apsw.ConstraintError:
+                error(409, "family_exists", "This account already has a family profile.")
+            await recompute_disasters(connection, (data.disaster_id,))
+            family = await require_family(connection, family_id, user)
+            await connection.execute("COMMIT")
+        except BaseException:
+            await connection.execute("ROLLBACK")
+            raise
+        return family
 
 
 @get("/{family_id:str}")
@@ -124,6 +133,11 @@ async def patch_family(family_id: FromPath[str], data: JSONBody[FamilyPatch], re
         await connection.execute("BEGIN IMMEDIATE")
         try:
             family = await require_family(connection, family_id, user)
+            original = {
+                "disaster_id": family["disaster_id"], "adults": family["adults"], "children": family["children"],
+                "location": family["location"].copy(), "needs": family["needs"].copy(),
+                "resources": family["resources"].copy(),
+            }
             changes = msgspec.to_builtins(data)
             for key, value in changes.items():
                 if isinstance(value, dict):
@@ -132,14 +146,18 @@ async def patch_family(family_id: FromPath[str], data: JSONBody[FamilyPatch], re
                     family[key] = value
             require_people(family["adults"], family["children"])
             await require_disaster(connection, family["disaster_id"])
-            family["updated_at"] = timestamp(now())
-            await connection.execute(
-                "UPDATE families SET disaster_id = ?, adults = ?, children = ?, latitude = ?, longitude = ?, "
-                "needs_json = ?, resources_json = ?, updated_at = ? WHERE id = ?",
-                (family["disaster_id"], family["adults"], family["children"], family["location"]["latitude"],
-                 family["location"]["longitude"], json.dumps(family["needs"]), json.dumps(family["resources"]),
-                 family["updated_at"], family_id),
-            )
+            current = {key: family[key] for key in original}
+            if current != original:
+                old_disaster_id = original["disaster_id"]
+                family["updated_at"] = timestamp(now())
+                await connection.execute(
+                    "UPDATE families SET disaster_id = ?, adults = ?, children = ?, latitude = ?, longitude = ?, "
+                    "needs_json = ?, resources_json = ?, updated_at = ? WHERE id = ?",
+                    (family["disaster_id"], family["adults"], family["children"], family["location"]["latitude"],
+                     family["location"]["longitude"], json.dumps(family["needs"]), json.dumps(family["resources"]),
+                     family["updated_at"], family_id),
+                )
+                await recompute_disasters(connection, sorted({old_disaster_id, family["disaster_id"]}))
             await connection.execute("COMMIT")
             return family
         except BaseException:
