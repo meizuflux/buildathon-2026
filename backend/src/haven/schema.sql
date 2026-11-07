@@ -82,3 +82,30 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     window_start TEXT NOT NULL,
     attempts INTEGER NOT NULL CHECK (attempts >= 0)
 );
+-- Donation hubs: community drop-off/pick-up points and their inventory.
+CREATE TABLE IF NOT EXISTS hubs (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL CHECK (type IN ('church', 'fire_station', 'school', 'community_center', 'other')),
+    address TEXT NOT NULL,
+    latitude REAL NOT NULL CHECK (latitude BETWEEN -90 AND 90),
+    longitude REAL NOT NULL CHECK (longitude BETWEEN -180 AND 180),
+    capacity_pct INTEGER NOT NULL CHECK (capacity_pct BETWEEN 0 AND 100),
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS hub_supplies (
+    hub_id TEXT NOT NULL REFERENCES hubs(id) ON DELETE CASCADE,
+    category TEXT NOT NULL CHECK (category IN ('water', 'diapers', 'formula', 'canned_goods', 'blankets')),
+    quantity INTEGER NOT NULL CHECK (quantity >= 0),
+    target INTEGER NOT NULL CHECK (target >= 0),
+    PRIMARY KEY (hub_id, category)
+);
+CREATE TABLE IF NOT EXISTS pickup_requests (
+    id TEXT PRIMARY KEY,
+    hub_id TEXT NOT NULL REFERENCES hubs(id),
+    requested_by TEXT NOT NULL REFERENCES users(id),
+    status TEXT NOT NULL CHECK (status IN ('dispatched', 'completed', 'cancelled')),
+    notes TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS pickup_requests_hub_idx ON pickup_requests(hub_id, status);

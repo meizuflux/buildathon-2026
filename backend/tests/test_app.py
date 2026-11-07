@@ -14,7 +14,7 @@ def test_startup_creates_schema_and_health_endpoint(tmp_path, monkeypatch):
         assert response.json() == {"status": "ok"}
     with sqlite3.connect(database) as connection:
         tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
-    assert {"users", "sessions", "disasters", "families", "shelters", "plans", "disaster_updates", "reports"} <= tables
+    assert {"users", "sessions", "disasters", "families", "shelters", "plans", "disaster_updates", "reports", "hubs", "hub_supplies", "pickup_requests"} <= tables
 
 
 def test_openapi_docs_and_schema(tmp_path, monkeypatch):
