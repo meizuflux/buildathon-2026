@@ -3,17 +3,18 @@ import { z } from 'zod';
 export const resourceStatus = z.enum(['confirmed', 'pending', 'unverified', 'unavailable', 'cancelled']);
 export const requestStatus = z.enum(['submitted', 'under_review', 'matched', 'accepted', 'in_progress', 'fulfilled', 'unable_to_fulfill', 'cancelled']);
 export const categorySchema = z.enum(['transportation', 'shelter', 'food_water', 'medical_supplies', 'accessibility', 'other']);
-export const needs = ['Limited mobility', 'Essential medication', 'Refrigerated medication', 'Electric medical equipment', 'Accessible transportation'] as const;
+export const needs = ['Limited mobility', 'Essential medication', 'Medication needed immediately', 'Refrigerated medication', 'Electric medical equipment', 'Accessible transportation'] as const;
 export const sourceSchema = z.object({ name: z.string(), kind: z.enum(['government', 'organization', 'unverified']), verified: z.boolean(), url: z.url().optional() });
 export const locationSchema = z.object({ label: z.string().min(2), latitude: z.number().min(-90).max(90).optional(), longitude: z.number().min(-180).max(180).optional() });
 export const householdInputSchema = z.object({
-  name: z.string().min(2).max(80), adults: z.number().int().min(0).max(60), children: z.number().int().min(0).max(60), pets: z.number().int().min(0).max(30), petTypes: z.string().max(120), petDetails: z.array(z.object({ kind: z.string().min(1).max(40), count: z.number().int().min(1).max(30) })).max(6).optional(),
+  disasterId: z.string().optional(), name: z.string().min(2).max(80), adults: z.number().int().min(0).max(60), children: z.number().int().min(0).max(60), pets: z.number().int().min(0).max(30), petTypes: z.string().max(120), petDetails: z.array(z.object({ kind: z.string().min(1).max(40), count: z.number().int().min(1).max(30) })).max(6).optional(),
   needs: z.array(z.string().max(100)), otherNeeds: z.string().max(300), hasCar: z.boolean(), canDrive: z.boolean(), seats: z.number().int().min(0).max(50), needsTransport: z.boolean(), needsShelter: z.boolean(), needsFood: z.boolean(), location: locationSchema,
 }).refine(data => data.adults + data.children >= 1 && data.adults + data.children <= 60, { message: 'Enter between 1 and 60 people in total.', path: ['adults'] }).refine(data => !data.petDetails || data.petDetails.reduce((total, pet) => total + pet.count, 0) === data.pets, { message: 'Pet counts must match the total.', path: ['petDetails'] });
 export const householdSchema = householdInputSchema.safeExtend({ id: z.string(), updatedAt: z.iso.datetime() });
 export const assignmentSchema = z.object({ name: z.string(), description: z.string(), address: z.string().optional(), coordinates: z.object({ latitude: z.number().min(-90).max(90), longitude: z.number().min(-180).max(180) }).optional(), organization: z.string(), status: resourceStatus, source: sourceSchema });
 export const planSchema = z.object({
   id: z.string(), householdId: z.string(), disasterId: z.string(), disasterType: z.string(), version: z.number().int().positive(), status: z.enum(['active', 'pending', 'superseded']), createdAt: z.iso.datetime(), updatedAt: z.iso.datetime(),
+  warnings: z.array(z.object({ message: z.string(), severity: z.enum(['warning', 'critical']) })).optional(),
   summary: z.string(), changes: z.array(z.string()), officialInstructions: z.array(z.object({ text: z.string(), source: sourceSchema })),
   actionSteps: z.array(z.object({ id: z.string(), title: z.string(), detail: z.string(), personalTask: z.boolean() })),
   shelterAssignment: assignmentSchema.nullable(), transportationAssignment: assignmentSchema.nullable(), additionalResources: z.array(assignmentSchema), unmetNeeds: z.array(z.string()), sources: z.array(sourceSchema),
@@ -44,3 +45,5 @@ export type Update = z.infer<typeof updateSchema>;
 export type Changes = z.infer<typeof changeSchema>;
 export type Source = z.infer<typeof sourceSchema>;
 export const categoryLabels: Record<AssistanceInput['category'], string> = { transportation: 'Transportation', shelter: 'Temporary shelter', food_water: 'Food & water', medical_supplies: 'Medical supplies', accessibility: 'Accessibility', other: 'Other support' };
+
+export type Disaster = { id: string; type: string; name: string; status: string; affectedArea: string; updatedAt: string };

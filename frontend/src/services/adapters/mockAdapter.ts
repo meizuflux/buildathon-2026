@@ -29,6 +29,7 @@ export class MockAdapter implements ApiAdapter {
     await this.store?.set('mock-state', this.state).catch(() => {});
     this.listeners.forEach(fn => fn());
   }
+  getDisasters = async () => [];
   getMessages = async () => [];
   sendMessage: ApiAdapter['sendMessage'] = async () => { throw new Error('The support service is not connected. Your message has not been sent.'); };
   getHousehold = () => this.read(() => this.state.household);

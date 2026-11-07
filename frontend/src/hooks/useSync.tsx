@@ -4,10 +4,11 @@ import NetInfo from '@react-native-community/netinfo';
 import { onlineManager, useQueryClient } from '@tanstack/react-query';
 import { adapter } from '../services/adapters';
 import { cache } from '../storage/cache';
+import { useAuth } from './useAuth';
 import { config } from '../constants/config';
 import { ApiError } from '../services/api/http';
 import { affectedQueries } from '../utils/changes';
-const entities = ['household', 'plan', 'alerts', 'requests', 'updates', 'reports', 'history', 'messages'];
+const entities = ['household', 'plan', 'alerts', 'requests', 'updates', 'reports', 'history', 'messages', 'disasters'];
 type Snapshot = { key: readonly unknown[]; data: unknown; at: number };
 const SyncContext = createContext({ ready: false, online: true, lastSync: null as string | null, syncing: false, syncError: '', storageError: '', refresh: async () => {} });
 export const useSyncContext = () => useContext(SyncContext);
@@ -21,7 +22,8 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const [syncError, setSyncError] = useState('');
   const [storageError, setStorageError] = useState('');
   const hydrated = useRef(false);
-  const namespace = `queries:${config.mode}:${config.baseUrl}`;
+  const account = useAuth();
+  const namespace = `queries:${config.mode}:${config.baseUrl}:${account.user?.id ?? 'local'}`;
   useEffect(() => {
     let live = true;
     void (async () => {

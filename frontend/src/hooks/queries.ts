@@ -12,3 +12,5 @@ export function useAlerts() { const { ready } = useSyncContext(); return useQuer
 export function useReports() { const { ready } = useSyncContext(); return useQuery({ queryKey: ['reports'], queryFn: adapter.getSituationReports, select: items => config.mode === 'api' ? items : [], enabled: ready }); }
 
 export function useMessages() { const { ready, online } = useSyncContext(); return useQuery({ queryKey: ['messages'], queryFn: adapter.getMessages, enabled: ready, refetchInterval: online && config.mode === 'api' ? 15000 : false, refetchIntervalInBackground: false }); }
+
+export function useDisasters() { const { ready } = useSyncContext(); return useQuery({ queryKey: ['disasters'], queryFn: adapter.getDisasters, enabled: ready }); }

@@ -6,3 +6,7 @@ dist-native/
 .env.local
 *.tsbuildinfo
 coverage/
+
+.runtime/
+__pycache__/
+*.py[cod]

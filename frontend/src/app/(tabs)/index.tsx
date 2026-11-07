@@ -28,7 +28,7 @@ export default function Home() {
       <Icon name="map-pin" color={c.green} size={18} /><View style={{ flex: 1, gap: 4 }}><Text style={local.locationText}>{household.data?.location.label ?? 'Choose your location'}</Text><Text style={s.caption}>{household.data ? 'Household location · tap to manage' : 'Add a household to personalize your updates'}</Text></View><Icon name="chevron-down" size={16} />
     </Pressable></QueryState>
     <Row style={{ justifyContent: 'space-between', gap: 8, marginTop: -8 }}>
-      {hazards.map(item => <Pressable key={item.name} accessibilityRole="tab" accessibilityState={{ selected: filter === item.name }} accessibilityLabel={item.name} onPress={() => setFilter(item.name)} style={[local.filter, filter === item.name && { borderBottomColor: c.ink }]}><Text style={{ fontFamily: filter === item.name ? type.semibold : type.family, fontSize: 14, color: filter === item.name ? c.ink : c.muted }}>{item.name}</Text></Pressable>)}
+      {hazards.map(item => <Pressable key={item.name} role="tab" accessibilityRole="tab" aria-selected={filter === item.name} accessibilityState={{ selected: filter === item.name }} accessibilityLabel={item.name} onPress={() => setFilter(item.name)} style={[local.filter, filter === item.name && { borderBottomColor: c.ink }]}><Text style={{ fontFamily: filter === item.name ? type.semibold : type.family, fontSize: 14, color: filter === item.name ? c.ink : c.muted }}>{item.name}</Text></Pressable>)}
     </Row>
     <QueryState query={alerts}>
       {lead ? <View style={{ gap: 16 }}>
