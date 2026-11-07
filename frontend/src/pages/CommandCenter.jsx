@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { AlertTriangle, ArrowRight, Info, Siren } from 'lucide-react'
 import { useData } from '../data.jsx'
 import { PageHeader, Empty } from '../components/ui.jsx'
-import { attentionItems, coverageByResource, isLate } from '../lib/logistics.js'
+import { coverageByResource, isLate } from '../lib/logistics.js'
 import { cap, fullTime, timeAgo } from '../lib/format.js'
 
 const LEVEL_ICON = { critical: Siren, warning: AlertTriangle, info: Info }
@@ -27,7 +27,6 @@ export default function CommandCenter() {
   const late = d.shipments.filter(isLate).length
   const help = d.reports.filter((r) => r.type === 'need_help' && r.status === 'received').length
 
-  const attention = attentionItems({ ...d, rt: d.rt })
   const coverage = coverageByResource(d).filter((r) => r.needed > 0).sort((a, b) => b.uncovered / (b.needed || 1) - a.uncovered / (a.needed || 1))
   const recentBroadcasts = d.updates.filter((u) => u.status !== 'scheduled').sort((a, b) => (b.published_at || '').localeCompare(a.published_at || '')).slice(0, 3)
 
@@ -70,31 +69,7 @@ export default function CommandCenter() {
         )}
       </section>
 
-      <div className="cc-grid">
-        <section className="card-panel">
-          <div className="panel-title">
-            <h2>Needs attention</h2>
-            <span className="muted">{attention.length} items</span>
-          </div>
-          <ul className="attention">
-            {attention.length === 0 && <Empty>Nothing needs attention right now.</Empty>}
-            {attention.slice(0, 14).map((a) => {
-              const Icon = LEVEL_ICON[a.level]
-              return (
-                <li key={`${a.id}-${a.title}`} className={`att att-${a.level}`}>
-                  <Icon size={16} className="att-icon" aria-hidden="true" />
-                  <div className="att-body">
-                    <div className="att-title">{a.title}</div>
-                    <div className="att-detail muted">{a.detail}</div>
-                  </div>
-                  <span className="muted small nowrap">{timeAgo(a.at)}</span>
-                  <Link to={a.to} className="btn btn-sm">{a.action}</Link>
-                </li>
-              )
-            })}
-          </ul>
-        </section>
-
+      <div className="operational-alerts">
         <section className="card-panel">
           <div className="panel-title"><h2>Activity</h2><span className="muted">live</span></div>
           <ol className="timeline">
