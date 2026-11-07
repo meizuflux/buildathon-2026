@@ -16,10 +16,11 @@ const COLLECTIONS = {
   needs: (d) => api.listNeeds(d),
   shipments: (d) => api.listShipments(d),
   activity: (d) => api.listActivity(d),
+  alerts: (d) => api.listAlerts(d),
 }
 // These interfaces are retained for unavailable features, but the backend has
 // no corresponding collections to poll yet.
-const EMPTY = { ...Object.fromEntries(Object.keys(COLLECTIONS).map((k) => [k, []])), conversations: [], partnerAccounts: [], assistance: [] }
+const EMPTY = { ...Object.fromEntries(Object.keys(COLLECTIONS).map((k) => [k, []])), alerts: null, conversations: [], partnerAccounts: [], assistance: [] }
 
 export function DataProvider({ children }) {
   const { expire } = useAuth()

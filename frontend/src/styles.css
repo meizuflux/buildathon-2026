@@ -267,6 +267,7 @@ a.badge:hover { text-decoration: none; filter: brightness(0.95); }
 .cc-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
 .cc-grid-even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .attention { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.operational-alerts { margin-bottom: 16px; }
 .att { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-top: 1px solid var(--border); }
 .att:first-child { border-top: 0; }
 .att-icon { flex: none; }

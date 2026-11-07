@@ -86,6 +86,7 @@ export const liveApi = {
   markConversationRead: (id) => request('POST', `/conversations/${e(id)}/read`),
 
   listActivity: (disasterId) => request('GET', `/disasters/${e(disasterId)}/activity?limit=50`).then((d) => d.activity),
+  listAlerts: (disasterId) => request('GET', `/disasters/${e(disasterId)}/alerts?limit=1000`),
 
   // Citizen assistance (Part 2 §11)
   listAssistanceRequests: (disasterId) => request('GET', `/assistance-requests${q({ disaster_id: disasterId })}`).then((d) => d.requests),
