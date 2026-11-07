@@ -58,13 +58,18 @@ Supply categories are `water`, `diapers`, `formula`, `canned_goods`, and `blanke
 
 | Endpoint | Auth | Purpose |
 |---|---|---|
-| `POST /api/requests` | family | `{"items": [{"category","quantity"}], "latitude", "longitude", "address", "notes"}` |
+| `POST /api/requests` | family | `{"items": [{"category","quantity"}], "latitude", "longitude", "address", "notes"}`. 409 `request_limit` when the citizen is at their cap |
+| `GET /api/requests/limits` | family | `{"active", "base_cap", "categories": {category: {"cap", "level", "pressure"}}}` |
 | `GET /api/requests/mine` | family | The citizen's requests, with source `hub` and `method` once assigned |
 | `POST /api/requests/{id}/cancel` | family (owner) | 409 `request_closed` once fulfilled or cancelled |
-| `GET /api/requests?status=&assigned_to_me=true` | operator | Oldest first. Open requests include `suggested_hubs`: the three nearest hubs with enough available stock |
+| `GET /api/requests?status=&assigned_to_me=true` | operator | Oldest first. Open requests include `suggested_hubs`: up to three ranked hubs with `score` and `reasons`; the first is recommended |
 | `POST /api/requests/{id}/claim` | operator | `{"hub_id", "method": "delivery" or "pickup"}`. 409 `insufficient_stock` if the hub can't cover it after other reservations |
 | `POST /api/requests/{id}/release` | assignee | Returns the request to the open queue |
 | `POST /api/requests/{id}/fulfill` | assignee | Removes the items from the source hub's inventory |
+
+**Recommended source hubs** (`donations/planner.py`): each hub that can cover a request is scored in kilometre-equivalents as distance, plus 15 times the share of the drawn units that would push the hub below its target (pending pledges count as stock), minus 5 for hubs at 90% capacity or more (2 at 70% or more), since sending goods out frees space. All open requests are planned together with a regret heuristic, so suggestions never promise the same units twice and a request with few options is placed before one with many.
+
+**Fair-share cap** (`donations/fairness.py`): a citizen may hold 3 active (open or assigned) requests. For each category, pressure is open demand divided by available stock; below 0.25 the cap rises to 4, from 0.6 it drops to 2, and from 1.0 to 1. A request is limited by its scarcest category.
 
 ### Drop-off pledges
 

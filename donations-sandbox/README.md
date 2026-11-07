@@ -18,6 +18,8 @@ On PowerShell, set the password first with `$env:DEMO_PASSWORD = "demo-password-
 
 Set `VITE_API_BASE` if the API isn't at `http://127.0.0.1:8000`.
 
+The Citizen app tab has a **Phone location** switch: *Simulated* places the phone in Bukit Duri, Jakarta (so the demo works anywhere), and *Real device GPS* uses the browser's location.
+
 ## Demo walkthrough
 
 1. **Citizen app** (`family@demo.example`): filter hubs with "I want to donate" → Formula, open GOR Senen, and pledge. Then go to **Request supplies** and send a request.

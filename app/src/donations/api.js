@@ -46,3 +46,6 @@ export const myPledges = (options) => request('/api/pledges/mine', options);
 
 export const cancelPledge = (id, options) =>
   request(`/api/pledges/${encodeURIComponent(id)}/cancel`, { ...options, method: 'POST' });
+
+// { active, base_cap, categories: { [category]: { cap, level, pressure } } }
+export const requestLimits = (options) => request('/api/requests/limits', options);

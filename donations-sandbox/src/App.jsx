@@ -15,6 +15,10 @@ const STAFF = [
   ['staff.kampung-melayu@demo.example', 'Balai Warga Kampung Melayu'],
 ];
 
+// A household in Bukit Duri, a flood-prone Jakarta neighbourhood, for demos run outside Jakarta.
+const JAKARTA = { lat: -6.2235, lng: 106.8585 };
+const JAKARTA_LABEL = 'Bukit Duri, Jakarta';
+
 const ROLES = {
   citizen: { label: 'Citizen app', role: 'family', email: 'family@demo.example' },
   staff: { label: 'Hub staff', role: 'hub_staff', email: STAFF[0][0] },
@@ -108,6 +112,7 @@ function LoginForm({ config, onLogin }) {
 
 export default function App() {
   const [tab, setTab] = useState('citizen');
+  const [simulateJakarta, setSimulateJakarta] = useState(true);
   const [sessions, setSessions] = useState(() => Object.fromEntries(Object.keys(ROLES).map((k) => [k, loadSession(k)])));
   const session = sessions[tab];
 
@@ -121,8 +126,31 @@ export default function App() {
     content = <LoginForm key={tab} config={ROLES[tab]} onLogin={(s) => setSession(tab, s)} />;
   } else if (tab === 'citizen') {
     content = (
-      <div className="phone mx-auto flex h-[760px] w-[390px] overflow-hidden rounded-[2.5rem] border-[10px] border-gray-900 bg-white shadow-xl">
-        <CitizenDonations token={session.token} apiBase={API_BASE} />
+      <div className="space-y-3">
+        <div className="flex justify-center gap-2 text-sm">
+          <span className="py-1 text-gray-600">Phone location:</span>
+          {[
+            [true, `Simulated (${JAKARTA_LABEL})`],
+            [false, 'Real device GPS'],
+          ].map(([value, label]) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => setSimulateJakarta(value)}
+              className={`rounded-md px-3 py-1 ${simulateJakarta === value ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 ring-1 ring-gray-200'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="phone mx-auto flex h-[760px] w-[390px] overflow-hidden rounded-[2.5rem] border-[10px] border-gray-900 bg-white shadow-xl">
+          <CitizenDonations
+            key={String(simulateJakarta)}
+            token={session.token}
+            apiBase={API_BASE}
+            location={simulateJakarta ? JAKARTA : undefined}
+          />
+        </div>
       </div>
     );
   } else if (tab === 'staff') {

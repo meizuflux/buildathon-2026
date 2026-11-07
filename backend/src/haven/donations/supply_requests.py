@@ -121,11 +121,14 @@ async def create_request(data: JSONBody[RequestCreate], request: Request) -> dic
             cap, scarcest = cap_for_items(await demand_pressure(connection), msgspec.to_builtins(data.items))
             active = await active_count(connection, actor.user_id)
             if active >= cap:
-                level = "very high" if cap == 1 else "high" if cap < BASE_CAP else "normal"
-                raise error(409, "request_limit",
-                            f"You have {active} active request{'s' * (active != 1)}. While demand for "
-                            f"{scarcest.replace('_', ' ')} is {level}, each person can have {cap} at a time "
-                            f"so supplies reach everyone.")
+                have = f"You have {active} active request{'s' * (active != 1)}"
+                if cap < BASE_CAP:
+                    level = "very high" if cap == 1 else "high"
+                    message = (f"{have}. While demand for {scarcest.replace('_', ' ')} is {level}, each person can "
+                               f"have {cap} at a time so supplies reach everyone.")
+                else:
+                    message = f"{have}, the most each person can have right now. Cancel one or wait for a delivery."
+                raise error(409, "request_limit", message)
             await connection.execute(
                 "INSERT INTO supply_requests (id, user_id, items_json, latitude, longitude, address, notes, status, "
                 "created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'open', ?, ?)",
