@@ -651,9 +651,9 @@ def test_bounded_relocation_uses_fragmented_shelter_capacity(coordination_client
 
 
 def test_allocator_moves_incumbent_to_place_waiting_household(coordination_client, monkeypatch):
-    import haven.allocation as allocation
+    import haven.allocation_policy as allocation_policy
 
-    monkeypatch.setattr(allocation, "_MAX_REFINEMENT_FAMILIES", 0)
+    monkeypatch.setattr(allocation_policy, "_MAX_REFINEMENT_FAMILIES", 0)
     client, database = coordination_client
     no_needs = {
         "pets": False,
@@ -694,9 +694,9 @@ def test_allocator_moves_incumbent_to_place_waiting_household(coordination_clien
 def test_allocator_uses_two_shelter_exchange_to_place_waiting_household(
     coordination_client, monkeypatch
 ):
-    import haven.allocation as allocation
+    import haven.allocation_policy as allocation_policy
 
-    monkeypatch.setattr(allocation, "_MAX_REFINEMENT_FAMILIES", 0)
+    monkeypatch.setattr(allocation_policy, "_MAX_REFINEMENT_FAMILIES", 0)
     client, database = coordination_client
     no_needs = {
         "pets": False,
