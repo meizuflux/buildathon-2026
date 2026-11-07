@@ -114,7 +114,7 @@ async def check_login_limit(connection: apsw.AsyncConnection, email: str, client
         raise
 
 
-@post("/api/auth/register")
+@post("/register")
 async def register(data: JSONBody[Credentials]) -> dict:
     email = normalize_email(data.email)
     require_password(data.password, registration=True)
@@ -129,7 +129,7 @@ async def register(data: JSONBody[Credentials]) -> dict:
     return {"user_id": user_id, "role": "family"}
 
 
-@post("/api/auth/login", status_code=200)
+@post("/login", status_code=200)
 async def login(data: JSONBody[Credentials], request: Request) -> dict:
     email = normalize_email(data.email)
     require_password(data.password)
@@ -150,14 +150,14 @@ async def login(data: JSONBody[Credentials], request: Request) -> dict:
         return {"access_token": token, "token_type": "Bearer", "expires_at": expires, "user": info}
 
 
-@get("/api/me")
+@get("/me")
 async def me(request: Request) -> dict:
     async with connect() as connection:
         user, _ = await authenticate(request.headers.get("authorization", ""), connection)
         return await user_info(connection, user)
 
 
-@post("/api/auth/logout", status_code=204)
+@post("/logout", status_code=204)
 async def logout(request: Request) -> None:
     async with connect() as connection:
         async with connection:
