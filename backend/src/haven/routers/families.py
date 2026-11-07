@@ -118,7 +118,7 @@ async def create_family(data: JSONBody[FamilyCreate], request: Request) -> Famil
                 await connection.execute(
                     "INSERT INTO families (id, owner_user_id, disaster_id, adults, children, latitude, longitude, "
                     "needs_json, resources_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    (family_id, user[0], data.disaster_id, data.adults, data.children,
+                    (family_id, user.id, data.disaster_id, data.adults, data.children,
                      data.location.latitude, data.location.longitude,
                      msgspec.json.encode(data.needs).decode(), msgspec.json.encode(data.resources).decode(),
                      created_at, created_at),
