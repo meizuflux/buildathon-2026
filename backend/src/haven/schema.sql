@@ -57,7 +57,8 @@ CREATE TABLE IF NOT EXISTS plans (
     UNIQUE (family_id, version)
 );
 -- Operator-set allocation budget is distinct from the derived free capacity
--- returned in shelters.capacity_json.available_people.
+-- returned in shelters.capacity_json.available_people. It may exceed physical
+-- capacity when forced assignments need to preserve a destination.
 CREATE TABLE IF NOT EXISTS shelter_capacity_budgets (
     shelter_id TEXT PRIMARY KEY REFERENCES shelters(id) ON DELETE CASCADE,
     allocation_budget INTEGER NOT NULL CHECK (allocation_budget >= 0)
