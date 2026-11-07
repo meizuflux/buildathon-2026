@@ -60,7 +60,13 @@ def evaluate(request: OpenRequest, hub: HubState, remaining: dict[str, int]) -> 
         drawn += quantity
         below += max(quantity - surplus, 0)
     below_share = below / drawn
-    bonus = OVER_90_BONUS_KM if hub.capacity_pct >= 90 else OVER_70_BONUS_KM if hub.capacity_pct >= 70 else 0.0
+    bonus = (
+        OVER_90_BONUS_KM
+        if hub.capacity_pct >= 90
+        else OVER_70_BONUS_KM
+        if hub.capacity_pct >= 70
+        else 0.0
+    )
     cost = distance + BELOW_TARGET_PENALTY_KM * below_share - bonus
 
     reasons = [f"{distance:.1f} km away"]
@@ -74,8 +80,13 @@ def evaluate(request: OpenRequest, hub: HubState, remaining: dict[str, int]) -> 
         reasons.append(f"frees space at a full hub ({hub.capacity_pct}%)")
     elif hub.capacity_pct >= 70:
         reasons.append(f"frees space ({hub.capacity_pct}% full)")
-    return {"id": hub.id, "name": hub.name, "distance_km": round(distance, 2), "score": round(cost, 2),
-            "reasons": reasons}
+    return {
+        "id": hub.id,
+        "name": hub.name,
+        "distance_km": round(distance, 2),
+        "score": round(cost, 2),
+        "reasons": reasons,
+    }
 
 
 def plan(requests: list[OpenRequest], hubs: list[HubState]) -> dict[str, list[dict]]:

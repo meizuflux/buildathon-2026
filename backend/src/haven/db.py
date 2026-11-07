@@ -30,3 +30,17 @@ async def initialize_database() -> None:
     async with connect() as connection:
         async for _ in await connection.execute(schema):
             pass
+        # Existing installations may contain recommendation-only plans. Reconcile
+        # them through the same ledger as live edits before serving requests.
+        from haven.allocation import recompute_disasters
+
+        await connection.execute("BEGIN IMMEDIATE")
+        try:
+            disasters = await (
+                await connection.execute("SELECT id FROM disasters ORDER BY id")
+            ).fetchall()
+            await recompute_disasters(connection, (row[0] for row in disasters))
+            await connection.execute("COMMIT")
+        except BaseException:
+            await connection.execute("ROLLBACK")
+            raise

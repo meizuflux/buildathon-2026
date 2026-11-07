@@ -18,10 +18,27 @@ schema:
 test:
     uv run --locked pytest -q
 
+# Check Python lint rules and formatting.
+lint:
+    uv run --locked ruff check src tests
+
+format-check:
+    uv run --locked ruff format --check src tests
+
+format:
+    uv run --locked ruff format src tests
+
+# Check source types.
+typecheck:
+    uv run --locked ty check src
+
+# Run all development checks.
+check: lint format-check typecheck test
+
 # Create an operator interactively (password is not echoed).
 create-operator:
     uv run --locked python -m haven.create_operator
 
-# Create demo accounts; existing accounts are left unchanged.
+# Create demo accounts and the fictional Tampa scenario; existing data is preserved.
 demo-data:
     uv run --locked python -m haven.demo_data

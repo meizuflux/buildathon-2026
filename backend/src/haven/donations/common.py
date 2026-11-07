@@ -2,14 +2,14 @@
 
 import math
 from contextlib import asynccontextmanager
-from typing import Annotated, Literal
+from typing import Annotated, Literal, cast
 
 import apsw
 import msgspec
 from litestar import Request
 from litestar.exceptions import HTTPException
 
-from haven.auth import authenticate
+from haven.auth import get_authenticated_user
 
 Category = Literal["water", "diapers", "formula", "canned_goods", "blankets"]
 CATEGORIES: tuple[str, ...] = Category.__args__
@@ -51,18 +51,27 @@ def parse_items(raw: str) -> list[dict]:
 
 def haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     p1, p2 = math.radians(lat1), math.radians(lat2)
-    a = math.sin((p2 - p1) / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(math.radians(lng2 - lng1) / 2) ** 2
+    a = (
+        math.sin((p2 - p1) / 2) ** 2
+        + math.cos(p1) * math.cos(p2) * math.sin(math.radians(lng2 - lng1) / 2) ** 2
+    )
     return 2 * 6371.0 * math.asin(math.sqrt(a))
 
 
 async def require_role(request: Request, connection: apsw.AsyncConnection, *roles: str) -> Actor:
-    """Authenticate the caller and require one of `roles`; hub staff carry their hub id."""
-    (user_id, role), _ = await authenticate(request.headers.get("authorization", ""), connection)
+    """Require a signed-in caller with one of `roles`; hub staff carry their hub id.
+
+    The auth middleware has already resolved the bearer token into `request.user`.
+    """
+    user = get_authenticated_user(request)
+    user_id, role = user.id, user.role
     if role not in roles:
         raise error(403, "forbidden", "You don't have access to this action.")
     hub_id = None
     if role == "hub_staff":
-        row = await (await connection.execute("SELECT hub_id FROM hub_staff WHERE user_id = ?", (user_id,))).fetchone()
+        row = await (
+            await connection.execute("SELECT hub_id FROM hub_staff WHERE user_id = ?", (user_id,))
+        ).fetchone()
         if row is None:
             raise error(403, "forbidden", "This staff account is not linked to a hub.")
         hub_id = row[0]
@@ -88,24 +97,32 @@ async def write_transaction(connection: apsw.AsyncConnection):
 
 
 async def hub_exists(connection: apsw.AsyncConnection, hub_id: str) -> bool:
-    return await (await connection.execute("SELECT 1 FROM hubs WHERE id = ?", (hub_id,))).fetchone() is not None
+    return (
+        await (await connection.execute("SELECT 1 FROM hubs WHERE id = ?", (hub_id,))).fetchone()
+        is not None
+    )
 
 
 async def stock(connection: apsw.AsyncConnection, hub_id: str) -> dict[str, int]:
-    rows = await (await connection.execute(
-        "SELECT category, quantity FROM hub_supplies WHERE hub_id = ?", (hub_id,)
-    )).fetchall()
-    return dict(rows)
+    rows = await (
+        await connection.execute(
+            "SELECT category, quantity FROM hub_supplies WHERE hub_id = ?", (hub_id,)
+        )
+    ).fetchall()
+    return dict(cast(list[tuple[str, int]], rows))
 
 
-async def reserved(connection: apsw.AsyncConnection, hub_ids: tuple[str, ...], exclude: str | None = None) -> dict:
+async def reserved(
+    connection: apsw.AsyncConnection, hub_ids: tuple[str, ...], exclude: str | None = None
+) -> dict:
     """Quantities promised to assigned (not yet fulfilled) requests, as {hub_id: {category: qty}}."""
     if not hub_ids:
         return {}
     marks = ",".join("?" * len(hub_ids))
     totals: dict[str, dict[str, int]] = {}
     async for request_id, hub_id, raw in await connection.execute(
-        f"SELECT id, hub_id, items_json FROM supply_requests WHERE status = 'assigned' AND hub_id IN ({marks})", hub_ids
+        f"SELECT id, hub_id, items_json FROM supply_requests WHERE status = 'assigned' AND hub_id IN ({marks})",
+        hub_ids,
     ):
         if request_id == exclude:
             continue
@@ -122,7 +139,8 @@ async def pledged(connection: apsw.AsyncConnection, hub_ids: tuple[str, ...]) ->
     marks = ",".join("?" * len(hub_ids))
     totals: dict[str, dict[str, int]] = {}
     async for hub_id, raw in await connection.execute(
-        f"SELECT hub_id, items_json FROM pledges WHERE status = 'pending' AND hub_id IN ({marks})", hub_ids
+        f"SELECT hub_id, items_json FROM pledges WHERE status = 'pending' AND hub_id IN ({marks})",
+        hub_ids,
     ):
         for item in parse_items(raw):
             bucket = totals.setdefault(hub_id, {})
@@ -130,15 +148,20 @@ async def pledged(connection: apsw.AsyncConnection, hub_ids: tuple[str, ...]) ->
     return totals
 
 
-async def adjust_stock(connection: apsw.AsyncConnection, hub_id: str, items: list[dict], sign: int) -> None:
+async def adjust_stock(
+    connection: apsw.AsyncConnection, hub_id: str, items: list[dict], sign: int
+) -> None:
     """Add (sign=1) or remove (sign=-1) items from a hub's inventory; removal never goes below zero."""
     current = await stock(connection, hub_id)
     if sign < 0:
         for item in items:
             have = current.get(item["category"], 0)
             if have < item["quantity"]:
-                raise error(409, "insufficient_stock",
-                            f"Hub has {have} {item['category'].replace('_', ' ')}, {item['quantity']} needed.")
+                raise error(
+                    409,
+                    "insufficient_stock",
+                    f"Hub has {have} {item['category'].replace('_', ' ')}, {item['quantity']} needed.",
+                )
     for item in items:
         await connection.execute(
             "INSERT INTO hub_supplies (hub_id, category, quantity, target) VALUES (?, ?, ?, 0) "

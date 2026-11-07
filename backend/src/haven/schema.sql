@@ -56,6 +56,24 @@ CREATE TABLE IF NOT EXISTS plans (
     updated_at TEXT NOT NULL,
     UNIQUE (family_id, version)
 );
+-- Operator-set allocation budget is distinct from the derived free capacity
+-- returned in shelters.capacity_json.available_people. It may exceed physical
+-- capacity when forced assignments need to preserve a destination.
+CREATE TABLE IF NOT EXISTS shelter_capacity_budgets (
+    shelter_id TEXT PRIMARY KEY REFERENCES shelters(id) ON DELETE CASCADE,
+    allocation_budget INTEGER NOT NULL CHECK (allocation_budget >= 0)
+);
+-- The current authoritative reservation for each family. Historical plan
+-- versions remain in plans; this table is replaced atomically per disaster.
+CREATE TABLE IF NOT EXISTS current_assignments (
+    family_id TEXT PRIMARY KEY REFERENCES families(id) ON DELETE CASCADE,
+    disaster_id TEXT NOT NULL REFERENCES disasters(id) ON DELETE CASCADE,
+    shelter_id TEXT REFERENCES shelters(id) ON DELETE SET NULL,
+    people INTEGER NOT NULL CHECK (people >= 0),
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS current_assignments_disaster_idx ON current_assignments(disaster_id);
+CREATE INDEX IF NOT EXISTS current_assignments_shelter_idx ON current_assignments(shelter_id);
 CREATE TABLE IF NOT EXISTS disaster_updates (
     id TEXT PRIMARY KEY,
     disaster_id TEXT NOT NULL REFERENCES disasters(id),

@@ -29,11 +29,15 @@ def insert_user(email: str, role: str, hub_id: str | None = None) -> None:
             (user_id, email, _HASH, role),
         )
         if hub_id:
-            connection.execute("INSERT INTO hub_staff (user_id, hub_id) VALUES (?, ?)", (user_id, hub_id))
+            connection.execute(
+                "INSERT INTO hub_staff (user_id, hub_id) VALUES (?, ?)", (user_id, hub_id)
+            )
 
 
 def headers_for(client, email: str) -> dict:
-    token = client.post("/api/auth/login", json={"email": email, "password": "correct-password"}).json()["access_token"]
+    token = client.post(
+        "/api/auth/login", json={"email": email, "password": "correct-password"}
+    ).json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
 
@@ -54,5 +58,3 @@ def hub_client(tmp_path, monkeypatch):
         insert_user("family2@example.com", "family")
         insert_user("staff@example.com", "hub_staff", "hub_near")
         yield client
-
-

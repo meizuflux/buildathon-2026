@@ -31,25 +31,34 @@ async def demand_pressure(connection: apsw.AsyncConnection) -> dict[str, float]:
         "SELECT category, SUM(quantity) FROM hub_supplies GROUP BY category"
     ):
         available[category] = total
-    hubs = tuple(row[0] for row in await (await connection.execute("SELECT id FROM hubs")).fetchall())
+    hubs = tuple(
+        str(row[0]) for row in await (await connection.execute("SELECT id FROM hubs")).fetchall()
+    )
     for per_hub in (await reserved(connection, hubs)).values():
         for category, quantity in per_hub.items():
             available[category] -= quantity
     demand = dict.fromkeys(CATEGORIES, 0)
-    async for (raw,) in await connection.execute("SELECT items_json FROM supply_requests WHERE status = 'open'"):
+    async for (raw,) in await connection.execute(
+        "SELECT items_json FROM supply_requests WHERE status = 'open'"
+    ):
         for item in parse_items(raw):
             demand[item["category"]] += item["quantity"]
     return {
-        category: (demand[category] / available[category]) if available[category] > 0 else float("inf")
+        category: (demand[category] / available[category])
+        if available[category] > 0
+        else float("inf")
         for category in CATEGORIES
     }
 
 
 async def active_count(connection: apsw.AsyncConnection, user_id: str) -> int:
-    row = await (await connection.execute(
-        "SELECT COUNT(*) FROM supply_requests WHERE user_id = ? AND status IN ('open', 'assigned')", (user_id,)
-    )).fetchone()
-    return row[0]
+    row = await (
+        await connection.execute(
+            "SELECT COUNT(*) FROM supply_requests WHERE user_id = ? AND status IN ('open', 'assigned')",
+            (user_id,),
+        )
+    ).fetchone()
+    return int(row[0]) if row else 0
 
 
 async def limits(connection: apsw.AsyncConnection, user_id: str) -> dict:
@@ -58,9 +67,16 @@ async def limits(connection: apsw.AsyncConnection, user_id: str) -> dict:
     categories = {}
     for category, value in pressure.items():
         cap = cap_for(value)
-        categories[category] = {"cap": cap, "level": LEVEL_NAMES[cap],
-                                "pressure": None if value == float("inf") else round(value, 2)}
-    return {"active": await active_count(connection, user_id), "base_cap": BASE_CAP, "categories": categories}
+        categories[category] = {
+            "cap": cap,
+            "level": LEVEL_NAMES[cap],
+            "pressure": None if value == float("inf") else round(value, 2),
+        }
+    return {
+        "active": await active_count(connection, user_id),
+        "base_cap": BASE_CAP,
+        "categories": categories,
+    }
 
 
 def cap_for_items(pressure: dict[str, float], items: list[dict]) -> tuple[int, str]:
