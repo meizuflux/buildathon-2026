@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { REPORT_TYPES } from '../lib/constants.js'
 import { fullTime, timeAgo } from '../lib/format.js'
 
@@ -34,7 +33,6 @@ export default function ReportsPanel({ reports, onLocate, showOnMap, setShowOnMa
             <div className="card-foot">
               <span className="muted mono">{r.family_id}</span>
               <span className="foot-actions">
-                <Link className="btn btn-ghost btn-sm" to={`/comms/messages?to=family:${r.family_id}&subject=${encodeURIComponent(`Re: ${REPORT_TYPES[r.type] || 'your report'}`)}`}>Reply</Link>
                 {r.location ? (
                   <button className="btn btn-ghost btn-sm" onClick={() => onLocate(r.location)}>Show on map</button>
                 ) : (

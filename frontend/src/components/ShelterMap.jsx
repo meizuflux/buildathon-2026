@@ -89,7 +89,6 @@ export default function ShelterMap({
               <strong>{REPORT_TYPES[r.type] || r.type}</strong>
               <div className="popup-meta">{r.family_id} · {timeAgo(r.created_at)}</div>
               <p className="popup-msg">{r.message}</p>
-              <Link to={`/comms/messages?to=family:${r.family_id}`}>Message family →</Link>
             </Popup>
           </CircleMarker>
         ))}

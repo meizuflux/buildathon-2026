@@ -12,7 +12,6 @@ const REF_LINK = {
   need: (id) => `/logistics/needs?focus=${id}`,
   shipment: () => '/logistics/dispatch',
   update: () => '/comms/broadcasts',
-  conversation: (id) => `/comms/messages/${id}`,
   report: (id) => `/map?report=${id}`,
   assistance: (id) => `/citizens?request=${id}`,
 }
@@ -44,7 +43,6 @@ export default function CommandCenter() {
         <Kpi label="Open needs" value={openNeeds.length} tone={openNeeds.some((n) => n.priority === 'critical') ? 'alert' : ''}
           sub={`${openNeeds.filter((n) => n.priority === 'critical').length} critical`} to="/logistics/needs" />
         <Kpi label="Shipments in transit" value={inTransit.length} tone={late ? 'warn' : ''} sub={late ? `${late} running late` : 'all on time'} to="/logistics/dispatch" />
-        <Kpi label="Unread messages" value="—" sub="Unavailable" to="/comms/messages" />
       </section>
 
       <section className="card-panel operational-alerts">
