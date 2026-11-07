@@ -2,11 +2,13 @@
 
 from litestar import Litestar, Request, Router, get
 from litestar.exceptions import HTTPException
+from litestar.middleware import DefineMiddleware
 from litestar.openapi import OpenAPIConfig
 from litestar.openapi.plugins import SwaggerRenderPlugin
 from litestar.openapi.spec import Components, SecurityScheme
 from litestar.response import Response
 
+from haven.auth import DatabaseTokenAuthMiddleware
 from haven.db import connect, initialize_database
 from haven.openapi import errors
 from haven.routers.accounts import router as accounts_router
@@ -36,6 +38,7 @@ def server_error(request: Request, exc: Exception) -> Response:
 app = Litestar(
     route_handlers=[health, Router(path="/api", route_handlers=[accounts_router, families_router, relief_router, coordination_router])],
     on_startup=[initialize_database],
+    middleware=[DefineMiddleware(DatabaseTokenAuthMiddleware)],
     exception_handlers={HTTPException: http_error, Exception: server_error},
     openapi_config=OpenAPIConfig(
         title="Haven API",

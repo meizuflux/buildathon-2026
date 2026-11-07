@@ -3,17 +3,17 @@
 import asyncio
 import json
 import time
-from typing import Annotated, Literal
+from typing import Annotated, Literal, cast
 from uuid import uuid4
 
 import msgspec
 from litestar import Request, Router, get, post
-from litestar.params import FromPath, FromQuery, JSONBody
+from litestar.params import FromPath, JSONBody, QueryParameter
 from litestar.openapi import ResponseSpec
 from litestar.response import Response
 
-from haven.api_common import current_user, error, require_disaster, require_family, require_operator
-from haven.auth import now, timestamp
+from haven.api_common import error, require_disaster, require_family
+from haven.auth import authenticated_guard, authenticate_digest, get_authenticated_user, now, operator_guard, timestamp
 from haven.allocation import public_plan, recompute_disasters
 from haven.db import connect
 from haven.openapi import BEARER, Plan, PlanPage, Report, ReportList, errors
@@ -39,12 +39,13 @@ def report_from_row(row: tuple) -> dict:
     }
 
 
-@get("/disasters/{disaster_id:str}/plans", tags=["Plans"], security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Operator only. List the latest plan per family, ordered by family creation time and ID. limit must be 1–1000; offset must be nonnegative.")
-async def list_plans(disaster_id: FromPath[str], request: Request, limit: FromQuery[int] = 100, offset: FromQuery[int] = 0) -> PlanPage:
-    if not 1 <= limit <= 1000 or offset < 0:
-        error(400, "invalid_request", "limit must be between 1 and 1000 and offset must be nonnegative.")
+@get("/disasters/{disaster_id:str}/plans", tags=["Plans"], security=BEARER, guards=[operator_guard], responses=errors(400, 401, 403, 404, 500), description="Operator only. List the latest plan per family, ordered by family creation time and ID.")
+async def list_plans(
+    disaster_id: FromPath[str],
+    limit: Annotated[int, QueryParameter(ge=1, le=1000)] = 100,
+    offset: Annotated[int, QueryParameter(ge=0)] = 0,
+) -> PlanPage:
     async with connect() as connection:
-        require_operator(await current_user(request, connection))
         await require_disaster(connection, disaster_id)
         rows = await (await connection.execute(
             "SELECT p.plan_json FROM families f JOIN plans p ON p.family_id = f.id "
@@ -59,10 +60,10 @@ async def list_plans(disaster_id: FromPath[str], request: Request, limit: FromQu
     return {"plans": [public_plan(json.loads(row[0])) for row in rows], "total": total, "limit": limit, "offset": offset}
 
 
-@post("/families/{family_id:str}/plan/generate", status_code=200, tags=["Plans"], security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Family owner or operator only. Reallocate the disaster and return this family’s latest plan.")
+@post("/families/{family_id:str}/plan/generate", status_code=200, tags=["Plans"], security=BEARER, guards=[authenticated_guard], responses=errors(400, 401, 403, 404, 500), description="Family owner or operator only. Reallocate the disaster and return this family’s latest plan.")
 async def generate_plan(family_id: FromPath[str], request: Request) -> Plan:
     async with connect() as connection:
-        user = await current_user(request, connection)
+        user = get_authenticated_user(request)
         await connection.execute("BEGIN IMMEDIATE")
         try:
             family = await require_family(connection, family_id, user)
@@ -80,14 +81,18 @@ async def generate_plan(family_id: FromPath[str], request: Request) -> Plan:
     return plan
 
 
-@get("/families/{family_id:str}/plan", tags=["Plans"], security=BEARER, responses={**errors(400, 401, 403, 404, 500), 200: ResponseSpec(data_container=Plan, description="Latest plan"), 204: ResponseSpec(data_container=None, description="No newer plan before timeout")}, description="Family owner or operator only. Supply after_version and wait_seconds (0–25) to long-poll for a newer plan.")
-async def get_plan(family_id: FromPath[str], request: Request, after_version: FromQuery[int | None] = None, wait_seconds: FromQuery[int] = 0) -> Plan | Response:
-    if (after_version is not None and after_version < 0) or not 0 <= wait_seconds <= 25:
-        error(400, "invalid_request", "after_version must be nonnegative and wait_seconds must be between 0 and 25.")
+@get("/families/{family_id:str}/plan", tags=["Plans"], security=BEARER, guards=[authenticated_guard], responses={**errors(400, 401, 403, 404, 500), 200: ResponseSpec(data_container=Plan, description="Latest plan"), 204: ResponseSpec(data_container=None, description="No newer plan before timeout")}, description="Family owner or operator only. Supply after_version and wait_seconds (0–25) to long-poll for a newer plan.")
+async def get_plan(
+    family_id: FromPath[str],
+    request: Request,
+    after_version: Annotated[int | None, QueryParameter(ge=0)] = None,
+    wait_seconds: Annotated[int, QueryParameter(ge=0, le=25)] = 0,
+) -> Plan | Response:
     deadline = time.monotonic() + wait_seconds
+    auth_digest = cast(str, request.auth)
     while True:
         async with connect() as connection:
-            user = await current_user(request, connection)
+            user = await authenticate_digest(auth_digest, connection)
             await require_family(connection, family_id, user)
             row = await (await connection.execute("SELECT plan_json FROM plans WHERE family_id = ? ORDER BY version DESC LIMIT 1", (family_id,))).fetchone()
         if row is None:
@@ -101,12 +106,12 @@ async def get_plan(family_id: FromPath[str], request: Request, after_version: Fr
         await asyncio.sleep(min(0.25, remaining))
 
 
-@post("/families/{family_id:str}/reports", tags=["Reports"], security=BEARER, responses=errors(400, 401, 403, 404, 409, 500), description="Family owner or operator only. Reusing a client_request_id with the same payload returns the original report; a different payload conflicts.")
+@post("/families/{family_id:str}/reports", tags=["Reports"], security=BEARER, guards=[authenticated_guard], responses=errors(400, 401, 403, 404, 409, 500), description="Family owner or operator only. Reusing a client_request_id with the same payload returns the original report; a different payload conflicts.")
 async def create_report(family_id: FromPath[str], data: JSONBody[ReportCreate], request: Request) -> Report:
     if not data.message.strip() or not data.client_request_id.strip():
         error(400, "invalid_request", "message and client_request_id must not be blank.")
     async with connect() as connection:
-        user = await current_user(request, connection)
+        user = get_authenticated_user(request)
         await connection.execute("BEGIN IMMEDIATE")
         try:
             await require_family(connection, family_id, user)
@@ -126,11 +131,9 @@ async def create_report(family_id: FromPath[str], data: JSONBody[ReportCreate], 
     return report
 
 
-@get("/disasters/{disaster_id:str}/reports", tags=["Reports"], security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Operator only. List reports for a disaster.")
-async def list_reports(disaster_id: FromPath[str], request: Request) -> ReportList:
+@get("/disasters/{disaster_id:str}/reports", tags=["Reports"], security=BEARER, guards=[operator_guard], responses=errors(400, 401, 403, 404, 500), description="Operator only. List reports for a disaster.")
+async def list_reports(disaster_id: FromPath[str]) -> ReportList:
     async with connect() as connection:
-        user = await current_user(request, connection)
-        require_operator(user)
         await require_disaster(connection, disaster_id)
         cursor = await connection.execute("SELECT r.* FROM reports r JOIN families f ON f.id = r.family_id WHERE f.disaster_id = ? ORDER BY r.created_at DESC, r.id", (disaster_id,))
         return {"reports": [report_from_row(row) async for row in cursor]}

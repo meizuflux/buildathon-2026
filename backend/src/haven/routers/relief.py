@@ -5,11 +5,11 @@ from typing import Annotated, Literal
 from uuid import uuid4
 
 import msgspec
-from litestar import Request, Router, get, patch, post
+from litestar import Router, get, patch, post
 from litestar.params import FromPath, FromQuery, JSONBody
 
-from haven.api_common import current_user, error, require_disaster, require_operator
-from haven.auth import now, timestamp
+from haven.api_common import error, require_disaster
+from haven.auth import now, operator_guard, timestamp
 from haven.allocation import recompute_disasters, set_shelter_allocation_budget
 from haven.db import connect
 from haven.openapi import BEARER, DisasterList, Shelter, ShelterList, Update, UpdateList, errors
@@ -135,11 +135,10 @@ async def list_shelters(disaster_id: FromQuery[str]) -> ShelterList:
     return {"shelters": [shelter_from_row(row) for row in rows]}
 
 
-@post("/shelters", tags=["Shelters"], security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Operator only. Creating a shelter triggers reallocation.")
-async def create_shelter(data: JSONBody[ShelterCreate], request: Request) -> Shelter:
+@post("/shelters", tags=["Shelters"], security=BEARER, guards=[operator_guard], responses=errors(400, 401, 403, 404, 500), description="Operator only. Creating a shelter triggers reallocation.")
+async def create_shelter(data: JSONBody[ShelterCreate]) -> Shelter:
     shelter = msgspec.to_builtins(data)
     async with connect() as connection:
-        require_operator(await current_user(request, connection))
         await connection.execute("BEGIN IMMEDIATE")
         try:
             await require_disaster(connection, data.disaster_id)
@@ -161,10 +160,9 @@ async def create_shelter(data: JSONBody[ShelterCreate], request: Request) -> She
     return shelter
 
 
-@patch("/shelters/{shelter_id:str}", tags=["Shelters"], security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Operator only. Nested fields merge and relevant changes trigger reallocation.")
-async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch], request: Request) -> Shelter:
+@patch("/shelters/{shelter_id:str}", tags=["Shelters"], security=BEARER, guards=[operator_guard], responses=errors(400, 401, 403, 404, 500), description="Operator only. Nested fields merge and relevant changes trigger reallocation.")
+async def update_shelter(shelter_id: FromPath[str], data: JSONBody[ShelterPatch]) -> Shelter:
     async with connect() as connection:
-        require_operator(await current_user(request, connection))
         await connection.execute("BEGIN IMMEDIATE")
         try:
             row = await (await connection.execute("SELECT * FROM shelters WHERE id = ?", (shelter_id,))).fetchone()
@@ -234,10 +232,9 @@ async def list_updates(disaster_id: FromPath[str]) -> UpdateList:
     return {"updates": [update_from_row(row) for row in rows]}
 
 
-@post("/disasters/{disaster_id:str}/updates", tags=["Updates"], security=BEARER, responses=errors(400, 401, 403, 404, 500), description="Operator only. Publish an official update.")
-async def publish_update(disaster_id: FromPath[str], data: JSONBody[UpdateCreate], request: Request) -> Update:
+@post("/disasters/{disaster_id:str}/updates", tags=["Updates"], security=BEARER, guards=[operator_guard], responses=errors(400, 401, 403, 404, 500), description="Operator only. Publish an official update.")
+async def publish_update(disaster_id: FromPath[str], data: JSONBody[UpdateCreate]) -> Update:
     async with connect() as connection:
-        require_operator(await current_user(request, connection))
         await require_disaster(connection, disaster_id)
         if not data.title.strip() or not data.message.strip():
             error(400, "invalid_request", "Update title and message must not be blank.")

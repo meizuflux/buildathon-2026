@@ -5,6 +5,7 @@ import hashlib
 import re
 import secrets
 from datetime import UTC, datetime, timedelta
+from typing import Literal
 from uuid import uuid4
 
 import apsw
@@ -12,7 +13,10 @@ import msgspec
 from argon2 import PasswordHasher, Type
 from argon2.exceptions import InvalidHashError, VerificationError
 from litestar import Request, get, post
-from litestar.exceptions import HTTPException
+from litestar.connection import ASGIConnection
+from litestar.exceptions import HTTPException, NotAuthorizedException, PermissionDeniedException
+from litestar.handlers.base import BaseRouteHandler
+from litestar.middleware import AbstractAuthenticationMiddleware, AuthenticationResult
 from litestar.params import JSONBody
 
 from haven.db import connect
@@ -28,6 +32,32 @@ _EMAIL = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 class Credentials(msgspec.Struct, forbid_unknown_fields=True):
     email: str
     password: str
+
+
+class AuthenticatedUser(msgspec.Struct, frozen=True):
+    id: str
+    role: Literal["family", "operator"]
+
+
+def get_authenticated_user(connection: ASGIConnection) -> AuthenticatedUser:
+    user = connection.user
+    if not isinstance(user, AuthenticatedUser):
+        raise NotAuthorizedException("Authentication required.")
+    return user
+
+
+def authenticated_guard(connection: ASGIConnection, _: BaseRouteHandler) -> None:
+    get_authenticated_user(connection)
+
+
+def operator_guard(connection: ASGIConnection, _: BaseRouteHandler) -> None:
+    if get_authenticated_user(connection).role != "operator":
+        raise PermissionDeniedException("Operator access required.")
+
+
+def family_account_guard(connection: ASGIConnection, _: BaseRouteHandler) -> None:
+    if get_authenticated_user(connection).role != "family":
+        raise PermissionDeniedException("Only family accounts can create their own family profile.")
 
 
 def now() -> datetime:
@@ -70,20 +100,16 @@ def require_password(password: str, *, registration: bool = False) -> None:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters and at most 1024 bytes.", extra={"code": "invalid_request"})
 
 
-async def user_info(connection: apsw.AsyncConnection, user: tuple) -> dict:
-    family = await (await connection.execute("SELECT id FROM families WHERE owner_user_id = ?", (user[0],))).fetchone()
-    return {"id": user[0], "role": user[1], "family_id": family[0] if family else None}
+async def user_info(connection: apsw.AsyncConnection, user: AuthenticatedUser) -> dict:
+    family = await (await connection.execute("SELECT id FROM families WHERE owner_user_id = ?", (user.id,))).fetchone()
+    return {"id": user.id, "role": user.role, "family_id": family[0] if family else None}
 
 
 def token_hash(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
-async def authenticate(authorization: str, connection: apsw.AsyncConnection) -> tuple[tuple, str]:
-    parts = authorization.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer" or len(parts[1]) > 256:
-        raise HTTPException(status_code=401, detail="Authentication required.", extra={"code": "unauthorized"})
-    digest = token_hash(parts[1])
+async def authenticate_digest(digest: str, connection: apsw.AsyncConnection) -> AuthenticatedUser:
     user = await (await connection.execute(
         "SELECT u.id, u.role FROM sessions s JOIN users u ON u.id = s.user_id "
         "WHERE s.token_hash = ? AND s.revoked_at IS NULL AND s.expires_at > ?",
@@ -91,7 +117,28 @@ async def authenticate(authorization: str, connection: apsw.AsyncConnection) -> 
     )).fetchone()
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication required.", extra={"code": "unauthorized"})
+    return AuthenticatedUser(id=user[0], role=user[1])
+
+
+async def authenticate(authorization: str, connection: apsw.AsyncConnection) -> tuple[AuthenticatedUser, str]:
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer" or len(parts[1]) > 256:
+        raise HTTPException(status_code=401, detail="Authentication required.", extra={"code": "unauthorized"})
+    digest = token_hash(parts[1])
+    user = await authenticate_digest(digest, connection)
     return user, digest
+
+
+class DatabaseTokenAuthMiddleware(AbstractAuthenticationMiddleware):
+    """Resolve optional opaque bearer tokens into Litestar's request user/auth."""
+
+    async def authenticate_request(self, connection: ASGIConnection) -> AuthenticationResult:
+        authorization = connection.headers.get("authorization", "")
+        if not authorization:
+            return AuthenticationResult(user=None, auth=None)
+        async with connect() as db_connection:
+            user, digest = await authenticate(authorization, db_connection)
+        return AuthenticationResult(user=user, auth=digest)
 
 
 async def check_login_limit(connection: apsw.AsyncConnection, email: str, client: str) -> None:
@@ -147,20 +194,19 @@ async def login(data: JSONBody[Credentials], request: Request) -> Session:
             await connection.execute("INSERT INTO sessions (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)",
                                      ("session_" + uuid4().hex, user[0], token_hash(token), expires))
             await connection.execute("DELETE FROM login_attempts WHERE key = ?", ("email:" + token_hash(email),))
-            info = await user_info(connection, user)
+            info = await user_info(connection, AuthenticatedUser(id=user[0], role=user[1]))
         return {"access_token": token, "token_type": "Bearer", "expires_at": expires, "user": info}
 
 
-@get("/me", security=BEARER, responses=errors(401, 500))
+@get("/me", security=BEARER, guards=[authenticated_guard], responses=errors(401, 500))
 async def me(request: Request) -> User:
     async with connect() as connection:
-        user, _ = await authenticate(request.headers.get("authorization", ""), connection)
-        return await user_info(connection, user)
+        return await user_info(connection, get_authenticated_user(request))
 
 
-@post("/logout", status_code=204, security=BEARER, responses=errors(401, 500))
+@post("/logout", status_code=204, security=BEARER, guards=[authenticated_guard], responses=errors(401, 500))
 async def logout(request: Request) -> None:
     async with connect() as connection:
         async with connection:
-            _, digest = await authenticate(request.headers.get("authorization", ""), connection)
-            await connection.execute("UPDATE sessions SET revoked_at = ? WHERE token_hash = ?", (timestamp(now()), digest))
+            get_authenticated_user(request)
+            await connection.execute("UPDATE sessions SET revoked_at = ? WHERE token_hash = ?", (timestamp(now()), request.auth))
