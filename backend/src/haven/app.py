@@ -12,6 +12,7 @@ from haven.auth import DatabaseTokenAuthMiddleware
 from haven.db import connect, initialize_database
 from haven.openapi import errors
 from haven.routers.accounts import router as accounts_router
+from haven.routers.alerts import router as alerts_router
 from haven.routers.coordination import router as coordination_router
 from haven.routers.families import router as families_router
 from haven.routers.relief import router as relief_router
@@ -36,7 +37,7 @@ def server_error(request: Request, exc: Exception) -> Response:
 
 
 app = Litestar(
-    route_handlers=[health, Router(path="/api", route_handlers=[accounts_router, families_router, relief_router, coordination_router])],
+    route_handlers=[health, Router(path="/api", route_handlers=[accounts_router, families_router, relief_router, coordination_router, alerts_router])],
     on_startup=[initialize_database],
     middleware=[DefineMiddleware(DatabaseTokenAuthMiddleware)],
     exception_handlers={HTTPException: http_error, Exception: server_error},

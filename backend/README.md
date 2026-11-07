@@ -73,3 +73,21 @@ Plans are persisted snapshots, including the selected shelter's capabilities and
 Plan retrieval supports `?after_version=1&wait_seconds=25` (0–25 seconds). It returns a newer plan with 200 or an empty 204 when unchanged at timeout, rechecking authorization during the wait. Family report retries reuse `client_request_id`; an identical retry returns the stored report, while a changed payload with the same key returns 409.
 
 Clients can read the initial plan after profile creation, then repeat long polls using the last received version. Replace the cached plan on a newer 200 response; retain it and poll again after 204. Updates use this existing long-polling contract rather than a separate push channel.
+
+## Operational alerts feed
+
+Operators can poll `GET /api/disasters/{disaster_id}/alerts?limit=100&offset=0`
+with `Authorization: Bearer <token>`. The response is
+`{"alerts": [...], "total": 0, "limit": 100, "offset": 0}`.
+Each alert includes a stable `id`, `disaster_id`, `code`, `severity`, `message`,
+nullable `shelter_id` and `family_id`, `updated_at`, and structured `details`.
+Render `message` and `severity`; use `id` as the frontend list key.
+
+The feed shows current conditions: shelter physical/allocation overflow or full
+capacity, limited/unavailable supplies, and latest-plan warnings for unmet family
+needs or no available shelter. Capacity warnings are deduplicated per shelter.
+Critical alerts sort before warnings, then by newest update with stable ID ties.
+Resolved conditions disappear when the frontend fetches again; this is not an
+historical event log. Replace the displayed list on refresh. Offset pagination
+can shift as conditions change. Limits range from 1 to 1000. The endpoint is
+operator-only because family alerts expose operational household information.

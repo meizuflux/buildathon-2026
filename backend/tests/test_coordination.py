@@ -632,3 +632,49 @@ def test_family_profile_changes_auto_version_plan_and_identical_inputs_do_not_ch
     assert updated["version"] == 3
     assert updated["instructions"] != original["instructions"]
     assert "transportation" in " ".join(updated["instructions"]).lower()
+
+
+def test_alert_feed_capacity_resolution_and_access(coordination_client):
+    client, database = coordination_client
+    url = "/api/disasters/disaster/alerts"
+    assert client.get(url).status_code == 401
+    assert client.get(url, headers=headers()).status_code == 403
+    assert client.get("/api/disasters/missing/alerts", headers=headers("operator")).status_code == 404
+    assert client.get(url, headers=headers("operator")).json()["alerts"] == []
+    seed_shelter(database, "only", available=1)
+    seed_family(database, "second")
+    assert generate(client).status_code == 200
+    response = client.patch("/api/shelters/only", headers=headers("operator"),
+                            json={"capacity": {"total_people": 2}, "resources": {"water": "unavailable"}})
+    assert response.status_code == 200, response.text
+    feed = client.get(url, headers=headers("operator")).json()
+    capacity = [a for a in feed["alerts"] if a["code"] == "shelter_capacity_overflow"]
+    assert len(capacity) == 1
+    assert capacity[0]["severity"] == "critical"
+    assert capacity[0]["details"]["people_over_capacity"] == 4
+    assert capacity[0]["family_id"] is None
+    assert any(a["code"] == "shelter_water_unavailable" for a in feed["alerts"])
+    assert client.get(url, headers=headers("operator")).json() == feed
+    page = client.get(url + "?limit=1&offset=1", headers=headers("operator")).json()
+    assert page["alerts"] == feed["alerts"][1:2]
+    assert page["total"] == feed["total"]
+    assert client.get(url + "?limit=0", headers=headers("operator")).status_code == 400
+    assert client.get("/api/disasters/other/alerts", headers=headers("operator")).json()["alerts"] == []
+    assert client.patch("/api/shelters/only", headers=headers("operator"), json={
+        "capacity": {"total_people": 20, "available_people": 10}, "resources": {"water": "available"},
+    }).status_code == 200
+    assert client.get(url, headers=headers("operator")).json()["alerts"] == []
+
+
+def test_alert_feed_uses_only_latest_plan(coordination_client):
+    client, database = coordination_client
+    assert generate(client).status_code == 200
+    url = "/api/disasters/disaster/alerts"
+    first = client.get(url, headers=headers("operator")).json()["alerts"]
+    assert len(first) == 1
+    assert first[0]["code"] == "no_open_shelter"
+    assert first[0]["family_id"] == "family"
+    assert client.post("/api/shelters", headers=headers("operator"), json=api_shelter()).status_code == 201
+    assert client.get(url, headers=headers("operator")).json()["alerts"] == []
+    schema = client.get("/schema/openapi.json").json()
+    assert schema["paths"]["/api/disasters/{disaster_id}/alerts"]["get"]["security"] == [{"BearerAuth": []}]

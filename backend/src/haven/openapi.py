@@ -133,6 +133,25 @@ class PlanShelter(TypedDict):
     resources: ShelterResources
 
 
+class Alert(TypedDict):
+    id: str
+    disaster_id: str
+    code: str
+    severity: Literal["info", "warning", "critical"]
+    message: str
+    shelter_id: str | None
+    family_id: str | None
+    updated_at: str
+    details: dict[str, str | int | list[str]]
+
+
+class AlertPage(TypedDict):
+    alerts: list[Alert]
+    total: int
+    limit: int
+    offset: int
+
+
 class Plan(TypedDict):
     family_id: str
     disaster_id: str
