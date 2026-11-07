@@ -28,28 +28,31 @@ POST assistance/report endpoints receive `Idempotency-Key`, matching `idempotenc
 
 ## Household example
 
-POST/PUT body (counts are integers; adults 1–30, children/pets 0–30, seats 0–50):
+POST/PUT body (integers: total people 1-60, children included in total, pets 0-30). The simplified survey submits adults as total minus children:
 
 ```json
 {
-  "name": "The Morgan household",
+  "name": "My household",
   "adults": 2,
   "children": 2,
   "pets": 1,
-  "petTypes": "Dog",
-  "needs": ["Wheelchair accessibility"],
+  "petTypes": "1 dogs",
+  "petDetails": [{ "kind": "Dogs", "count": 1 }],
+  "needs": ["Limited mobility"],
   "otherNeeds": "",
   "hasCar": true,
-  "canDrive": true,
-  "seats": 4,
+  "canDrive": false,
+  "seats": 0,
   "needsTransport": false,
-  "needsShelter": true,
-  "needsFood": true,
+  "needsShelter": false,
+  "needsFood": false,
   "location": { "label": "Wilmington, NC" }
 }
 ```
 
-Household response is the body above plus `"id": "household-123"` and `"updatedAt": "2026-11-07T19:00:00.000Z"`. Location may include optional numeric `latitude` (-90–90) and `longitude` (-180–180), only after permission. `otherNeeds` is at most 300 characters. Do not require diagnoses or medication histories. Known needs: Wheelchair accessibility, Limited mobility, Essential medication, Refrigerated medication, Electric medical equipment, Accessible transportation. The model tolerates additional short support labels.
+Household response is the body above plus `"id": "household-123"` and `"updatedAt": "2026-11-07T19:00:00.000Z"`. Location may include optional numeric `latitude` (-90–90) and `longitude` (-180–180), only after permission. `otherNeeds` is at most 300 characters. Do not require diagnoses or medication histories. Known survey needs: Limited mobility, Essential medication, Refrigerated medication, Electric medical equipment, Accessible transportation. The model tolerates additional short support labels.
+
+The name, canDrive, seats, needsShelter, and needsFood fields remain for compatibility. The survey does not ask for them; new profiles use the internal name My household and false/zero resource defaults. Optional petDetails contains per-type kind/count pairs whose counts must equal pets. Existing free-text pet descriptions are preserved when editing. Existing removed resource fields are preserved on edit.
 
 ## Sources and assignments
 
@@ -60,6 +63,8 @@ All critical information must carry a source. A `Source` is:
 ```
 
 `kind`: `government | organization | unverified`; `verified`: boolean; `url`: optional absolute URL. Verification must be provided by the service, not inferred by the client.
+
+An Assignment may include optional coordinates: { latitude: number, longitude: number }. Supply real shelter coordinates to show its map. Distance estimates use those coordinates and a household/device position, never geocoded guesses. Assignments without coordinates still show their address.
 
 An Assignment is:
 
@@ -176,3 +181,16 @@ Errors should use an appropriate non-2xx HTTP status and a proposed body:
 ```
 
 Use 400/422 for validation, 401 for expired/missing credentials, 403 for forbidden records, 404 for missing detail records, 409 for a conflicting idempotency key, 429 for rate limits, 503 for unavailable service. The current client intentionally displays safe generic errors by HTTP status, avoiding untrusted/sensitive backend text. It runtime-validates all successful responses and rejects malformed payloads instead of presenting them as current information. If adopting server error codes or Retry-After, adapt the shared HTTP client in one place.
+
+## Support conversation
+
+The user-facing support-request forms have been replaced by a conversation. The existing assistance endpoints remain legacy adapter compatibility only. The new routes must scope records to the authenticated household:
+
+- GET /api/v1/messages returns SupportMessage[], including household and support replies.
+- POST /api/v1/messages accepts { "body": "Message text", "idempotencyKey": "stable-unique-key" }. body is trimmed, 1-2000 characters. Use the matching Idempotency-Key header.
+- Return 200/201 with { "id": "message-123", "body": "Message text", "sender": "household", "createdAt": "2026-11-07T21:00:00.000Z", "idempotencyKey": "stable-unique-key" }. The client validates body, sender, and key before treating the send as accepted.
+- Replies have sender: "support" and may omit idempotencyKey. sender is set by the server, never accepted from the household client. Authenticate staff separately and authorize every conversation.
+- Retries must return the same message. Do not create duplicate records for the same key; reject conflicting bodies for an already-used key. POST acknowledgment represents service receipt, not staff acknowledgment or emergency dispatch.
+- Emit changes events with entity: "messages" to refresh conversations. The app also polls the active conversation every 15 seconds while online and supports manual refresh.
+
+There is no messaging server in this repo. Until this contract is implemented by a connected service, the UI stores drafts and does not claim transmission.

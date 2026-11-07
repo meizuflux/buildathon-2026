@@ -11,7 +11,17 @@ export class MockAdapter implements ApiAdapter {
   private ready: Promise<void>;
   private listeners = new Set<() => void>();
   constructor(private store?: CacheStore, private latency = 180) { this.ready = this.restore(); }
-  private async restore() { try { const saved = await this.store?.get<MockState>('mock-state'); if (saved) this.state = saved; } catch { /* The sync provider displays storage failures. Demo can still run in memory. */ } }
+  private async restore() { try { const saved = await this.store?.get<MockState>('mock-state'); if (saved) {
+    this.state = saved;
+    // Add map metadata to the original demo fixtures without replacing saved reports or assignments.
+    const sample = households().find(h => h.id === saved.household?.id && h.location.label === saved.household.location.label);
+    if (sample && saved.household && saved.household.location.latitude === undefined) saved.household.location = { ...sample.location };
+    const sampleShelter = makePlan(households()[0]!).shelterAssignment!;
+    for (const plan of [saved.plan, ...saved.history]) {
+      const shelter = plan?.shelterAssignment;
+      if (shelter && !shelter.coordinates && shelter.name === sampleShelter.name && shelter.address === sampleShelter.address) shelter.coordinates = sampleShelter.coordinates;
+    }
+  } } catch { /* The sync provider displays storage failures. Demo can still run in memory. */ } }
   private async read<T>(getter: () => T): Promise<T> { await this.ready; if (this.latency) await new Promise(r => setTimeout(r, this.latency)); return clone(getter()); }
   private async emit(...entities: Changes['events'][number]['entity'][]) {
     for (const entity of entities) { this.state.sequence++; this.state.events.push({ id: `event-${this.state.sequence}`, entity, sequence: this.state.sequence }); }
@@ -19,6 +29,8 @@ export class MockAdapter implements ApiAdapter {
     await this.store?.set('mock-state', this.state).catch(() => {});
     this.listeners.forEach(fn => fn());
   }
+  getMessages = async () => [];
+  sendMessage: ApiAdapter['sendMessage'] = async () => { throw new Error('The support service is not connected. Your message has not been sent.'); };
   getHousehold = () => this.read(() => this.state.household);
   createHousehold: ApiAdapter['createHousehold'] = async input => { await this.ready; this.state.household = { ...clone(input), id: this.state.household?.id ?? `household-${Date.now()}`, updatedAt: now() }; if (!this.state.plan) this.state.plan = makePlan(this.state.household); await this.emit('household', 'plan'); return clone(this.state.household); };
   updateHousehold = this.createHousehold;

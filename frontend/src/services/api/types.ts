@@ -1,5 +1,7 @@
-import type { Household, HouseholdInput, ResponsePlan, DisasterAlert, AssistanceInput, AssistanceRequest, SituationReport, ReportInput, Update, Changes } from '../../types/models';
+import type { Household, HouseholdInput, ResponsePlan, DisasterAlert, AssistanceInput, AssistanceRequest, SituationReport, ReportInput, Update, Changes, MessageInput, SupportMessage } from '../../types/models';
 export interface ApiAdapter {
+  getMessages(): Promise<SupportMessage[]>;
+  sendMessage(input: MessageInput): Promise<SupportMessage>;
   getHousehold(): Promise<Household | null>;
   createHousehold(input: HouseholdInput): Promise<Household>;
   updateHousehold(input: HouseholdInput): Promise<Household>;

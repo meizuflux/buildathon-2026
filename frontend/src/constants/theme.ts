@@ -1,12 +1,20 @@
-// Survey map: shared native and web design tokens.
+﻿// Emergency triage palette. Semantic alert colors remain fixed in both modes.
 export const colors = {
-  ink: '#1D2B3A', text: '#1D2B3A', muted: '#526471',
-  green: '#2E7D7A', greenHover: '#256663', greenLight: '#DCE9E7',
-  cream: '#EAEFF0', white: '#F5F7F7', chrome: '#EAEFF0',
-  border: '#CDD7D9', fieldBorder: '#71858C',
-  amber: '#824326', amberLight: '#F0E5DA', amberBorder: '#B9A88E',
-  red: '#A53B1C', redLight: '#F6E2DA', ember: '#E4572E', silt: '#B9A88E',
-  blue: '#355F79', blueLight: '#DCE7ED', transparent: 'transparent',
+  ink: '#1D2B3A', text: '#1D2B3A', muted: '#4E606F',
+  green: '#246B68', greenHover: '#1D5654', greenLight: '#DFEDEA',
+  cream: '#F0F6FC', white: '#FFFFFF', chrome: '#F0F6FC', onPrimary: '#FFFFFF',
+  border: '#CED9E2', fieldBorder: '#70818F',
+  amber: '#E67E00', amberLight: '#FFFFFF', amberBorder: '#E67E00',
+  red: '#D9381E', redLight: '#FFFFFF', ember: '#D9381E', silt: '#B9A88E',
+  blue: '#355F79', blueLight: '#E1ECF3', transparent: 'transparent',
+};
+export type Palette = typeof colors;
+export const darkColors: Palette = {
+  ...colors, ink: '#F0F6FC', text: '#F0F6FC', muted: '#AEBDCC',
+  green: '#8BCFC5', greenHover: '#A5DED5', greenLight: '#19312F',
+  cream: '#0D1117', white: '#161E27', chrome: '#0D1117', onPrimary: '#0D1117',
+  border: '#303E4C', fieldBorder: '#7C8C9D',
+  amberLight: '#161E27', redLight: '#161E27', blue: '#A5C6DF', blueLight: '#182C3C',
 };
 export const type = {
   family: 'IBMPlexSans_400Regular', medium: 'IBMPlexSans_500Medium',

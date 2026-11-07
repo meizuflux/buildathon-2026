@@ -7,7 +7,7 @@ import { cache } from '../storage/cache';
 import { config } from '../constants/config';
 import { ApiError } from '../services/api/http';
 import { affectedQueries } from '../utils/changes';
-const entities = ['household', 'plan', 'alerts', 'requests', 'updates', 'reports', 'history'];
+const entities = ['household', 'plan', 'alerts', 'requests', 'updates', 'reports', 'history', 'messages'];
 type Snapshot = { key: readonly unknown[]; data: unknown; at: number };
 const SyncContext = createContext({ ready: false, online: true, lastSync: null as string | null, syncing: false, syncError: '', storageError: '', refresh: async () => {} });
 export const useSyncContext = () => useContext(SyncContext);

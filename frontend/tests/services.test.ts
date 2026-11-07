@@ -19,7 +19,7 @@ test('household onboarding, editing, and persistent restore preserve the shared 
   const restored = new MockAdapter(store, 0);
   assert.equal((await restored.getHousehold())?.children, 3);
   assert(planSchema.safeParse(await restored.getCurrentPlan()).success);
-  assert(!householdInputSchema.safeParse({ ...household, adults: 0 }).success);
+  assert(!householdInputSchema.safeParse({ ...household, adults: 0, children: 0 }).success);
   assert(!householdInputSchema.safeParse({ ...household, children: 1.5 }).success);
 });
 test('assistance submission stays submitted and retries are idempotent', async () => {

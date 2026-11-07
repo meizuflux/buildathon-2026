@@ -1,6 +1,6 @@
 # Haven · Your household, connected
 
-A frontend-only disaster coordination app built with React Native, Expo SDK 54, TypeScript, Expo Router, TanStack Query, and native Expo SQLite persistence. Includes an adaptive browser preview, optional Expo Location, SecureStore token integration, and NetInfo connectivity detection. No backend or matching algorithm is included.
+A frontend-only disaster coordination app built with React Native, Expo SDK 54, TypeScript, Expo Router, TanStack Query, and native Expo SQLite persistence. Includes an adaptive browser preview, optional Expo Location, SecureStore token integration, and NetInfo connectivity detection. No backend or matching algorithm is included. Support messages require an authenticated backend implementing the message API described below.
 
 ## Run
 
@@ -19,13 +19,13 @@ Use a compatible Expo Go SDK 54 client or an Expo development build on your devi
 
 1. Open Home and choose **Set up my household**. Complete the five steps, review, and save.
 2. Review your sample plan, source labels, assignments, unmet needs, and preparation checklist.
-3. Request assistance, review exactly what is shared, submit, and inspect the request timeline.
+3. Open Support, write a message, and send it to the connected coordination service. Until a backend is configured, messages remain local drafts.
 4. Report your situation. Receipt by the coordination service is separate from any organization acknowledgment.
-5. In a development session, open Household → Demo playground. Load household A, B, or C and trigger events. The adapter emits change notifications; synchronization refreshes shared queries. Selecting a household clears the mock requests/reports/history for that scenario.
+5. Edit Household on one scrollable page. People, pets, support needs, transportation, and address remain visible without stepping through the initial survey.
 6. Disconnect networking after loading information. Cached sections remain visible with offline warnings. Save a report draft; reconnect, open the draft, review, and explicitly submit it.
 7. Edit the household via Household → Edit household. Personal preparation checkmarks are stored per household and do not modify official assignments.
 
-All alerts, names, locations, shelter availability, instructions, and assignments in mock mode are **fictional**, even when their simulated source is marked verified. Demo mode is the default and is visibly labeled. Scenario buttons appear only when both `__DEV__` and mock mode are true. Fresh demo installs start without a profile so onboarding can be demonstrated.
+The default local mode keeps household profiles and drafts on the device. Fabricated alerts, updates, and assignments are excluded from the normal UI; connect an API backend to load those records. Test fixtures are used only by service tests and the isolated browser audit.
 
 ## Connect the backend
 
@@ -61,7 +61,7 @@ npx expo install --check
 npm run build:web
 ```
 
-For the design smoke test, start Expo first, then run `npm run design:audit` in another terminal. It uses an isolated headless Chrome profile and fictional demo fixtures to check all nine screens at mobile and desktop widths, plus assistance submission and report receipt. Set `CHROME_PATH` if Chrome is installed somewhere other than the default Windows location; set `HAVEN_AUDIT_URL` if Expo uses a different port. Captures and results are written to `.hallmark/screens/` at the repository root.
+For the browser audit, start Expo in API mode with EXPO_PUBLIC_API_BASE_URL=http://localhost:8799, then run npm run design:audit in another terminal. The script intercepts that test origin with isolated fixtures; it never contacts a live coordination team. It checks all screens at mobile and desktop widths, single-page edits, message draft restoration, send failures/retries/acknowledgments, incoming replies, and night mode. CHROME_PATH and HAVEN_AUDIT_URL override the browser and app origin. Screenshots and results are written to .hallmark/screens/.
 
 Tests cover household creation/editing/restoration, all demo event payloads, submission status semantics, idempotency, version history, unavailable shelters, long-poll wake/cursor/deduplication/cancellation, persisted snapshots, HTTP auth/errors/validation/cancellation/timeouts. Native permission dialogs and device SQLite behavior still require an iOS/Android device smoke test.
 
@@ -69,8 +69,26 @@ The app does not independently recommend routes, generate evacuation instruction
 
 ## Survey map mobile design
 
-The mobile interface uses Contour Paper, Deep Survey Ink, Strata Teal, Ember Orange, and Silt tokens in `src/constants/theme.ts`, with bundled IBM Plex Sans and IBM Plex Mono fonts. Layouts remain a single mobile column, including browser previews.
+A single mobile column, IBM Plex Sans typography, and a high-contrast Ice White canvas. Day/night controls are available in the header and Household > Appearance. Night mode uses canvas #0D1117 and text #F0F6FC; alert Crimson #D9381E and Amber #E67E00 are fixed across both modes. Warning panels use left borders with readable neutral text.
 
-Nearby sorts alerts by severity, then update time, with filters for storms, floods, fire, and earthquakes. Filters show only alerts returned by the configured adapter; empty results do not establish safety. Mark myself safe opens the report review and submission flow. Its receipt and last submitted status come from the existing reports service.
+Initial setup uses the survey; editing an existing household shows all fields together with one Save changes action. The survey asks for total people (including children) and number of children first. Pets have per-type counters and an Other option. Enter a full street address or explicitly share current location. Editing an address clears stale coordinates. Legacy names and resource fields remain in the API contract for compatibility but are not collected by this survey. New profiles use the internal label My household. Pet details are optional structured metadata alongside the legacy total and description.
 
-The area illustration is explicitly a schematic, not a geographic map. It has no live boundaries, device-location marker, distances, or navigation routes. Production alerts still require the backend integration described above; push notifications and a geographic hazard feed are not included.
+My plan now focuses on the assigned shelter, status, address, and map. React Native Maps powers mobile; Leaflet with OpenStreetMap tiles powers the browser. The backend can provide optional shelter coordinates. Missing coordinates retain the address and external-map fallback. Straight-line distance is shown only when both locations are known; it is not road distance or a safe route. Manual addresses are not automatically sent to third-party geocoders. In API mode, use current location to estimate distance when household coordinates are missing.
+
+Normal app views do not show demo captions or generated incident data. Local mode shows empty alert/assignment states. Production alerts still require backend integration; push notifications and geographic hazard boundaries are not included.
+
+Nearby includes separate hurricane and storm filters. The safety status action is hidden for hurricanes and remains available for other hazard categories. Support includes a Call 911 action that opens the phone dialer; browser/device support varies.
+
+### Native map setup
+
+Expo Go can preview React Native Maps. For a standalone Android build, set GOOGLE_MAPS_ANDROID_API_KEY in the build environment to an Android Maps SDK key restricted to your app package/signing certificate. app.config.ts injects it into android.config.googleMaps.apiKey. Without a configured key, standalone Android displays the shelter address and a map-app fallback rather than mounting a map that cannot initialize. iOS uses Apple Maps by default. See [Expo map setup](https://docs.expo.dev/versions/latest/sdk/map-view/).
+
+The browser map uses public OpenStreetMap tiles and displays attribution. Map tiles require network access; offline shelter addresses remain visible. Use a suitable tile service for production traffic.
+
+The browser audit also verifies survey validation, per-type pets, save/edit restoration, the hurricane safety-action exception, and persisted night mode. Device permission dialogs, native map rendering, and dialer handoff still need a physical-device smoke test.
+
+## Support messages
+
+The Support tab replaces request forms with a conversation and pinned composer. Old request URLs redirect to Support. Messages are sent through the authenticated HTTP client to GET/POST /api/v1/messages. The service must return the accepted message with the same body and idempotencyKey before the UI labels it Sent. This means accepted by the service, not read by a staff member. Failed sends retain the draft and key for retry; no fake acknowledgments or replies are generated.
+
+Drafts are stored per household, backend origin, and data mode. They are never auto-sent. Incoming messages refresh through message change events, foreground polling, and manual refresh. Local mode permits drafting and disables Send. Set EXPO_PUBLIC_DATA_MODE=api and EXPO_PUBLIC_API_BASE_URL to connect a backend that implements the documented contract. No support messaging server or staff destination is supplied in this repository.

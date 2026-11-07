@@ -3,8 +3,10 @@ import { http } from '../api/client';
 import { endpoints as e } from '../api/endpoints';
 import { householdSchema, planSchema, alertSchema, updateSchema, assistanceSchema, reportSchema, changeSchema } from '../../types/models';
 import type { ApiAdapter } from '../api/types';
+import { createMessagesApi } from '../api/messages';
 import { ApiError } from '../api/http';
 export const backendAdapter: ApiAdapter = {
+  ...createMessagesApi(http),
   getHousehold: () => http(e.household, householdSchema.nullable()),
   createHousehold: body => http(e.createHousehold, householdSchema, { method: 'POST', body }),
   updateHousehold: body => http(e.household, householdSchema, { method: 'PUT', body }),

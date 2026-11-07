@@ -1,29 +1,36 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
-import { Page, Card, Row, Title, Body, Badge, Attribution, Metadata, QueryState, Empty, Button, Toggle, Notice, date, s } from '../../components/common/ui';
-import { AssignmentCard } from '../../components/plans/AssignmentCard';
-import { usePlan } from '../../hooks/queries';
+﻿import React, { useState } from 'react';
+import { View, Text, Linking } from 'react-native';
+import * as Location from 'expo-location';
+import { Page, Row, Title, Body, Badge, Attribution, QueryState, Empty, Button, Notice, date, useUI, Icon } from '../../components/common/ui';
+import ShelterMap from '../../components/maps/ShelterMap';
+import { usePlan, useHousehold } from '../../hooks/queries';
 import { useSyncContext } from '../../hooks/useSync';
-import { cache } from '../../storage/cache';
-import { adapter } from '../../services/adapters';
-import { colors as c } from '../../constants/theme';
-import { config } from '../../constants/config';
+import { type } from '../../constants/theme';
+import { coordinate, distanceMiles, type Coordinate } from '../../utils/shelter';
 export default function Plan() {
-  const query = usePlan(); const plan = query.data; const sync = useSyncContext();
-  const [checked, setChecked] = useState<string[]>([]); const [saved, setSaved] = useState(false); const [saveError, setSaveError] = useState(''); const [showHistory, setShowHistory] = useState(false);
-  const wide = false;
-  const key = `checklist:${config.mode}:${config.baseUrl}:${plan?.householdId}`;
-  useEffect(() => { let live = true; setSaved(false); void cache.get<string[]>(key).then(value => { if (live) { setChecked(value ?? []); setSaved(true); } }).catch(() => { if (live) setSaveError('Your preparation checklist cannot be saved on this device.'); }); return () => { live = false; }; }, [key]);
-  const history = useQuery({ queryKey: ['history'], queryFn: adapter.getPlanHistory, enabled: showHistory && sync.ready });
-  async function toggle(id: string) { const next = checked.includes(id) ? checked.filter(x => x !== id) : [...checked, id]; setChecked(next); try { await cache.set(key, next); } catch { setSaveError('Checklist changes could not be saved.'); } }
-  return <Page title="My plan" subtitle="Instructions and resource assignments from your coordination team." action={<Button title="Report a change" href="/reports" variant="secondary" icon="edit-3" />}><QueryState query={query}>{plan ? <>
-    <Card><Row style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}><View style={{ gap: 8, flex: 1, minWidth: 0 }}><Metadata>{plan.disasterType}, version {plan.version}</Metadata><Title>{plan.summary}</Title><Text style={s.caption}>Updated {date(plan.updatedAt)}</Text></View><Badge value={plan.status} /></Row>{plan.changes.length > 0 && <View style={{ paddingTop: 16, gap: 5 }}><Title small>{plan.version > 1 ? `What changed in version ${plan.version}` : 'Your first plan'}</Title>{plan.changes.map((change, i) => <Body key={i}>{change}</Body>)}</View>}</Card>
-    <Card><Title>Safety information</Title>{plan.officialInstructions.map((item, i) => <View key={i}><Body>{item.text}</Body><Attribution source={item.source} timestamp={plan.updatedAt} /></View>)}</Card>
-    <Card><Row style={{ justifyContent: 'space-between' }}><Title>Preparation checklist</Title><Text style={s.caption}>{plan.actionSteps.filter(step => step.personalTask && checked.includes(step.id)).length}/{plan.actionSteps.filter(step => step.personalTask).length} personal tasks</Text></Row><Body muted>Your checklist is private to this device. Checking a task does not change official instructions or assignments.</Body>{saveError && <Notice danger>{saveError}</Notice>}{plan.actionSteps.map((step, i) => step.personalTask ? <Toggle key={step.id} selected={checked.includes(step.id)} title={`${i + 1}. ${step.title}`} detail={step.detail} onPress={() => { if (saved) void toggle(step.id); }} /> : <View key={step.id} style={{ padding: 16, gap: 8 }}><Title small>{i + 1}. {step.title}</Title><Body muted>{step.detail}</Body><Badge value="unverified" /></View>)}</Card>
-    <View style={{ flexDirection: wide ? 'row' : 'column', gap: 20 }}><AssignmentCard title="Shelter" icon="home" assignment={plan.shelterAssignment} stale={!sync.online || !!query.isError} /><AssignmentCard title="Transportation" icon="truck" assignment={plan.transportationAssignment} stale={!sync.online || !!query.isError} /></View>
-    {plan.additionalResources.map((assignment, i) => <AssignmentCard key={i} title="Additional support" icon="package" assignment={assignment} stale={!sync.online || !!query.isError} />)}
-    {plan.unmetNeeds.length > 0 && <Notice>Still awaiting support: {plan.unmetNeeds.join(', ')}. These needs have not been fulfilled.</Notice>}
-    <Card><Title small>Information sources</Title>{plan.sources.map((source, i) => <Attribution key={i} source={source} />)}<Button title={showHistory ? 'Hide plan history' : 'View plan history'} variant="ghost" onPress={() => setShowHistory(!showHistory)} />{showHistory && <QueryState query={history}>{history.data?.map(version => <View key={`${version.id}-${version.version}`} style={{ gap: 6, paddingVertical: 12 }}><Title small>Version {version.version}, {date(version.updatedAt)}</Title><Body muted>{version.changes.join(' ')}</Body></View>)}</QueryState>}</Card>
-  </> : <Empty title="Your plan is being prepared" message="Complete your household profile to get started. Plans are supplied by the coordination service." action={<Button title="Household profile" href="/profile" />} />}</QueryState></Page>;
+  const { c, s } = useUI(); const query = usePlan(); const household = useHousehold(); const sync = useSyncContext();
+  const [sharedPosition, setSharedPosition] = useState<Coordinate | null>(null); const [locating, setLocating] = useState(false); const [error, setError] = useState('');
+  const plan = query.data; const shelter = plan?.shelterAssignment;
+  const destination = coordinate(shelter?.coordinates);
+  const origin = sharedPosition ?? coordinate(household.data?.location);
+  const miles = origin && destination ? distanceMiles(origin, destination) : null;
+  const available = shelter?.status === 'confirmed';
+  async function locate() {
+    setError(''); setLocating(true);
+    try { const permission = await Location.requestForegroundPermissionsAsync(); if (permission.status !== 'granted') throw new Error('Location permission was not granted. You can still view the shelter address.'); const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }); setSharedPosition(position.coords); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Unable to get your location.'); } finally { setLocating(false); }
+  }
+  async function openMap() {
+    if (!shelter) return;
+    const target = destination ? `${destination.latitude},${destination.longitude}` : shelter.address;
+    if (!target) return;
+    try { await Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(target)}`); } catch { setError('Could not open your maps app. Use the address shown here.'); }
+  }
+  return <Page title="Your shelter"><QueryState query={query}>{shelter ? <>
+    <View style={{ gap: 12 }}><Row style={{ justifyContent: 'space-between' }}><Row><Icon name="home" color={c.green} /><Text style={s.sectionLabel}>Shelter assignment</Text></Row><Badge value={shelter.status} /></Row><Text accessibilityRole="header" style={{ fontFamily: type.semibold, fontSize: 26, lineHeight: 30, letterSpacing: -0.4, color: c.ink }}>{shelter.name}</Text><Body>{shelter.description}</Body><Text style={s.caption}>Updated {date(plan?.updatedAt)}</Text></View>
+    {(!available || !sync.online || query.isError) && <Notice danger={shelter.status === 'unavailable' || shelter.status === 'cancelled'}>{!available ? 'This shelter is not confirmed as available. Contact your coordination team before travelling.' : 'Saved assignment. Reconfirm shelter availability before travelling.'}</Notice>}
+    {destination ? <View style={{ gap: 12 }}><Row style={{ justifyContent: 'space-between' }}><Title small>Where to go</Title></Row><View style={{ marginHorizontal: -24 }}><ShelterMap origin={origin} destination={destination} name={shelter.name} /></View><Row style={{ gap: 24, flexWrap: 'wrap' }}><Row><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: c.blue }} /><Text style={s.caption}>Shared location</Text></Row><Row><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: c.green }} /><Text style={s.caption}>Shelter</Text></Row></Row><View style={{ paddingVertical: 12, gap: 4 }}>{miles !== null ? <><Text style={{ fontFamily: type.semibold, fontSize: 32, lineHeight: 36, color: c.ink }}>{miles < 0.1 ? '< 0.1' : miles.toFixed(1)} <Text style={{ fontSize: 16, fontFamily: type.family }}>mi away</Text></Text><Text style={s.caption}>Straight-line estimate, not road distance or a safe route.</Text></> : <Body muted>Share your current location to estimate the distance.</Body>}</View>{!origin && <Button title="Use current location for distance" variant="secondary" onPress={() => void locate()} busy={locating} />}{sharedPosition && <Button title="Clear current location" variant="ghost" onPress={() => setSharedPosition(null)} />}</View> : <Notice>Shelter map coordinates have not been provided. Use the address below and check with your coordination team.</Notice>}
+    <View style={{ gap: 12 }}><Title small>Shelter address</Title><Body>{shelter.address ?? 'Awaiting the shelter’s street address.'}</Body>{(shelter.address || destination) && <Button title="View in maps" variant="secondary" icon="map-pin" onPress={() => void openMap()} />}<Attribution source={shelter.source} /></View>
+    <Button title="Ask about this assignment" href="/assistance" variant="ghost" />
+  </> : <Empty title="No shelter assigned yet" message="Your shelter and its location will appear here when the coordination team makes an assignment." action={<Button title="Household details" href="/profile" variant="secondary" />} />}</QueryState>{!!error && <Notice danger>{error}</Notice>}</Page>;
 }
