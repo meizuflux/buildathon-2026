@@ -1,7 +1,5 @@
 """Litestar application entry point."""
 
-from contextlib import closing
-
 from litestar import Litestar, Request, get
 from litestar.exceptions import HTTPException
 from litestar.openapi import OpenAPIConfig
@@ -9,14 +7,13 @@ from litestar.openapi.plugins import SwaggerRenderPlugin
 from litestar.response import Response
 
 from haven.auth import login, logout, me, register
-from haven.db import connect, initialize_database
+from haven.db import initialize_database, run_db
 
 
-@get("/health", sync_to_thread=True)
-def health() -> dict[str, str]:
+@get("/health")
+async def health() -> dict[str, str]:
     """Report whether the API can reach its database."""
-    with closing(connect()) as connection:
-        connection.execute("SELECT 1").fetchone()
+    await run_db(lambda connection: connection.execute("SELECT 1").fetchone())
     return {"status": "ok"}
 
 

@@ -1,6 +1,6 @@
 # Haven API
 
-Litestar and SQLite backend scaffold, managed with [uv](https://docs.astral.sh/uv/).
+Litestar and APSW/SQLite backend scaffold, managed with [uv](https://docs.astral.sh/uv/).
 
 ```sh
 cd backend
@@ -11,6 +11,8 @@ just dev
 The API listens on `http://127.0.0.1:8000`. Check `GET /health` or visit `/schema` for Swagger UI or `/schema/openapi.json` for the generated OpenAPI document. The Swagger UI loads its assets from a CDN and needs internet access. Run tests with `just test`.
 
 Use `just prod` to run without reload (configure `HOST`, `PORT`, and `WEB_CONCURRENCY` through environment variables). Run `just schema` to create missing tables without starting the server. Run `just` to list all recipes.
+
+Database operations and password hashing run in worker threads so they do not block the async event loop.
 
 On startup, the application creates the tables in `src/haven/schema.sql`. The default database is `disaster_response.sqlite3` in the current working directory; set `DATABASE_PATH` to change it. This is an initial schema, not a migration system: changes to existing tables require recreating the development database or applying changes manually.
 

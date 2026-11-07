@@ -1,3 +1,5 @@
+import asyncio
+import sqlite3
 from contextlib import closing
 from datetime import UTC, datetime, timedelta
 
@@ -5,7 +7,13 @@ import pytest
 from litestar.testing import TestClient
 
 from haven.app import app
-from haven.db import connect
+from haven.db import database_path
+
+
+def connect():
+    connection = sqlite3.connect(database_path())
+    connection.row_factory = sqlite3.Row
+    return connection
 
 
 @pytest.fixture
@@ -75,7 +83,7 @@ def test_operator_is_created_only_from_local_command(client, monkeypatch):
 
     monkeypatch.setattr("builtins.input", lambda _: "operator@example.com")
     monkeypatch.setattr(create_operator, "getpass", lambda _: "operator-password")
-    create_operator.main()
+    asyncio.run(create_operator.main())
     response = login(client, email="operator@example.com", password="operator-password")
     assert response.status_code == 200
     assert response.json()["user"]["role"] == "operator"

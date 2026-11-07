@@ -12,7 +12,7 @@ prod:
 
 # Create missing database tables from the initial schema.
 schema:
-    uv run --locked python -c 'from haven.db import initialize_database; initialize_database()'
+    uv run --locked python -c 'import asyncio; from haven.db import initialize_database; asyncio.run(initialize_database())'
 
 # Run the test suite.
 test:
