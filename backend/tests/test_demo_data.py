@@ -24,3 +24,15 @@ def test_demo_accounts_can_sign_in_and_reseeding_preserves_them(tmp_path, monkey
             response = client.post("/api/auth/login", json={"email": email, "password": created[email]})
             assert response.status_code == 200
             assert response.json()["user"]["role"] == role
+
+
+def test_demo_hubs_seed_idempotently_near_center(tmp_path, monkeypatch):
+    from haven.demo_data import DEMO_CENTER, DEMO_HUBS, seed_hubs
+
+    monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "hubs.sqlite3"))
+    assert asyncio.run(seed_hubs()) == len(DEMO_HUBS)
+    assert asyncio.run(seed_hubs()) == 0
+    with TestClient(app=app) as client:
+        nearby = client.get("/api/hubs/nearby", params={"lat": DEMO_CENTER[0], "lng": DEMO_CENTER[1]}).json()
+        assert len(nearby) == len(DEMO_HUBS)
+        assert len(client.get("/api/hubs", params={"min_capacity": 90}).json()) == 3
