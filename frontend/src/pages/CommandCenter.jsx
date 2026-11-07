@@ -38,7 +38,7 @@ export default function CommandCenter() {
       <section className="kpis" aria-label="Key figures">
         <Kpi label="People sheltered" value={(total - free).toLocaleString()} sub={`${sheltersActive.length} active sites`} to="/map" />
         <Kpi label="Spaces free" value={free.toLocaleString()} sub={total ? `${Math.round(((total - free) / total) * 100)}% occupied` : '—'} meter={total ? (total - free) / total : 0} to="/map" />
-        <Kpi label="Open help requests" value={help} tone={help ? 'alert' : ''} sub={`${d.reports.length} reports total`} to="/map?tab=reports" />
+        <Kpi label="Open help requests" value={help} tone={help ? 'alert' : ''} sub={`${d.reports.length} reports total`} to="/comms/reports" />
         <Kpi label="Open needs" value={openNeeds.length} tone={openNeeds.some((n) => n.priority === 'critical') ? 'alert' : ''}
           sub={`${openNeeds.filter((n) => n.priority === 'critical').length} critical`} to="/logistics/needs" />
         <Kpi label="Shipments in transit" value={inTransit.length} tone={late ? 'warn' : ''} sub={late ? `${late} running late` : 'all on time'} to="/logistics/dispatch" />

@@ -9,6 +9,7 @@ import Families from './pages/Families.jsx'
 import FamilyDetail from './pages/FamilyDetail.jsx'
 import MapPage from './pages/MapPage.jsx'
 import Broadcasts from './pages/Broadcasts.jsx'
+import FamilyReports from './pages/FamilyReports.jsx'
 import Needs from './pages/Needs.jsx'
 import Dispatch from './pages/Dispatch.jsx'
 import Inventory from './pages/Inventory.jsx'
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="map" element={<MapPage />} />
           <Route path="comms" element={<Navigate to="/comms/broadcasts" replace />} />
           <Route path="comms/broadcasts" element={<Broadcasts />} />
+          <Route path="comms/reports" element={<FamilyReports />} />
           <Route path="logistics" element={<Navigate to="/logistics/needs" replace />} />
           <Route path="logistics/needs" element={<Needs />} />
           <Route path="logistics/dispatch" element={<Dispatch />} />

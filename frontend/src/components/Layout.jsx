@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Bell, Building2, KeyRound, LayoutDashboard, Map, Megaphone, PackageSearch, RefreshCw, Truck, Users, Warehouse } from 'lucide-react'
+import { Bell, Building2, FileText, KeyRound, LayoutDashboard, Map, Megaphone, PackageSearch, RefreshCw, Truck, Users, Warehouse } from 'lucide-react'
 import { useAuth } from '../auth.jsx'
 import { useData } from '../data.jsx'
 import { DISASTER_TYPES } from '../lib/constants.js'
@@ -19,11 +19,12 @@ export default function Layout() {
     { section: null, items: [
       { to: '/', label: 'Command Center', icon: LayoutDashboard, end: true },
       { to: '/alerts', label: 'Alerts', icon: Bell, badge: d.alerts?.total, tone: 'alert' },
-      { to: '/map', label: 'Operations Map', icon: Map, badge: helpOpen, tone: 'alert' },
+      { to: '/map', label: 'Operations Map', icon: Map },
       { to: '/families', label: 'Families', icon: Users },
     ] },
     { section: 'Communications', items: [
       { to: '/comms/broadcasts', label: 'Broadcasts', icon: Megaphone },
+      { to: '/comms/reports', label: 'Family reports', icon: FileText, badge: helpOpen, tone: 'alert' },
     ] },
     { section: 'Logistics', items: [
       { to: '/logistics/needs', label: 'Needs', icon: PackageSearch, badge: criticalNeeds, tone: 'alert' },
