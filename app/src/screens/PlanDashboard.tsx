@@ -45,7 +45,7 @@ export default function PlanDashboard() {
   const reviewJourney = () => scrollTo('journey');
   const showSticky = !wide && !presenter && !composing && !editing && !updating && rec.status === 'recommended' && !!d?.route;
 
-  const instruction = view.instruction && <OfficialInstructionBand instruction={view.instruction} />;
+  const instruction = view.instruction && <OfficialInstructionBand instruction={view.instruction} now={view.now} />;
   const recommendation = (
     <Recommendation rec={rec} household={view.household} now={view.now} updating={updating} lastChange={view.lastChange}
       onReviewJourney={reviewJourney} onEditNeeds={() => setEditing(true)} onMessage={message} />

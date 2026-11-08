@@ -5,15 +5,19 @@ import { Pressable, Text, View } from 'react-native';
 import type { Step } from '../../demo/checklist';
 import { Icon } from '../common/ui';
 import { Heading, useDash } from './parts';
+import { ProgressRing } from './visuals';
 
 export function NextSteps({ steps, checked, onToggle }: { steps: Step[]; checked: string[]; onToggle: (id: string) => void }) {
   const { c, s } = useDash();
   const done = steps.filter((x) => checked.includes(x.id)).length;
   return (
     <View style={s.section}>
-      <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
-        <Heading>Next steps</Heading>
-        <Text style={s.secondary} aria-live="polite">{done} of {steps.length} done</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <View style={{ gap: 2 }}>
+          <Heading>Get ready</Heading>
+          <Text style={s.secondary} aria-live="polite">{done === steps.length ? 'All done' : `${steps.length - done} to go`}</Text>
+        </View>
+        <ProgressRing done={done} total={steps.length} />
       </View>
       <View style={[s.panel, { gap: 0, paddingVertical: 4 }]} accessibilityRole="list">
         {steps.map((step, i) => {
@@ -28,11 +32,10 @@ export function NextSteps({ steps, checked, onToggle }: { steps: Step[]; checked
                 {on && <Icon name="check" size={16} color={c.onPrimary} />}
               </View>
               <View style={{ flex: 1, gap: 2 }}>
-                <Text style={[s.strong, on && { color: c.muted }]}>
+                <Text style={[s.strong, on && { color: c.muted, textDecorationLine: 'line-through' }]}>
                   <Text style={{ fontVariant: ['tabular-nums'] }}>{i + 1}. </Text>{step.title}
                 </Text>
-                {step.detail && <Text style={s.secondary}>{step.detail}</Text>}
-                {on && <Text style={[s.secondary, { color: c.confirmed }]}>Done</Text>}
+                {step.detail && !on && <Text style={s.secondary}>{step.detail}</Text>}
               </View>
             </Pressable>
           );

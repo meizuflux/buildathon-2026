@@ -22,7 +22,7 @@ export function Updates({ broadcasts, messages, notices, online, tab, onTab, onS
   ];
   return (
     <View style={s.section} nativeID="updates">
-      <Heading>Updates and messages</Heading>
+      <Heading>Updates</Heading>
       <View style={[s.panel, { padding: 0, gap: 0, overflow: 'hidden' }]}>
         <View role="tablist" aria-label="Update type" style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: c.border }}>
           {tabs.map((t) => {
@@ -53,7 +53,6 @@ function Official({ broadcasts }: { broadcasts: Broadcast[] }) {
   if (!broadcasts.length) return <Text style={s.secondary}>No official broadcasts yet.</Text>;
   return (
     <>
-      <Text style={s.secondary}>Broadcasts from emergency management. These are separate from this app’s recommendation.</Text>
       {broadcasts.map((b, i) => (
         <View key={b.id} style={{ gap: 4, paddingTop: i ? 16 : 0, borderTopWidth: i ? 1 : 0, borderTopColor: c.border }}>
           <StatusLabel tone={b.severity === 'critical' ? 'critical' : b.severity === 'attention' ? 'attention' : 'neutral'}
@@ -82,14 +81,12 @@ function Coordinator({ messages, online, onSend, onFocus }: { messages: Message[
   };
   return (
     <>
-      <Text style={s.secondary}>A conversation with the shelter coordination desk. In this demo, coordinator replies are simulated.</Text>
       <View style={{ gap: 12 }} aria-live="polite">
         {messages.map((m) => <Bubble key={m.id} message={m} onRetry={() => onSend(m.body, m.id)} />)}
       </View>
-      {!online && <InlineNotice tone="attention" icon="wifi-off">You are offline. Messages cannot be sent until you reconnect.</InlineNotice>}
+      {!online && <InlineNotice tone="attention" icon="wifi-off">Offline. Messages can’t send until you reconnect.</InlineNotice>}
       <View style={{ gap: 8 }}>
-        <Text nativeID="composer-label" style={s.strong}>Message a coordinator</Text>
-        <TextInput value={draft} onChangeText={setDraft} multiline aria-labelledby="composer-label" accessibilityLabel="Message a coordinator"
+                <TextInput value={draft} onChangeText={setDraft} multiline accessibilityLabel="Message a coordinator"
           placeholder="Ask about access, space, or transport" placeholderTextColor={c.muted}
           onFocus={() => onFocus(true)} onBlur={() => onFocus(false)}
           style={{ minHeight: 88, borderWidth: 1, borderColor: c.fieldBorder, borderRadius: 10, padding: 12, fontFamily: type.family, fontSize: 16, lineHeight: 24, color: c.text, backgroundColor: c.surface, textAlignVertical: 'top' }} />
@@ -125,10 +122,9 @@ function Bubble({ message: m, onRetry }: { message: Message; onRetry: () => void
 
 function Changes({ notices }: { notices: SystemNotice[] }) {
   const { c, s } = useDash();
-  if (!notices.length) return <Text style={s.secondary}>No changes to your recommendation yet. When conditions or your household needs change, we explain what changed here.</Text>;
+  if (!notices.length) return <Text style={s.secondary}>No changes yet.</Text>;
   return (
     <>
-      <Text style={s.secondary}>Notices from this app about changes to your recommendation.</Text>
       {notices.map((n, i) => (
         <View key={n.id} style={{ gap: 4, paddingTop: i ? 16 : 0, borderTopWidth: i ? 1 : 0, borderTopColor: c.border }}>
           <Text style={s.h3}>{n.title}</Text>

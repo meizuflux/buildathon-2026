@@ -3,69 +3,67 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { type } from '../../constants/theme';
-import { householdNeeds, requirementLabel } from '../../demo/recommend';
-import type { Answer, DemoHousehold, Recommendation } from '../../demo/types';
+import type { Answer, DemoHousehold, Recommendation, Requirement } from '../../demo/types';
 import { Icon } from '../common/ui';
-import { Action, Heading, InlineNotice, LinkButton, StatusLabel, useDash } from './parts';
+import { Action, Heading, InlineNotice, LinkButton, useDash } from './parts';
+import { Glyph, type GlyphName } from './visuals';
 
 export function HouseholdFit({ household, rec, onEdit }: { household: DemoHousehold; rec: Recommendation; onEdit: () => void }) {
   const { c, s } = useDash();
   const [details, setDetails] = useState(false);
-  const needs = householdNeeds(household);
   const checks = rec.destination?.checks ?? [];
-  const people = household.adults + household.children;
-  const name = rec.destination?.shelter.name;
+  const status = (r: Requirement) => checks.find((x) => x.requirement === r);
+  const tiles: { key: string; glyph: GlyphName; value: string; label: string; requirement?: Requirement }[] = [
+    { key: 'adults', glyph: 'adult', value: String(household.adults), label: household.adults === 1 ? 'Adult' : 'Adults' },
+    ...(household.children > 0 ? [{ key: 'children', glyph: 'child' as const, value: String(household.children), label: household.children === 1 ? 'Child' : 'Children', requirement: 'children' as const }] : []),
+    ...(household.dogs > 0 ? [{ key: 'dogs', glyph: 'paw' as const, value: String(household.dogs), label: household.dogs === 1 ? 'Dog' : 'Dogs', requirement: 'dogs' as const }] : []),
+    ...(household.wheelchairEntrance !== 'no' ? [{ key: 'wheel', glyph: 'wheelchair' as const, value: household.wheelchairEntrance === 'yes' ? 'Needed' : 'Not sure', label: 'Step-free entry', requirement: 'wheelchairEntrance' as const }] : []),
+    ...(household.poweredEquipment !== 'no' ? [{ key: 'power', glyph: 'power' as const, value: household.poweredEquipment === 'yes' ? 'Needed' : 'Not sure', label: 'Backup power', requirement: 'poweredEquipment' as const }] : []),
+    { key: 'car', glyph: 'car', value: household.vehicle === 'yes' ? 'Yes' : household.vehicle === 'no' ? 'No' : 'Not sure', label: 'Vehicle' },
+  ];
 
   return (
     <View style={s.section}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <Heading>Why it fits your household</Heading>
-        <LinkButton title="Edit household needs" icon="edit-2" onPress={onEdit} />
+        <Heading>Your household</Heading>
+        <LinkButton title="Edit needs" icon="edit-2" onPress={onEdit} />
       </View>
-      <View style={[s.panel, { gap: 0, paddingVertical: 8 }]}>
-        <Row label={`${people} ${people === 1 ? 'person' : 'people'}: ${household.adults} adults, ${household.children} children`}>
-          {rec.destination?.spacesOk ? <StatusLabel tone="confirmed" icon="check-circle">Space reported</StatusLabel>
-            : rec.destination?.spacesOk === false ? <StatusLabel tone="critical" icon="x-circle">Not enough space reported</StatusLabel>
-            : <StatusLabel tone="attention" icon="help-circle">Space not confirmed</StatusLabel>}
-        </Row>
-        {needs.map(({ requirement, need }) => {
-          const check = checks.find((x) => x.requirement === requirement);
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="list">
+        {tiles.map((tile) => {
+          const check = tile.requirement ? status(tile.requirement) : undefined;
+          const tone = !check ? null : check.state === 'confirmed' ? c.confirmed : check.state === 'unknown' ? c.amber : c.red;
+          const word = !check ? null : check.state === 'confirmed' ? 'Confirmed' : check.state === 'unknown' ? 'Unconfirmed' : 'Not available';
           return (
-            <Row key={requirement} label={need === 'possibly' ? `${requirementLabel(requirement)}: not sure` : requirementLabel(requirement)}>
-              {!check ? <StatusLabel tone="neutral" icon="minus">No destination</StatusLabel>
-                : check.state === 'confirmed' ? <StatusLabel tone="confirmed" icon="check-circle">Confirmed{name ? ` at ${name}` : ''}</StatusLabel>
-                : check.state === 'unknown' ? <StatusLabel tone="attention" icon="help-circle">Not confirmed</StatusLabel>
-                : <StatusLabel tone="critical" icon="x-circle">Not available</StatusLabel>}
-            </Row>
+            <View key={tile.key} accessible accessibilityLabel={`${tile.label}: ${tile.value}${check ? `. ${check.label}` : ''}`}
+              style={{ flexGrow: 1, flexBasis: 100, padding: 12, borderRadius: 12, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border, gap: 6 }}>
+              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: c.greenLight, alignItems: 'center', justifyContent: 'center' }}>
+                <Glyph name={tile.glyph} size={22} color={c.green} />
+              </View>
+              <Text style={{ fontFamily: type.semibold, fontSize: 18, lineHeight: 24, color: c.ink }}>{tile.value}</Text>
+              <Text style={[s.secondary, { fontSize: 14, lineHeight: 18 }]}>{tile.label}</Text>
+              {check && tone && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Icon name={check.state === 'confirmed' ? 'check-circle' : check.state === 'unknown' ? 'help-circle' : 'x-circle'} size={14} color={tone} />
+                  <Text style={{ fontFamily: type.medium, fontSize: 13, color: tone }}>{word}</Text>
+                </View>
+              )}
+            </View>
           );
         })}
-        <Row label={household.vehicle === 'yes' ? 'Has a vehicle' : household.transportHelp === 'yes' ? 'Needs transport help' : 'Transport not confirmed'} last>
-          <Text style={s.secondary}>{household.vehicle === 'yes' ? 'Journey times are by car' : 'Ask a coordinator about transport'}</Text>
-        </Row>
       </View>
       <Pressable accessibilityRole="button" aria-expanded={details} onPress={() => setDetails(!details)}
         style={({ pressed }) => [s.link, pressed && { opacity: 0.7 }]}>
         <Icon name={details ? 'eye-off' : 'eye'} size={17} color={c.green} />
-        <Text style={[s.linkText, { color: c.green }]}>{details ? 'Hide household details' : 'Show household details'}</Text>
+        <Text style={[s.linkText, { color: c.green }]}>{details ? 'Hide details' : 'Show details'}</Text>
       </Pressable>
       {details && (
         <View style={{ gap: 4, paddingLeft: 4 }}>
           <Text style={s.secondary}>Children’s ages: {household.childAges.join(' and ') || 'not given'}</Text>
           {household.dogs > 0 && <Text style={s.secondary}>Pet: {household.petNote || `${household.dogs} dog`}</Text>}
-          <Text style={s.secondary}>Starting area: {household.location.label}</Text>
-          <Text style={s.secondary}>Details are stored on this device for the demo only.</Text>
+          <Text style={s.secondary}>Area: {household.location.label}</Text>
+          <Text style={s.secondary}>Stored on this device only.</Text>
         </View>
       )}
-    </View>
-  );
-}
-
-function Row({ label, children, last }: { label: string; children: React.ReactNode; last?: boolean }) {
-  const { c, s } = useDash();
-  return (
-    <View style={{ paddingVertical: 12, gap: 4, borderBottomWidth: last ? 0 : 1, borderBottomColor: c.border }}>
-      <Text style={s.strong}>{label}</Text>
-      {children}
     </View>
   );
 }
@@ -148,9 +146,9 @@ export function EditNeedsSheet({ visible, household, online, onSave, onClose }: 
             </Pressable>
           </View>
           <ScrollView contentContainerStyle={{ padding: 20, gap: 20 }}>
-            <Text style={s.secondary}>We use these answers to check which shelters can meet your household’s needs. Choose “Not sure” if you don’t know. We will show what that leaves unresolved.</Text>
-            <Choice label="Does anyone need a wheelchair-accessible entrance?" hint="Step-free entrance and route inside." value={draft.wheelchairEntrance} onChange={(v) => set('wheelchairEntrance', v)} />
-            <Choice label="Does anyone rely on powered essential equipment?" hint="For example, equipment that needs mains or backup power." value={draft.poweredEquipment} onChange={(v) => set('poweredEquipment', v)} />
+            <Text style={s.secondary}>Not sure? That’s fine. We’ll show what’s still unknown.</Text>
+            <Choice label="Does anyone need a wheelchair-accessible entrance?" value={draft.wheelchairEntrance} onChange={(v) => set('wheelchairEntrance', v)} />
+            <Choice label="Does anyone rely on powered essential equipment?" value={draft.poweredEquipment} onChange={(v) => set('poweredEquipment', v)} />
             <View style={{ gap: 12 }}>
               <Count label="Adults" value={draft.adults} min={1} onChange={(n) => set('adults', n)} />
               <Count label="Children" value={draft.children} onChange={(n) => setDraft((d) => ({ ...d, children: n, childAges: d.childAges.slice(0, n) }))} />

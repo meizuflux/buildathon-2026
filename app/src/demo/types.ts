@@ -74,6 +74,8 @@ export interface OfficialInstruction {
   details: string;
   authority: string;
   issuedAt: number;
+  /** Simulation minute residents are told to leave by, when the instruction sets one. */
+  leaveBy?: number;
 }
 
 export interface Broadcast {

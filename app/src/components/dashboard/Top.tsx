@@ -6,6 +6,7 @@ import { clock } from '../../demo/time';
 import type { OfficialInstruction } from '../../demo/types';
 import { Icon } from '../common/ui';
 import { Mono, useDash } from './parts';
+import { Countdown } from './visuals';
 
 export function Header({ household, online, now, onHousehold, onPresenter, presenterOpen }: {
   household: string; online: boolean; now: number; onHousehold: () => void; onPresenter: () => void; presenterOpen: boolean;
@@ -74,26 +75,32 @@ export function ConnectionBanner({ online, savedAt, stale, staleSince }: { onlin
 }
 
 /** Official instruction: issued by an authority, shown above and apart from the app's recommendation. */
-export function OfficialInstructionBand({ instruction }: { instruction: OfficialInstruction }) {
+export function OfficialInstructionBand({ instruction, now }: { instruction: OfficialInstruction; now: number }) {
   const { c, s } = useDash();
   const [open, setOpen] = useState(false);
   const critical = instruction.level === 'mandatory';
   const tone = critical ? c.red : c.amber;
   return (
-    <View accessibilityRole="summary" style={{ borderRadius: 12, borderWidth: 1, borderColor: tone, backgroundColor: critical ? c.redLight : c.amberLight, padding: 16, gap: 8 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Icon name="alert-octagon" size={18} color={tone} />
-        <Text style={{ fontFamily: type.semibold, fontSize: 14, color: tone }}>Official instruction · {critical ? 'Mandatory' : 'Advisory'}</Text>
+    <View accessibilityRole="summary" style={{ borderRadius: 14, borderWidth: 1, borderColor: tone, backgroundColor: critical ? c.redLight : c.amberLight, padding: 16, gap: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: tone, alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="alert-octagon" size={20} color={c.onPrimary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: type.semibold, fontSize: 13, color: tone, letterSpacing: 0.3 }}>OFFICIAL INSTRUCTION · {critical ? 'MANDATORY' : 'ADVISORY'}</Text>
+          <Text style={{ fontFamily: type.semibold, fontSize: 19, lineHeight: 26, color: c.ink }}>{instruction.headline}</Text>
+        </View>
       </View>
-      <Text style={{ fontFamily: type.semibold, fontSize: 19, lineHeight: 27, color: c.ink }}>{instruction.headline}</Text>
-      <Text style={s.secondary}>Issued by {instruction.authority}</Text>
-      <Mono>Issued {clock(instruction.issuedAt)} · Ref {instruction.id}</Mono>
+      {instruction.leaveBy !== undefined && <Countdown now={now} from={instruction.issuedAt} until={instruction.leaveBy} color={tone} />}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
+        <Mono>{instruction.authority} · {clock(instruction.issuedAt)}</Mono>
+        <Pressable accessibilityRole="button" aria-expanded={open} onPress={() => setOpen(!open)}
+          style={({ pressed }) => [{ minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 4 }, pressed && { opacity: 0.7 }]}>
+          <Text style={{ fontFamily: type.medium, fontSize: 15, color: c.ink, textDecorationLine: 'underline' }}>{open ? 'Hide details' : 'Details'}</Text>
+          <Icon name={open ? 'chevron-up' : 'chevron-down'} size={16} color={c.ink} />
+        </Pressable>
+      </View>
       {open && <Text style={s.instruction}>{instruction.details}</Text>}
-      <Pressable accessibilityRole="button" aria-expanded={open} onPress={() => setOpen(!open)}
-        style={({ pressed }) => [{ minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' }, pressed && { opacity: 0.7 }]}>
-        <Text style={{ fontFamily: type.medium, fontSize: 15, color: c.ink, textDecorationLine: 'underline' }}>{open ? 'Hide details' : 'Read full instruction'}</Text>
-        <Icon name={open ? 'chevron-up' : 'chevron-down'} size={16} color={c.ink} />
-      </Pressable>
     </View>
   );
 }

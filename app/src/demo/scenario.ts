@@ -115,12 +115,13 @@ export const closureScript: Omit<Closure, 'at'>[] = [
 export const instruction: OfficialInstruction = {
   id: 'OI-B-1315',
   level: 'mandatory',
-  headline: 'Mandatory evacuation for Zone B. Leave by 18:00.',
+  headline: 'Evacuate Zone B',
   details:
     'Residents of Zone B, including Seminole Heights, should leave by 18:00 today. Take essential items, ' +
     'medication, and pets. Follow posted detours.',
   authority: AUTHORITY,
   issuedAt: 13 * 60 + 15,
+  leaveBy: 18 * 60,
 };
 
 export const initialBroadcasts: Broadcast[] = [
@@ -158,7 +159,7 @@ export const initialMessages: Message[] = [
     from: 'coordinator',
     author: 'Jordan Lee',
     role: 'Shelter coordination desk',
-    body: 'Hello. Reply here if anything about your household changes, or if you have trouble reaching your destination.',
+    body: 'Hi! Message me here if your needs change or you have trouble getting there.',
     at: 13 * 60 + 22,
     simulated: true,
   },
