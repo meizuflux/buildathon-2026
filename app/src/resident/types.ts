@@ -103,9 +103,6 @@ export interface Recommendation {
   alternatives: { assessment: ShelterAssessment; whyNot: string }[];
   /** Household-side unknowns that affect the choice. */
   householdUnknowns: string[];
-  /** The household already left; their destination was kept even if the plan changed. */
-  keptBecauseTravelling: boolean;
-  advisory: string | null;
   /** The coordinators' plan counted space for this household. Still not a confirmed placement. */
   reserved: boolean;
 }

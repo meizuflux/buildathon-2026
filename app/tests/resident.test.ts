@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  broadcastsFromUpdates, familyPatch, householdFromFamily, instructionFromUpdates, keepDestination, recommendationFromPlan, shelterFromApi,
+  broadcastsFromUpdates, familyPatch, householdFromFamily, instructionFromUpdates, recommendationFromPlan, shelterFromApi,
   type ApiFamily, type ApiPlan, type ApiShelter,
 } from '../src/resident/api';
-import { preparationSteps } from '../src/resident/checklist';
+import { checklistAfterSync, preparationSteps } from '../src/resident/checklist';
 import { describeChange } from '../src/resident/rules';
 import { clock, localMinute } from '../src/resident/time';
 
@@ -71,15 +71,6 @@ test('a needs-mismatch alert makes the plan unverified, and no_match means none'
   assert.equal(none.reserved, false);
 });
 
-test('after "We\'ve left", a changed plan keeps the destination and explains', () => {
-  const list = [shelter('A', true, true), shelter('D', true, true)].map(shelterFromApi);
-  const kept = keepDestination(recommendationFromPlan(plan('D'), h(), list), h(), list, 'A');
-  assert.equal(kept.destination?.shelter.id, 'A');
-  assert.equal(kept.keptBecauseTravelling, true);
-  assert.equal(kept.reserved, false);
-  assert.match(kept.advisory ?? '', /has not been changed/);
-});
-
 test('describeChange explains a new destination and new unknowns', () => {
   const list = [shelter('A', true, true), shelter('D', true, true)].map(shelterFromApi);
   const before = recommendationFromPlan(plan('A'), h(), list);
@@ -113,4 +104,26 @@ test('checklist follows the household profile and gives no medical treatment adv
 test('local times format as HH:MM in the device time zone', () => {
   const d = new Date(2026, 10, 8, 9, 5);
   assert.equal(clock(localMinute(d)), '09:05');
+});
+
+const active = { phase: 'active' as const, started_at: '2026-11-08T10:00:00Z' };
+const peace = { phase: 'peace' as const, started_at: null };
+
+test('returning to peace clears every completed item, including saved items from a prior app session', () => {
+  const checked = preparationSteps(h()).map((step) => step.id);
+  const saved = JSON.parse(JSON.stringify({ checked, hurricane: active }));
+  assert.deepEqual(checklistAfterSync(saved.checked, saved.hurricane, peace), []);
+  assert.deepEqual(checklistAfterSync(checked, undefined, peace), []);
+});
+
+test('routine polling and reopening in the same phase preserve new checklist progress', () => {
+  const checked = ['medication', 'documents'];
+  assert.deepEqual(checklistAfterSync(checked, active, active), checked);
+  assert.deepEqual(checklistAfterSync(checked, peace, peace), checked);
+  assert.deepEqual(checklistAfterSync(checked, peace, active), checked);
+  assert.deepEqual(checklistAfterSync(checked, undefined, active), checked);
+});
+
+test('a reset and new hurricane while the app was closed clears the old checklist', () => {
+  assert.deepEqual(checklistAfterSync(['medication'], active, { ...active, started_at: '2026-11-09T10:00:00Z' }), []);
 });

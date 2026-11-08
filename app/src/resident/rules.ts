@@ -115,6 +115,5 @@ export function describeChange(before: Recommendation | null, after: Recommendat
     if (after.status === 'recommended' && before.status !== 'recommended') lines.push('A destination that meets your listed requirements is available.');
   }
   for (const u of after.householdUnknowns.filter((x) => !before.householdUnknowns.includes(x))) lines.push(`Not yet known: ${u.toLowerCase()}.`);
-  if (after.advisory && after.advisory !== before.advisory) lines.push(after.advisory);
   return lines;
 }

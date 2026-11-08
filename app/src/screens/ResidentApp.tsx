@@ -1,7 +1,7 @@
 // The resident app shell: a top bar, one pane per tab, and a bottom tab bar. On the web it is a
 // phone-width column; on a device it fills the screen.
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SetupSheet } from '../components/resident/Household';
 import { Icon, type IconName } from '../components/resident/Icon';
@@ -24,16 +24,6 @@ const TABS: { id: Tab; label: string; icon: IconName }[] = [
   { id: 'messages', label: 'Messages', icon: 'message-circle' },
   { id: 'household', label: 'Household', icon: 'users' },
 ];
-
-function scrollTo(id: string) {
-  if (Platform.OS !== 'web' || typeof document === 'undefined') return;
-  const el = document.getElementById(id);
-  if (!el) return;
-  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-  const heading = el.querySelector<HTMLElement>('[role="heading"]');
-  if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
-}
 
 /** Phone-width column on the web; full screen on a device. */
 function Frame({ children }: { children: React.ReactNode }) {
@@ -82,8 +72,7 @@ function Main() {
   const panes: Record<Tab, React.ReactNode> = {
     plan: (
       <PlanPane rec={rec} household={view.household} now={view.now} updating={updating} lastChange={view.lastChange}
-        instruction={view.instruction} travelling={!!state.travellingTo} online={state.online}
-        onReviewJourney={() => scrollTo('journey')} onEditNeeds={editNeeds} onMessage={() => setTab('messages')} onLeft={ready.startJourney} />
+        instruction={view.instruction} onEditNeeds={editNeeds} onMessage={() => setTab('messages')} />
     ),
     prepare: <PreparePane steps={steps} checked={state.checked} onToggle={ready.toggleStep} />,
     updates: <UpdatesPane broadcasts={view.broadcasts} notices={state.notices} />,

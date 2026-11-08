@@ -13,9 +13,9 @@ import { NEED_VISUAL, NeedBadge, ShelterArt, Stat } from './visuals';
 
 export const km = (h: Household, a: ShelterAssessment) => `${distanceKm(h.location, a.shelter).toFixed(1)} km`;
 
-export function Recommendation({ rec, household, now, updating, lastChange, onReviewJourney, onEditNeeds, onMessage }: {
+export function Recommendation({ rec, household, now, updating, lastChange, onEditNeeds, onMessage }: {
   rec: Rec; household: Household; now: number; updating: boolean; lastChange: string[];
-  onReviewJourney: () => void; onEditNeeds: () => void; onMessage: () => void;
+  onEditNeeds: () => void; onMessage: () => void;
 }) {
   const { c, s } = useDash();
 
@@ -38,8 +38,7 @@ export function Recommendation({ rec, household, now, updating, lastChange, onRe
     </InlineNotice>
   );
 
-  // After the household has left, keep showing their destination (with any advisory) instead of switching views.
-  if (!rec.destination || (rec.status !== 'recommended' && !rec.keptBecauseTravelling)) {
+  if (!rec.destination || rec.status !== 'recommended') {
     return <View style={{ gap: 16 }}>{changed}<NoVerifiedDestination rec={rec} household={household} onMessage={onMessage} onEditNeeds={onEditNeeds} /></View>;
   }
 
@@ -48,13 +47,12 @@ export function Recommendation({ rec, household, now, updating, lastChange, onRe
   return (
     <View style={{ gap: 16 }} accessibilityLiveRegion="polite" aria-live="polite">
       {changed}
-      {rec.advisory && <InlineNotice tone="critical" icon="alert-triangle" title="Changed after you left">{rec.advisory}</InlineNotice>}
       <View style={[s.panel, { padding: 0, gap: 0, overflow: 'hidden' }]}>
         <View style={{ backgroundColor: c.greenLight, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 16, gap: 8 }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center', backgroundColor: c.surface, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
-              <Icon name={rec.keptBecauseTravelling ? 'navigation' : 'compass'} size={14} color={c.green} />
-              <Text style={{ fontFamily: type.semibold, fontSize: 13, color: c.green }}>{rec.keptBecauseTravelling ? 'On your way' : 'Recommended for you'}</Text>
+              <Icon name="compass" size={14} color={c.green} />
+              <Text style={{ fontFamily: type.semibold, fontSize: 13, color: c.green }}>Recommended for you</Text>
             </View>
             <ShelterArt width={92} />
           </View>
@@ -70,9 +68,7 @@ export function Recommendation({ rec, household, now, updating, lastChange, onRe
           </View>
 
           <View style={{ gap: 12 }}>
-            <Text style={s.secondary}>{rec.status === 'recommended'
-              ? 'Recommended because it meets your household’s listed requirements.'
-              : 'Chosen before you left. It no longer meets every requirement.'}</Text>
+            <Text style={s.secondary}>Recommended because it meets your household’s listed requirements.</Text>
             {d.checks.length > 0 && (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="list">
                 {d.checks.map((x) => <NeedBadge key={x.requirement} glyph={NEED_VISUAL[x.requirement].glyph} label={NEED_VISUAL[x.requirement].short} state={x.state} detail={x.label} />)}
@@ -89,7 +85,6 @@ export function Recommendation({ rec, household, now, updating, lastChange, onRe
             </InlineNotice>
           )}
 
-          <Action title="Review journey" icon="map" onPress={onReviewJourney} />
         </View>
       </View>
     </View>

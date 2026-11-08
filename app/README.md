@@ -22,7 +22,7 @@ Sign in with a family account, or choose **Create an account**. An account witho
 Five tabs:
 
 - **Plan:** the latest official instruction, the recommended shelter, the household's needs matched against it, availability, a map and straight-line distance, and the other shelters with why they weren't chosen.
-- **Prepare:** a checklist based on the household. Ticks are kept on the device.
+- **Prepare:** a checklist based on the household. Ticks are kept on the device and cleared when the hurricane returns to peace.
 - **Updates:** official broadcasts, and notices when the plan changes.
 - **Messages:** messages to the coordination desk.
 - **Household:** members and needs, editable in place, plus sign-out.
@@ -35,6 +35,7 @@ Five tabs:
 | Household | `GET`, `POST`, `PATCH` `/api/families` |
 | Recommendation | `GET /api/families/{id}/plan`. After an edit, `POST /api/families/{id}/plan/generate`. |
 | Shelters | `GET /api/shelters?disaster_id=…` |
+| Hurricane phase | `GET /api/disasters/{id}/hurricane` |
 | Official updates | `GET /api/disasters/{id}/updates` |
 | Messages | `POST /api/families/{id}/reports` (`need_help`, idempotent `client_request_id`) |
 
@@ -48,7 +49,6 @@ The backend's allocation plan picks the shelter. The app's rules in `src/residen
 
 - **No confirmed placement:** "Recommended", "availability reported" and "space counted in the coordinators' plan" are shown separately.
 - **No delivery claims:** messages are only "Sent" or "Not sent", never delivered or read.
-- **After "We've left":** the destination is never swapped automatically.
 
 ### Limits of the current backend
 

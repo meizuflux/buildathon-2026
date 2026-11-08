@@ -1,5 +1,5 @@
 // Loads the signed-in household's plan from the Haven backend and keeps it fresh. The backend's
-// allocation plan decides the destination. Checklist ticks, "We've left", and the local copy of sent
+// allocation plan decides the destination. Checklist ticks and the local copy of sent
 // messages are stored on this device.
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { z } from 'zod';
@@ -9,10 +9,10 @@ import { ApiError } from '../services/api/http';
 import { cache } from '../storage/cache';
 import {
   broadcastsFromUpdates, disasterSchema, familyPatch, familySchema, householdFromFamily, instructionFromUpdates,
-  keepDestination, planSchema, recommendationFromPlan, shelterFromApi, shelterSchema, updateSchema,
-  type ApiDisaster, type ApiFamily, type ApiPlan, type ApiShelter, type ApiUpdate,
+  hurricaneSchema, planSchema, recommendationFromPlan, shelterFromApi, shelterSchema, updateSchema,
+  type ApiDisaster, type ApiFamily, type ApiHurricane, type ApiPlan, type ApiShelter, type ApiUpdate,
 } from './api';
-import { preparationSteps, type Step } from './checklist';
+import { checklistAfterSync, preparationSteps, type Step } from './checklist';
 import { describeChange } from './rules';
 import { localMinute } from './time';
 import type { Broadcast, Household, Message, OfficialInstruction, Recommendation, Shelter, SystemNotice } from './types';
@@ -36,7 +36,6 @@ export interface ResidentState extends View {
   messages: Message[];
   notices: SystemNotice[];
   checked: string[];
-  travellingTo: string | null;
   online: boolean;
   saved: View | null;
 }
@@ -51,7 +50,6 @@ interface Ready {
   disasterName: string;
   lastSync: number | null;
   toggleStep: (id: string) => void;
-  startJourney: () => void;
   sendMessage: (body: string, retryId?: string) => void;
   /** Resolves once the backend has saved the household and regenerated the plan; rejects otherwise. */
   saveHousehold: (h: Household) => Promise<void>;
@@ -61,8 +59,8 @@ interface Setup { phase: 'setup'; createHousehold: (h: Household) => Promise<voi
 interface Pending { phase: 'loading' | 'error'; error: string | null; retry: () => void; signOut: () => void }
 export type ResidentContext = Ready | Setup | Pending;
 
-interface Data { family: ApiFamily; disaster: ApiDisaster; shelters: ApiShelter[]; plan: ApiPlan; updates: ApiUpdate[] }
-interface Local { checked: string[]; travellingTo: string | null; messages: Message[] }
+interface Data { family: ApiFamily; disaster: ApiDisaster; hurricane: ApiHurricane; shelters: ApiShelter[]; plan: ApiPlan; updates: ApiUpdate[] }
+interface Local { checked: string[]; hurricane?: ApiHurricane; messages: Message[] }
 
 const Context = createContext<ResidentContext | null>(null);
 
@@ -73,15 +71,16 @@ async function fetchAll(): Promise<Data | null> {
   const me = await http('/api/me', meSchema);
   if (!me.family_id) return null;
   const family = await http('/api/families/' + enc(me.family_id), familySchema);
-  const [disasters, shelters, plan, updates] = await Promise.all([
+  const [disasters, shelters, plan, updates, hurricane] = await Promise.all([
     listDisasters(),
     listShelters(family.disaster_id),
     http('/api/families/' + enc(family.id) + '/plan', planSchema),
     http('/api/disasters/' + enc(family.disaster_id) + '/updates', z.object({ updates: z.array(updateSchema) })).then((r) => r.updates),
+    http('/api/disasters/' + enc(family.disaster_id) + '/hurricane', hurricaneSchema),
   ]);
   const disaster = disasters.find((d) => d.id === family.disaster_id)
     ?? { id: family.disaster_id, type: 'Disaster', name: 'Active emergency', status: 'active', affected_area: 'your area', updated_at: family.updated_at };
-  return { family, disaster, shelters, plan, updates };
+  return { family, disaster, hurricane, shelters, plan, updates };
 }
 
 function snapshot(s: ResidentState): View {
@@ -92,7 +91,7 @@ function snapshot(s: ResidentState): View {
 function build(data: Data, local: Local, prev: ResidentState | null, title: string): ResidentState {
   const household = householdFromFamily(data.family, `Home in ${data.disaster.affected_area}`);
   const shelters = data.shelters.map(shelterFromApi);
-  const recommendation = keepDestination(recommendationFromPlan(data.plan, household, shelters), household, shelters, local.travellingTo);
+  const recommendation = recommendationFromPlan(data.plan, household, shelters);
   const lines = prev ? describeChange(prev.recommendation, recommendation) : [];
   const now = localMinute(Date.now());
   const notices: SystemNotice[] = lines.length ? [{ id: `NT-${Date.now()}`, at: now, title, lines }, ...(prev?.notices ?? [])] : prev?.notices ?? [];
@@ -100,7 +99,7 @@ function build(data: Data, local: Local, prev: ResidentState | null, title: stri
     now, household, shelters, recommendation,
     instruction: instructionFromUpdates(data.updates), broadcasts: broadcastsFromUpdates(data.updates),
     lastChange: lines.length ? lines : prev?.lastChange ?? [],
-    messages: local.messages, notices, checked: local.checked, travellingTo: local.travellingTo,
+    messages: local.messages, notices, checked: local.checked,
     online: true, saved: null,
   };
 }
@@ -115,9 +114,7 @@ export function ResidentProvider({ children }: { children: React.ReactNode }) {
   const [updating, setUpdating] = useState(false);
   const [lastSync, setLastSync] = useState<number | null>(null);
   const data = useRef<Data | null>(null);
-  const local = useRef<Local>({ checked: [], travellingTo: null, messages: [] });
-  const latest = useRef<ResidentState | null>(null);
-  latest.current = state;
+  const local = useRef<Local>({ checked: [], messages: [] });
   const signOut = useCallback(() => { void auth.signOut(); }, [auth]);
 
   const localKey = (familyId: string) => `resident:${familyId}`;
@@ -133,12 +130,18 @@ export function ResidentProvider({ children }: { children: React.ReactNode }) {
         const saved = await cache.get<Local>(localKey(next.family.id)).catch(() => null);
         local.current = {
           checked: saved?.checked ?? [],
-          travellingTo: saved?.travellingTo ?? null,
+          hurricane: saved?.hurricane,
           // A send interrupted by a reload is shown as failed so it can be retried.
           messages: (saved?.messages ?? []).map((m) => (m.state === 'sending' ? { ...m, state: 'failed' } : m)),
         };
       }
+      local.current = {
+        ...local.current,
+        checked: checklistAfterSync(local.current.checked, local.current.hurricane, next.hurricane),
+        hurricane: next.hurricane,
+      };
       data.current = next;
+      persist();
       setState((prev) => build(next, local.current, prev, title));
       setError(null);
       setLastSync(Date.now());
@@ -150,7 +153,7 @@ export function ResidentProvider({ children }: { children: React.ReactNode }) {
       setState((prev) => (prev ? { ...prev, online: false, saved: prev.saved ?? snapshot(prev) } : prev));
       setPhase((p) => (p === 'loading' ? 'error' : p));
     }
-  }, [signOut]);
+  }, [signOut, persist]);
 
   useEffect(() => {
     void sync();
@@ -163,12 +166,6 @@ export function ResidentProvider({ children }: { children: React.ReactNode }) {
     local.current = { ...local.current, checked: c.includes(id) ? c.filter((x) => x !== id) : [...c, id] };
     persist();
     setState((prev) => (prev ? { ...prev, checked: local.current.checked } : prev));
-  }, [persist]);
-
-  const startJourney = useCallback(() => {
-    local.current = { ...local.current, travellingTo: latest.current?.recommendation.destination?.shelter.id ?? null };
-    persist();
-    if (data.current) setState((prev) => build(data.current!, local.current, prev, 'You marked that you have left'));
   }, [persist]);
 
   const saveHousehold = useCallback(async (household: Household) => {
@@ -226,11 +223,11 @@ export function ResidentProvider({ children }: { children: React.ReactNode }) {
       const view = !state.online && state.saved ? state.saved : snapshot(state);
       return {
         phase, state, view, steps: preparationSteps(state.household), updating, disasterName: data.current?.disaster.name ?? '', lastSync,
-        toggleStep, startJourney, sendMessage, saveHousehold, signOut,
+        toggleStep, sendMessage, saveHousehold, signOut,
       };
     }
     return { phase: phase === 'error' ? 'error' : 'loading', error, retry, signOut };
-  }, [phase, state, updating, lastSync, error, createHousehold, toggleStep, startJourney, sendMessage, saveHousehold, retry, signOut]);
+  }, [phase, state, updating, lastSync, error, createHousehold, toggleStep, sendMessage, saveHousehold, retry, signOut]);
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
