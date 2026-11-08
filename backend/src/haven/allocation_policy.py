@@ -64,7 +64,7 @@ PRIORITY_PROFILES = {
         "moves",
     ),
 }
-DEFAULT_PRIORITY_PROFILE = "balanced"
+DEFAULT_PRIORITY_PROFILE = "headroom"
 
 
 @dataclass
@@ -213,31 +213,30 @@ def allocate_disaster(
     def score(selection: list[int]) -> tuple[int, ...]:
         loads = loads_for(selection)
         physical = [max(0, loads[j] - totals[j]) for j in range(len(destinations))]
-        values = (
-            sum(physical),
-            sum(max(0, loads[j] - budgets[j]) for j in range(len(destinations))),
-            max(
+        by_name = {
+            "physical_overflow": sum(physical),
+            "budget_overflow": sum(max(0, loads[j] - budgets[j]) for j in range(len(destinations))),
+            "peak_overflow": max(
                 (1000 * physical[j] + max(1, totals[j]) - 1) // max(1, totals[j])
                 for j in range(len(destinations))
             ),
-            sum(supplies[i][j] for i, j in enumerate(selection)),
-            sum(
+            "no_car_distance": sum(
                 trips[i][j]
                 for i, j in enumerate(selection)
                 if not ordered[i]["resources"].get("has_car")
             ),
-            sum(trips[i][j] for i, j in enumerate(selection)),
-            sum(moves[i][j] for i, j in enumerate(selection)),
-        )
-        by_name = dict(zip(PRIORITY_PROFILES["needs_first"], values, strict=True))
-        by_name["utilization"] = sum(
-            max(0, 20 * loads[j] - step * effective_capacity[j])
-            for j in range(len(destinations))
-            for step in range(1, 20)
-        )
-        by_name["headroom"] = sum(
-            max(0, 20 * loads[j] - 17 * effective_capacity[j]) for j in range(len(destinations))
-        )
+            "distance": sum(trips[i][j] for i, j in enumerate(selection)),
+            "supplies": sum(supplies[i][j] for i, j in enumerate(selection)),
+            "moves": sum(moves[i][j] for i, j in enumerate(selection)),
+            "utilization": sum(
+                max(0, 20 * loads[j] - step * effective_capacity[j])
+                for j in range(len(destinations))
+                for step in range(1, 20)
+            ),
+            "headroom": sum(
+                max(0, 20 * loads[j] - 19 * effective_capacity[j]) for j in range(len(destinations))
+            ),
+        }
         return tuple(by_name[name] for name in objective_names)
 
     # Always have a complete, needs-respecting placement before calling CP-SAT.
@@ -266,8 +265,8 @@ def allocate_disaster(
                     - max(0, 20 * loads[j] - step * effective_capacity[j])
                     for step in range(1, 20)
                 ),
-                "headroom": max(0, 20 * projected - 17 * effective_capacity[j])
-                - max(0, 20 * loads[j] - 17 * effective_capacity[j]),
+                "headroom": max(0, 20 * projected - 19 * effective_capacity[j])
+                - max(0, 20 * loads[j] - 19 * effective_capacity[j]),
                 "supplies": supplies[i][j],
                 "no_car_distance": trips[i][j] if not ordered[i]["resources"].get("has_car") else 0,
                 "distance": trips[i][j],
@@ -330,7 +329,7 @@ def allocate_disaster(
         model.add(peak_overflow * max(1, totals[j]) >= physical * 1000)
         if "headroom" in objective_names:
             excess = model.new_int_var(0, total_people * 20, f"headroom_{j}")
-            model.add(excess >= 20 * load - 17 * effective_capacity[j])
+            model.add(excess >= 20 * load - 19 * effective_capacity[j])
             headroom.append(excess)
         if band_optimum:
             model.add(20 * load >= band * effective_capacity[j])
@@ -356,22 +355,21 @@ def allocate_disaster(
             ]
         )
 
-    baseline_objectives = [
-        cp_model.LinearExpr.sum(physical_overflow),
-        cp_model.LinearExpr.sum(budget_overflow),
-        peak_overflow,
-        assignment_cost(supplies),
-        assignment_cost(trips, without_car=True),
-        assignment_cost(trips),
-        assignment_cost(moves),
-    ]
-    objective_map = dict(zip(PRIORITY_PROFILES["needs_first"], baseline_objectives, strict=True))
-    objective_map["utilization"] = (
-        cp_model.LinearExpr.constant(global_utilization_bound)
-        if band_optimum
-        else cp_model.LinearExpr.sum(utilization)
-    )
-    objective_map["headroom"] = cp_model.LinearExpr.sum(headroom)
+    objective_map = {
+        "physical_overflow": cp_model.LinearExpr.sum(physical_overflow),
+        "budget_overflow": cp_model.LinearExpr.sum(budget_overflow),
+        "peak_overflow": peak_overflow,
+        "no_car_distance": assignment_cost(trips, without_car=True),
+        "distance": assignment_cost(trips),
+        "supplies": assignment_cost(supplies),
+        "moves": assignment_cost(moves),
+        "headroom": cp_model.LinearExpr.sum(headroom),
+        "utilization": (
+            cp_model.LinearExpr.constant(global_utilization_bound)
+            if band_optimum
+            else cp_model.LinearExpr.sum(utilization)
+        ),
+    }
     lower_bounds = {
         "physical_overflow": max(0, total_people - sum(totals)),
         "budget_overflow": max(0, total_people - sum(budgets)),
@@ -380,7 +378,7 @@ def allocate_disaster(
         )
         // sum(max(1, total) for total in totals),
         "utilization": global_utilization_bound,
-        "headroom": max(0, 20 * total_people - 17 * sum(effective_capacity)),
+        "headroom": max(0, 20 * total_people - 19 * sum(effective_capacity)),
         "supplies": sum(min(row.values()) for row in supplies),
         "distance": sum(min(row.values()) for row in trips),
         "no_car_distance": sum(

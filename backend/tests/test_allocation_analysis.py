@@ -208,10 +208,7 @@ def test_shelter_refresh_merges_legacy_sites_without_recreating_households(tmp_p
     assert result == {"curated_shelters": 9, "households_reallocated": 1}
     with sqlite3.connect(database) as db:
         assert db.execute("SELECT COUNT(*) FROM shelters").fetchone()[0] == 9
-        assert (
-            db.execute("SELECT COUNT(*) FROM shelters WHERE id='shelter_03'").fetchone()[0]
-            == 0
-        )
+        assert db.execute("SELECT COUNT(*) FROM shelters WHERE id='shelter_03'").fetchone()[0] == 0
         assert (
             db.execute("SELECT password_hash FROM users WHERE id='u'").fetchone()[0] == "preserved"
         )

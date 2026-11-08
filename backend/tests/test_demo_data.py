@@ -191,7 +191,9 @@ def test_demo_family_is_failed_by_nearest_shelter_but_not_by_haven(tmp_path, mon
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "resident.sqlite3"))
     asyncio.run(seed_demo_data())
     with TestClient(app=app) as client:
-        login = client.post("/api/auth/login", json={"email": "family@family.com", "password": "family"})
+        login = client.post(
+            "/api/auth/login", json={"email": "family@family.com", "password": "family"}
+        )
         assert login.status_code == 200
         token = login.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}

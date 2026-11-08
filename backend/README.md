@@ -121,7 +121,7 @@ uv run --locked python scripts/analyze_allocation.py --repeat
 
 The default run compares four profiles across three repeatable household seeds and four scenarios: base, reduced capacity (40% of normal), loss of medical support, and closure of the largest medical site. Add `--scenarios base,capacity_shortage,medical_outage,shelter_closed,no_open` to include the no-destination case. Use `--profiles balanced --seeds 42 --scenarios base --seconds 10` for a focused iteration with a longer search budget. `--repeat` measures assignment changes on a second base run.
 
-Profiles share the same protected needs and overflow objectives. `needs_first` reproduces the original supply/travel-first policy; `headroom` penalizes occupancy above 85% before supplies/travel; `balanced` (the app default) balances utilization before supplies/travel; `travel_then_balance` leaves balance until after travel. Comparing them exposes tradeoffs rather than declaring one universally best.
+Profiles share the same protected needs and overflow objectives. `needs_first` reproduces the original supply/travel-first policy; `headroom` (the app default) penalizes occupancy above 95% before supplies/travel; `balanced` balances utilization before supplies/travel; `travel_then_balance` leaves balance until after travel. Comparing them exposes tradeoffs rather than declaring one universally best.
 
 Reports are written under `.runtime/allocation-analysis/latest/` (choose `--output` to keep each iteration):
 

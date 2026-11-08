@@ -249,7 +249,7 @@ def test_solver_matches_exhaustive_optimum_on_small_mixed_pools():
                 for step in range(1, 20)
             )
             headroom = sum(
-                max(0, 20 * loads[site["id"]] - 17 * capacities[site["id"]]) for site in shelters
+                max(0, 20 * loads[site["id"]] - 19 * capacities[site["id"]]) for site in shelters
             )
             prefix = (clinical, other, physical, budget, peak)
             if profile == "balanced":
@@ -276,16 +276,34 @@ def test_solver_matches_exhaustive_optimum_on_small_mixed_pools():
         )
 
 
-def test_default_balances_compatible_shelters_before_distance():
+def test_default_keeps_households_at_nearest_compatible_shelter():
+    families = [family(str(i), 1, 0) for i in range(5)]
+    assigned, remaining = choices(families, [shelter("near", 0, 6), shelter("far", 1, 6)])
+    assert remaining == {"near": 1, "far": 6}
+    assert len(assigned) == 5
+
+
+def test_headroom_diverts_overflow_above_ninety_five_percent():
     families = [family(str(i), 1, 0) for i in range(6)]
     assigned, remaining = choices(families, [shelter("near", 0, 6), shelter("far", 1, 6)])
+    assert remaining == {"near": 1, "far": 5}
+    assert len(assigned) == 6
+
+
+def test_balanced_profile_balances_compatible_shelters_before_distance():
+    families = [family(str(i), 1, 0) for i in range(6)]
+    assigned, remaining = choices(
+        families, [shelter("near", 0, 6), shelter("far", 1, 6)], priority_profile="balanced"
+    )
     assert remaining == {"near": 3, "far": 3}
     assert len(assigned) == 6
 
 
 def test_balance_accounts_for_different_shelter_sizes():
     families = [family(str(i), 1, 0) for i in range(20)]
-    _, remaining = choices(families, [shelter("small", 0, 10), shelter("large", 1, 30)])
+    _, remaining = choices(
+        families, [shelter("small", 0, 10), shelter("large", 1, 30)], priority_profile="balanced"
+    )
     assert remaining == {"small": 5, "large": 15}
 
 
