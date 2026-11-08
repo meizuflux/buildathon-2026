@@ -1,4 +1,4 @@
-﻿// Haven resident palette. Semantic colors keep one meaning each:
+// Haven resident palette. Semantic colors keep one meaning each:
 // amber = needs attention or confirmation, red = critical restriction or urgent official instruction,
 // green (confirmed) = a specific fact or completed action is confirmed.
 // Contrast is checked in tests/contrast.test.ts. The requested primary #087E8B measured 4.48:1 on the
@@ -13,7 +13,7 @@ export const colors = {
   red: '#B42318', redLight: '#FDECEA', ember: '#B42318', silt: '#B9A88E',
   blue: '#355F79', blueLight: '#E1ECF3', transparent: 'transparent',
   confirmed: '#18794E', confirmedLight: '#E7F4EE',
-  surface: '#FFFFFF', presenter: '#1B2733', presenterText: '#E8EEF4', presenterMuted: '#A9B7C6',
+  surface: '#FFFFFF',
 };
 export type Palette = typeof colors;
 export const darkColors: Palette = {
@@ -28,8 +28,8 @@ export const darkColors: Palette = {
 };
 export const type = {
   family: 'IBMPlexSans_400Regular', medium: 'IBMPlexSans_500Medium',
-  semibold: 'IBMPlexSans_600SemiBold', mono: 'IBMPlexMono_500Medium', monoRegular: 'IBMPlexMono_400Regular',
-  // Resident dashboard scale (px).
+  semibold: 'IBMPlexSans_600SemiBold', monoRegular: 'IBMPlexMono_400Regular',
+  // Type scale (px).
   pageTitle: 32, destination: 28, instruction: 17, button: 16, secondary: 15, meta: 13,
   heading: 28, section: 22, title: 17, body: 16, label: 15, caption: 13,
 };

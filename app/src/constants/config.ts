@@ -1,8 +1,5 @@
 export const config = {
-  mode: process.env.EXPO_PUBLIC_DATA_MODE === 'mock' ? 'mock' as const : 'api' as const,
+  /** Haven backend. For a phone on the same network, set this to your computer's LAN IP. */
   baseUrl: (process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, ''),
-  changesPath: process.env.EXPO_PUBLIC_CHANGES_PATH ?? '/api/v1/changes',
   timeoutMs: 15000,
-  /** Show the resident dashboard against the live backend instead of the tabbed app (npm run demo:live). */
-  residentDashboard: process.env.EXPO_PUBLIC_RESIDENT_DASHBOARD === '1',
 };

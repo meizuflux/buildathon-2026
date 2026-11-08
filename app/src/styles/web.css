@@ -73,15 +73,7 @@ html, body, #root { background: #F0F6FC; }
 :root { --color-focus: #246B68; --color-selection: #DFEDEA; --color-paper: #F0F6FC; }
 html[data-theme="dark"] { --color-focus: #8BCFC5; --color-selection: #19312F; --color-ink: #F0F6FC; --color-paper: #0D1117; }
 html[data-theme="dark"], html[data-theme="dark"] body, html[data-theme="dark"] #root { background: #0D1117; }
-.shelter-map { font-family: 'IBMPlexSans_400Regular', sans-serif; }
-.shelter-map .leaflet-control-zoom { box-shadow: none; border: 0; border-radius: 0; }
-.shelter-map .leaflet-control-zoom a { width: 44px; height: 44px; line-height: 44px; color: #1D2B3A; background: #FFFFFF; }
-.shelter-map .leaflet-control-attribution { font-size: 10px; color: #1D2B3A; background: #FFFFFF; }
-.shelter-map .leaflet-control-attribution a { color: #246B68; }
-.shelter-map[data-night="true"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.8); }
-.shelter-map[data-night="true"] .leaflet-control-zoom a { color: #F0F6FC; background: #161E27; }
-
-/* Resident dashboard */
+/* Focus rings for radios, tab panels and focused headings */
 [role="radio"]:focus-visible,
 [role="tabpanel"] [role="button"]:focus-visible,
 [role="heading"]:focus-visible {
@@ -89,12 +81,6 @@ html[data-theme="dark"], html[data-theme="dark"] body, html[data-theme="dark"] #
   outline-offset: 3px;
 }
 [role="heading"]:focus:not(:focus-visible) { outline: none; }
-.journey-closure {
-  display: flex; align-items: center; justify-content: center;
-  width: 24px; height: 24px; border-radius: 12px;
-  background: #FFFFFF; border: 2px solid #B42318;
-  color: #B42318; font: 600 18px/1 'IBMPlexSans_600SemiBold', sans-serif;
-}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
