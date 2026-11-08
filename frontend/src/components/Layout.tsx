@@ -92,7 +92,6 @@ export default function Layout() {
           )}
           <span className="spacer" />
           <button className="hx-sync" onClick={() => d.refresh()} title="Refresh now"><RefreshCw size={13} /> Synced {d.lastSync ? timeAgo(d.lastSync) : '…'}</button>
-          <Link className="btn" to="/evacuation-preview"><Route size={14} /> Preview evacuation</Link>
           {phase === 'peace' && <button className="btn btn-danger" onClick={() => setDialog('initiate')}><CloudLightning size={14} /> Initiate hurricane</button>}
           {phase === 'active' && <button className="btn" onClick={() => setDialog('reset')}><RotateCcw size={14} /> Reset to peace</button>}
           <Link className="btn btn-primary" to="/comms/broadcasts"><Send size={14} /> Send broadcast</Link>
