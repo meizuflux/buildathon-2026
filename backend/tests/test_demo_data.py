@@ -15,8 +15,7 @@ def test_demo_accounts_can_sign_in(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "demo.sqlite3"))
     monkeypatch.delenv("DEMO_PASSWORD", raising=False)
     created = asyncio.run(seed_demo_data())
-    assert set(created) == {email for email, _ in DEMO_ACCOUNTS}
-    assert all(created.values())
+    assert created == {"family@example.com": "family", "gov@example.com": "gov"}
     with TestClient(app=app) as client:
         for email, role in DEMO_ACCOUNTS:
             response = client.post(
@@ -33,7 +32,7 @@ def test_shared_demo_password_and_seeded_golden_gate_scenario(tmp_path, monkeypa
     with TestClient(app=app) as client:
         operator = client.post(
             "/api/auth/login",
-            json={"email": "government@demo.example", "password": "shared-demo-password"},
+            json={"email": "gov@example.com", "password": "shared-demo-password"},
         )
         assert operator.status_code == 200
         headers = {"Authorization": f"Bearer {operator.json()['access_token']}"}
@@ -59,8 +58,8 @@ def test_reseeding_recreates_the_entire_demo_database(tmp_path, monkeypatch):
         response = client.post(
             "/api/auth/login",
             json={
-                "email": "government@demo.example",
-                "password": first_credentials["government@demo.example"],
+                "email": "gov@example.com",
+                "password": first_credentials["gov@example.com"],
             },
         )
         old_token = response.json()["access_token"]
@@ -72,7 +71,7 @@ def test_reseeding_recreates_the_entire_demo_database(tmp_path, monkeypatch):
         connection.execute("PRAGMA user_version = 999")
         connection.commit()
     second_credentials = asyncio.run(seed_demo_data())
-    assert first_credentials != second_credentials
+    assert first_credentials == second_credentials
     with closing(sqlite3.connect(database_path())) as connection:
         assert connection.execute("SELECT count(*) FROM shelters").fetchone()[0] == 7
         assert connection.execute("SELECT count(*) FROM families").fetchone()[0] == 1000

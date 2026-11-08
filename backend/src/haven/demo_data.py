@@ -3,7 +3,6 @@
 import asyncio
 import json
 import os
-import secrets
 from pathlib import Path
 from uuid import uuid4
 
@@ -13,7 +12,7 @@ from haven.db import connect, database_path
 from haven.demo_households import generate_households
 from haven.startup import initialize_database
 
-DEMO_ACCOUNTS = (("family@demo.example", "family"), ("government@demo.example", "operator"))
+DEMO_ACCOUNTS = (("family@example.com", "family"), ("gov@example.com", "operator"))
 
 
 async def seed_demo_data() -> dict[str, str]:
@@ -27,7 +26,7 @@ async def seed_demo_data() -> dict[str, str]:
     async with connect() as connection:
         async with connection:
             for email, role in DEMO_ACCOUNTS:
-                password = os.environ.get("DEMO_PASSWORD") or secrets.token_urlsafe(18)
+                password = os.environ.get("DEMO_PASSWORD") or email.split("@", 1)[0]
                 password_hash = await asyncio.to_thread(hash_password, password)
                 await connection.execute(
                     "INSERT INTO users (id, email, password_hash, role, created_at) "
