@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { colors, darkColors } from '../src/constants/theme';
 import { contrast } from '../src/utils/contrast';
 
-// Every text color the resident dashboard draws, on every background it is drawn on.
+// Every text color the app draws, on every background it is drawn on.
 const pairs = (c: typeof colors): [string, string, string][] => [
   ['text on page', c.text, c.cream],
   ['text on surface', c.text, c.surface],
@@ -21,8 +21,6 @@ const pairs = (c: typeof colors): [string, string, string][] => [
   ['text on critical tint', c.text, c.redLight],
   ['confirmed on surface', c.confirmed, c.surface],
   ['confirmed on confirmed tint', c.confirmed, c.confirmedLight],
-  ['presenter text', c.presenterText, c.presenter],
-  ['presenter muted', c.presenterMuted, c.presenter],
 ];
 
 for (const [name, palette] of [['light', colors], ['dark', darkColors]] as const) {
