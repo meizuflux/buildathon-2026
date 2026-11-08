@@ -33,13 +33,13 @@ Existing accounts created with the earlier scrypt implementation cannot sign in;
 
 With the API stopped, run `just demo-data` to delete and recreate the configured SQLite database (`DATABASE_PATH`, default `disaster_response.sqlite3`). Every run starts fresh, discarding all existing records, edits, accounts, and sessions. The command creates a family account (`family@demo.example`) and a government operator (`government@demo.example`) and prints fresh generated passwords. Restart the API and sign in with those credentials.
 
-The script creates a fictional active hurricane in **Golden Gate Estates, Naples**, 1,000 synthetic households at distinct real houses, seven simulated shelters at local school sites, allocated plans, and an official demo update. Synthetic family accounts cannot sign in; use the demo family account to exercise registration/profile creation independently. The household characteristics, shelter operations, capacities, capabilities, and supplies are fictional; these records do not describe actual residents or current shelter availability.
+The script creates a fictional active hurricane in **Golden Gate Estates, Naples**, 1,000 synthetic households at distinct real houses, nine simulated shelter hubs at public school and community sites, allocated plans, and an official demo update. Synthetic family accounts cannot sign in; use the demo family account to exercise registration/profile creation independently. The household characteristics, shelter operations, capacities, capabilities, and supplies are fictional; these records do not describe actual residents or current shelter availability.
 
 Household profiles use a repeatable random sample (seed 42), shuffled across the house locations. Sizes range from one to eight people, including single adults, single parents, couples, families with children, and larger households. Car access, pets, medication urgency, accessibility needs, and other care needs vary across profiles, with specific notes about dogs/cats, prescription refills, walkers/wheelchairs, infant supplies, allergies, and power-dependent equipment. Guaranteed examples include a four-person household with a car and dog, and a single adult without a car who needs mobility and medication assistance. The distribution is designed for demo coverage rather than population estimates; seeding generates current plans for every household.
 
-House locations come from Collier County's current single-family address points on Estates roads. Every selected point was checked to intersect a distinct 2025 building footprint. Shelters use county address coordinates for Palmetto Ridge High, Corkscrew Middle, Cypress Palm Middle, Sabal Palm Elementary, Big Cypress Elementary, Estates Elementary, and Corkscrew Elementary. The fixture and its source links are in [`src/haven/data/golden_gate_estates.json`](src/haven/data/golden_gate_estates.json). Seeding works offline. To deliberately refresh the source snapshot, run `python scripts/refresh_demo_locations.py` with network access; review the resulting fixture before committing it.
+House locations come from Collier County's current single-family address points on Estates roads. Every selected point was checked to intersect a distinct 2025 building footprint. Nearby campuses are consolidated into Palmetto Ridge/Corkscrew and Cypress Palm/Sabal Palm hubs; Big Cypress and Max Hasse share a community hub. Estates Elementary is retained. Five additional destinations are Big Corkscrew Island Regional Park, Estates Branch Library, Palmetto Elementary, Bear Creek Elementary, and Greater Naples Fire Rescue Station 74. Coordinates come from county address points, with facility references recorded per hub. These public locations are simulated destinations for the exercise, not confirmed operational shelters. The fixture and its source links are in [`src/haven/data/golden_gate_estates.json`](src/haven/data/golden_gate_estates.json). Seeding works offline. To deliberately refresh the source snapshot, run `python scripts/refresh_demo_locations.py` with network access; review the resulting fixture before committing it.
 
-Demo data is disposable: there are no data migrations, version markers, or compatibility IDs. Change the seed or fixture and rerun `just demo-data` to rebuild the scenario and its allocations. The simulated shelter capacity totals 4,000. Disaster creation is otherwise outside the REST contract.
+The simulated shelter capacity totals 6,000. Shelter hubs have stable IDs and explicit simulated capacities/capabilities. To update an existing demo network while keeping accounts, households, reports, and plan history, preview with `uv run --locked python -m haven.refresh_demo_shelters`, then add `--apply`. A consistent database backup is saved under `.runtime/demo-shelter-backups/`; merged legacy site rows are removed only after their households are reassigned atomically. This updates curated demo sites only. Use `just demo-data` when a complete disposable reset is intended. Disaster creation is otherwise outside the REST contract.
 
 ## Disaster response API
 
@@ -90,12 +90,13 @@ The allocator uses **Google OR-Tools CP-SAT** to consider every household in a d
 1. Minimize unmet medical, medication, accessibility, and special-care requirements for each household.
 2. Minimize other unmet requirements (pets and child-friendly facilities).
 3. Minimize people over listed physical capacity, then people over operator allocation budgets. A full shelter has zero usable budget. Where overflow is unavoidable, minimize the largest overflow as a proportion of shelter size.
-4. Prefer better food, water, and clothes availability labels, plus medication availability for immediate-medication needs. Label penalties are weighted by household size: available (0), limited (1), unknown (2), unavailable (3).
-5. Minimize total household travel distance for households without cars.
-6. Minimize total household travel distance for everyone.
-7. Minimize changes to existing destinations.
+4. Balance utilization relative to each site's usable capacity (the smaller of physical capacity and its operator budget). A convex congestion cost in 5% bands discourages filling one site while leaving interchangeable capacity empty. Required support always takes precedence; identical utilization is not guaranteed when needs or household sizes constrain placement.
+5. Prefer better food, water, and clothes availability labels, plus medication availability for immediate-medication needs. Label penalties are weighted by household size: available (0), limited (1), unknown (2), unavailable (3).
+6. Minimize total household travel distance for households without cars.
+7. Minimize total household travel distance for everyone.
+8. Minimize changes to existing destinations.
 
-Needs are evaluated first for each household. Because capacity may overflow, every household can simultaneously receive its best needs match. Worse matches are excluded before optimization, guaranteeing that capacity, supplies, distance, or a search timeout cannot trade away supported needs. The remaining objectives are solved one at a time, fixing each proven optimum before proceeding. A complete deterministic seed and the prior assignments are compared under the same objective; the solver cannot replace them with a worse result. Search has a shared two-second budget per disaster pool (excluding input preparation and persistence). An unproved stage stops further optimization, preserving the best complete placement found; large pools may therefore return a feasible result rather than a proven optimum. Stable input ordering and a single solver worker make ordering repeatable; timing limits may still affect the degree of improvement. Optimization runs off the API event loop.
+Needs are evaluated first for each household. Because capacity may overflow, every household can simultaneously receive its best needs match. Worse matches are excluded before optimization, guaranteeing that capacity, supplies, distance, or a search timeout cannot trade away supported needs. The remaining objectives are solved one at a time, fixing each proven optimum before proceeding. Attained mathematical lower bounds skip unnecessary search; a common optimal utilization band can be expressed as simple per-site load bounds. A complete deterministic seed and the prior assignments are compared under the same objective; the solver cannot replace them with a worse result. Search has a shared five-second budget per disaster pool (excluding input preparation and persistence). An unproved stage stops further optimization, preserving the best complete placement found; large pools may therefore return a feasible result rather than a proven optimum. Stable input ordering and a single solver worker make ordering repeatable; timing limits may still affect the degree of improvement. Optimization runs off the API event loop.
 
 `capacity.available_people` is the unreserved operator allocation budget, floored at zero and capped at listed physical capacity. An internal budget preserves operator capacity accounting while allocations change the free count. Capacity is a warning threshold, so a household whose only supported destination is full still receives that destination. Plans carry `shelter_capacity_overflow` alerts for physical/budget overflow or a full shelter. If no shelter meets every requirement, the best clinical/other-needs match is assigned with a critical `shelter_needs_mismatch` alert listing the unmet requirements. If no open or full shelter exists, the plan has no destination and a critical `no_open_shelter` alert; the allocator cannot invent a real destination.
 
@@ -106,6 +107,36 @@ Plans are persisted snapshots, including the selected shelter's capabilities and
 Plan retrieval supports `?after_version=1&wait_seconds=25` (0–25 seconds). It returns a newer plan with 200 or an empty 204 when unchanged at timeout, rechecking authorization during the wait. Family report retries reuse `client_request_id`; an identical retry returns the stored report, while a changed payload with the same key returns 409.
 
 Clients can read the initial plan after profile creation, then repeat long polls using the last received version. Replace the cached plan on a newer 200 response; retain it and poll again after 204. Updates use this existing long-polling contract rather than a separate push channel.
+
+## Allocation experiments
+
+The measured comparison and per-site reference loads are saved in [`analysis/reference-report.md`](analysis/reference-report.md), with machine-readable evidence in [`analysis/reference-results.json`](analysis/reference-results.json). The balanced profile passed all three base seeds with zero unmet listed needs, zero overflow, zero empty/full sites, and zero repeat-run moves. The demo network uses roughly 45–50% of each site; this reflects 2,747 people across 6,000 simulated spaces in the primary seed.
+
+Run the pure in-memory benchmark without changing the app database:
+
+```sh
+uv run --locked python scripts/analyze_allocation.py --repeat
+```
+
+The default run compares four profiles across three repeatable household seeds and four scenarios: base, reduced capacity (40% of normal), loss of medical support, and closure of the largest medical site. Add `--scenarios base,capacity_shortage,medical_outage,shelter_closed,no_open` to include the no-destination case. Use `--profiles balanced --seeds 42 --scenarios base --seconds 10` for a focused iteration with a longer search budget. `--repeat` measures assignment changes on a second base run.
+
+Profiles share the same protected needs and overflow objectives. `needs_first` reproduces the original supply/travel-first policy; `headroom` penalizes occupancy above 85% before supplies/travel; `balanced` (the app default) balances utilization before supplies/travel; `travel_then_balance` leaves balance until after travel. Comparing them exposes tradeoffs rather than declaring one universally best.
+
+Reports are written under `.runtime/allocation-analysis/latest/` (choose `--output` to keep each iteration):
+
+- `report.md`: comparison table, per-site loads, and a measured-profile recommendation.
+- `report.json`: all metrics, input/allocator fingerprints, search bounds/statuses, travel percentiles by car/care/pet groups, unavoidable vs avoidable mismatches, and repeat moves.
+- `assignments.csv`: per-household destinations, distance, unmet requirements, and allocation coverage.
+
+To inspect stored allocations and compare alternatives without editing them:
+
+```sh
+uv run --locked python scripts/analyze_allocation.py --database disaster_response.sqlite3 --scenarios base --repeat
+```
+
+Database input opens SQLite read-only and uses operator allocation budgets, not already-consumed free counts. The report includes the stored plan baseline. Missing databases and empty household pools fail explicitly. The command returns a nonzero exit status for avoidable unmet needs, invalid destinations, or missing assignments when a destination exists; capacity/medical/no-open stress shortages are reported honestly and are not hidden as successful placements.
+
+For each iteration: retain a report with a distinct output path, inspect unmet needs and per-site loads first, compare no-car travel tails and assignment stability next, change one profile or fixture factor, and rerun the same seeds. A profile is recommended only when every measured base seed has complete allocation, no unmet listed needs/overflow, and no empty/full open sites; among qualifying profiles, lower no-car mean travel wins, followed by overall mean travel. This acceptance gate is specific to the demo, not proof that every real network should fill every site. Missing care capabilities or insufficient capacity require network changes rather than repeated priority tuning.
 
 ## Operational alerts feed
 

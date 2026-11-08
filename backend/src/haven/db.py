@@ -18,7 +18,8 @@ def database_path() -> Path:
 async def connect():
     connection = await apsw.Connection.as_async(str(database_path()))
     try:
-        await connection.set_busy_timeout(5000)
+        # A two-pool reassignment may spend five seconds optimizing each pool.
+        await connection.set_busy_timeout(15000)
         await connection.execute("PRAGMA foreign_keys = ON")
         yield connection
     finally:

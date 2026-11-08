@@ -209,7 +209,7 @@ def test_solver_matches_exhaustive_optimum_on_small_mixed_pools():
             }
         previous = {person["id"]: rng.choice(shelters)["id"] for person in families}
 
-        def policy_score(selection):
+        def policy_score(selection, profile):
             clinical, other, supply, no_car_trip, all_trip, moves = 0, 0, 0, 0, 0, 0
             loads = {site["id"]: 0 for site in shelters}
             for person, site in zip(families, selection, strict=True):
@@ -237,13 +237,61 @@ def test_solver_matches_exhaustive_optimum_on_small_mixed_pools():
                     - (site["allocation_budget"] if site["status"] == "open" else 0),
                 )
                 peak = max(peak, (over * 1000 + max(1, total) - 1) // max(1, total))
-            return clinical, other, physical, budget, peak, supply, no_car_trip, all_trip, moves
+            capacities = {
+                site["id"]: max(0, min(site["capacity"]["total_people"], site["allocation_budget"]))
+                if site["status"] == "open"
+                else 0
+                for site in shelters
+            }
+            balance = sum(
+                max(0, 20 * loads[site["id"]] - step * capacities[site["id"]])
+                for site in shelters
+                for step in range(1, 20)
+            )
+            headroom = sum(
+                max(0, 20 * loads[site["id"]] - 17 * capacities[site["id"]]) for site in shelters
+            )
+            prefix = (clinical, other, physical, budget, peak)
+            if profile == "balanced":
+                return (*prefix, balance, supply, no_car_trip, all_trip, moves)
+            if profile == "headroom":
+                return (*prefix, headroom, supply, no_car_trip, all_trip, moves)
+            if profile == "travel_then_balance":
+                return (*prefix, supply, no_car_trip, all_trip, balance, moves)
+            return (*prefix, supply, no_car_trip, all_trip, moves)
 
-        assigned, remaining = allocate_disaster(families, shelters, previous)
-        actual = policy_score([assigned[person["id"]] for person in families])
-        optimum = min(policy_score(selection) for selection in product(shelters, repeat=4))
-        assert actual == optimum
+        for profile in ("needs_first", "balanced", "headroom", "travel_then_balance"):
+            assigned, remaining = allocate_disaster(
+                families, shelters, previous, priority_profile=profile
+            )
+            actual = policy_score([assigned[person["id"]] for person in families], profile)
+            optimum = min(
+                policy_score(selection, profile) for selection in product(shelters, repeat=4)
+            )
+            assert actual == optimum, profile
+
         assert sum(remaining.values()) == (
             sum(site["allocation_budget"] for site in shelters)
             - sum(person["adults"] for person in families)
         )
+
+
+def test_default_balances_compatible_shelters_before_distance():
+    families = [family(str(i), 1, 0) for i in range(6)]
+    assigned, remaining = choices(families, [shelter("near", 0, 6), shelter("far", 1, 6)])
+    assert remaining == {"near": 3, "far": 3}
+    assert len(assigned) == 6
+
+
+def test_balance_accounts_for_different_shelter_sizes():
+    families = [family(str(i), 1, 0) for i in range(20)]
+    _, remaining = choices(families, [shelter("small", 0, 10), shelter("large", 1, 30)])
+    assert remaining == {"small": 5, "large": 15}
+
+
+def test_balance_cannot_take_away_required_support():
+    person = family("f", 4, 0)
+    person["needs"]["pets"] = True
+    pets, general = shelter("pets", 0, 1), shelter("general", 1, 100)
+    pets["capabilities"]["pets_allowed"] = True
+    assert choices([person], [pets, general])[0] == {"f": "pets"}
