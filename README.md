@@ -54,7 +54,7 @@ cd backend
 just demo-data
 ```
 
-Every run deletes and rebuilds the configured SQLite database and prints fresh demo passwords. Restart the API and sign in with those credentials. The scenario places 1,000 synthetic households at actual houses in Golden Gate Estates, Naples, and nine simulated shelter hubs at public school and community sites. Household profiles and shelter operations are fictional and must not be used for real emergency response. See the [backend README](backend/README.md#demo-data) for details.
+Every run deletes and rebuilds the configured SQLite database and creates two demo accounts: `gov@gov.com` (password `gov`) for the dashboard and `family@family.com` (password `family`) for the household app. Restart the API and sign in. The scenario places 1,000 synthetic households at actual houses in Golden Gate Estates, Naples, and nine simulated shelter hubs at public school and community sites. Household profiles and shelter operations are fictional and must not be used for real emergency response. See the [backend README](backend/README.md#demo-data) for details.
 
 ## Development and checks
 

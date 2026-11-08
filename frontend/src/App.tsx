@@ -11,6 +11,7 @@ import MapPage from './pages/MapPage'
 import Broadcasts from './pages/Broadcasts'
 import FamilyReports from './pages/FamilyReports'
 import Logistics from './pages/Logistics'
+import EvacuationPreview from './pages/EvacuationPreview'
 
 export default function App() {
   const { user } = useAuth()
@@ -20,6 +21,7 @@ export default function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<CommandCenter />} />
+          <Route path="evacuation-preview" element={<EvacuationPreview />} />
           <Route path="alerts" element={<Alerts />} />
           <Route path="families" element={<Families />} />
           <Route path="families/:id" element={<FamilyDetail />} />

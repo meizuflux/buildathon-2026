@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type Dispatch, type SetStateAction } from 'react'
+import { useEffect, useMemo, useRef, type Dispatch, type ReactNode, type SetStateAction } from 'react'
 import { Link } from 'react-router-dom'
 import L from 'leaflet'
 import { CircleMarker, MapContainer, Marker, Polyline, Popup, TileLayer, Tooltip, ZoomControl, useMap, useMapEvents } from 'react-leaflet'
@@ -91,6 +91,8 @@ type OpsMapProps = {
   home?: Location | null
   line?: [number, number][] | null
   zoomControl?: boolean
+  extraPoints?: [number, number][]
+  children?: ReactNode
 }
 
 const ALL_LAYERS: MapLayers = { shelters: true, families: true, reports: true }
@@ -98,6 +100,7 @@ const ALL_LAYERS: MapLayers = { shelters: true, families: true, reports: true }
 export default function OpsMap({
   shelters = [], families = [], reports = [], layers = ALL_LAYERS, selectedId, onSelect, focus, fitKey,
   picking = false, draftLocation, onPick, popups = true, home, line, zoomControl = true,
+  extraPoints, children,
 }: OpsMapProps) {
   const points = useMemo(() => {
     const pts: [number, number][] = [
@@ -105,8 +108,9 @@ export default function OpsMap({
       ...families.map((f): [number, number] => [f.location.latitude, f.location.longitude]),
     ]
     if (home) pts.push([home.latitude, home.longitude])
+    if (extraPoints) pts.push(...extraPoints)
     return pts
-  }, [shelters, families, home])
+  }, [shelters, families, home, extraPoints])
 
   return (
     <div className={`hx-map ${picking ? 'is-picking' : ''}`}>
@@ -171,6 +175,7 @@ export default function OpsMap({
 
         {home && <Marker position={[home.latitude, home.longitude]} icon={homeIcon}><Tooltip direction="top" offset={[0, -8]}>Household location</Tooltip></Marker>}
         {picking && draftLocation && <Marker position={[draftLocation.latitude, draftLocation.longitude]} icon={draftIcon} />}
+        {children}
       </MapContainer>
     </div>
   )

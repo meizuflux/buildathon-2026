@@ -31,9 +31,9 @@ Existing accounts created with the earlier scrypt implementation cannot sign in;
 
 ## Demo data
 
-With the API stopped, run `just demo-data` to delete and recreate the configured SQLite database (`DATABASE_PATH`, default `disaster_response.sqlite3`). Every run starts fresh, discarding all existing records, edits, accounts, and sessions. The command creates a family account (`family@demo.example`) and a government operator (`government@demo.example`) and prints fresh generated passwords. Restart the API and sign in with those credentials.
+With the API stopped, run `just demo-data` to delete and recreate the configured SQLite database (`DATABASE_PATH`, default `disaster_response.sqlite3`). Every run starts fresh, discarding all existing records, edits, accounts, and sessions. The command creates a family account (`family@family.com`, password `family`) and a government operator (`gov@gov.com`, password `gov`). These fixed passwords are for the disposable local demo only. Restart the API and sign in.
 
-The script creates a fictional active hurricane in **Golden Gate Estates, Naples**, 1,000 synthetic households at distinct real houses, nine simulated shelter hubs at public school and community sites, allocated plans, and an official demo update. Synthetic family accounts cannot sign in; use the demo family account to exercise registration/profile creation independently. The household characteristics, shelter operations, capacities, capabilities, and supplies are fictional; these records do not describe actual residents or current shelter availability.
+The script creates a fictional active hurricane in **Golden Gate Estates, Naples**, 1,000 synthetic households at distinct real houses, nine simulated shelter hubs at public school and community sites, allocated plans, and an official demo update. Synthetic family accounts cannot sign in. The demo family account (`family@family.com`) owns one extra household (`demo_family_resident`: 2 adults, 1 child, a pet, insulin, a wheelchair-accessible entrance need, no car) placed where the nearest shelter has no medical staff, so nearest-shelter routing fails it and Haven's plan does not; register a new account to exercise profile creation independently. The household characteristics, shelter operations, capacities, capabilities, and supplies are fictional; these records do not describe actual residents or current shelter availability.
 
 Household profiles use a repeatable random sample (seed 42), shuffled across the house locations. Sizes range from one to eight people, including single adults, single parents, couples, families with children, and larger households. Car access, pets, medication urgency, accessibility needs, and other care needs vary across profiles, with specific notes about dogs/cats, prescription refills, walkers/wheelchairs, infant supplies, allergies, and power-dependent equipment. Guaranteed examples include a four-person household with a car and dog, and a single adult without a car who needs mobility and medication assistance. The distribution is designed for demo coverage rather than population estimates; seeding generates current plans for every household.
 
@@ -156,3 +156,16 @@ Resolved conditions disappear when the frontend fetches again; this is not an
 historical event log. Replace the displayed list on refresh. Offset pagination
 can shift as conditions change. Limits range from 1 to 1000. The endpoint is
 operator-only because family alerts expose operational household information.
+
+## Hurricane demo
+
+The live demo adds a peace/active hurricane status, an evacuation preview comparing the old nearest-shelter approach with Haven's personalized allocation, and an "initiate" control. The binding contract is [`../docs/hurricane-demo.md`](../docs/hurricane-demo.md).
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| GET | `/disasters/{disaster_id}/hurricane` | Public. Current phase (`peace` or `active`), hurricane name and category. |
+| POST | `/disasters/{disaster_id}/hurricane/initiate` | Operator only. Optional body `{"name", "category"}`; activates, publishes a critical broadcast and records activity. `409 hurricane_already_active` if already active. |
+| POST | `/disasters/{disaster_id}/hurricane/reset` | Operator only, idempotent. Returns to peace and removes the broadcast and activity created by initiate. |
+| GET | `/disasters/{disaster_id}/evacuation/preview` | Operator only, read-only. Per-household nearest vs. personalized destinations and aggregate metrics. |
+
+The same comparison runs offline: `just compare-naive` (synthetic fixture, fresh solve), `just compare-naive --database disaster_response.sqlite3` (stored assignments, read-only), and `--json comparison.json` to also write the full result.

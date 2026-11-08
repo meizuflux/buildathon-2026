@@ -26,9 +26,6 @@ export const REPORT_TYPES: Record<ReportType, string> = {
 }
 export const DISASTER_TYPES: Record<string, string> = {
   hurricane: 'Hurricane',
-  flood: 'Flood',
-  tsunami: 'Tsunami',
-  tornado: 'Tornado',
 }
 
 export type BroadcastTemplate = {

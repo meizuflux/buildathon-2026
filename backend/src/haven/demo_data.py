@@ -2,8 +2,6 @@
 
 import asyncio
 import json
-import os
-import secrets
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -14,11 +12,24 @@ from haven.db import connect, database_path
 from haven.demo_households import generate_households
 from haven.startup import initialize_database
 
-DEMO_ACCOUNTS = (("family@demo.example", "family"), ("government@demo.example", "operator"))
+# Fixed, deliberately simple sign-ins for the disposable demo database: (email, role, password).
+DEMO_ACCOUNTS = (
+    ("family@family.com", "family", "family"),
+    ("gov@gov.com", "operator", "gov"),
+)
+DEMO_FAMILY_ID = "demo_family_resident"
+# Matches WHEELCHAIR_YES in app/src/resident/api.ts so the household app shows the need as confirmed.
+DEMO_FAMILY_ACCESSIBILITY = "Wheelchair-accessible entrance needed"
+# Home of the demo household: golden_gate_estates.json households[61]. Its nearest shelter by
+# straight-line distance is demo_shelter_08 (about 1.1 km), which has no medical staff or
+# medication, while demo_shelter_01 (about 2.2 km) supports every need. Nearest-shelter routing
+# therefore fails this household and Haven's personalized plan does not. The wording of the
+# medical note avoids the equipment keywords that the household app reads as powered equipment.
+DEMO_FAMILY_LOCATION = {"latitude": 26.31402411, "longitude": -81.58765271}
 
 
 async def seed_demo_data() -> dict[str, str]:
-    """Discard the configured SQLite database and return fresh demo credentials."""
+    """Discard the configured SQLite database and return the demo credentials."""
     locations = json.loads(DEMO_LOCATIONS.read_text(encoding="utf-8"))
     path = database_path()
     for suffix in ("", "-wal", "-shm", "-journal"):
@@ -27,8 +38,7 @@ async def seed_demo_data() -> dict[str, str]:
     created = {}
     async with connect() as connection:
         async with connection:
-            for email, role in DEMO_ACCOUNTS:
-                password = os.environ.get("DEMO_PASSWORD") or secrets.token_urlsafe(18)
+            for email, role, password in DEMO_ACCOUNTS:
                 password_hash = await asyncio.to_thread(hash_password, password)
                 await connection.execute(
                     "INSERT INTO users (id, email, password_hash, role, created_at) "
@@ -158,15 +168,48 @@ async def _seed_golden_gate_scenario(locations: dict) -> None:
                         stamp,
                     ),
                 )
+            demo_owner = await (
+                await connection.execute(
+                    "SELECT id FROM users WHERE email = ?", (DEMO_ACCOUNTS[0][0],)
+                )
+            ).fetchone()
+            if demo_owner is not None:
+                await connection.execute(
+                    "INSERT INTO families (id, owner_user_id, disaster_id, adults, children, latitude, "
+                    "longitude, needs_json, resources_json, created_at, updated_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        DEMO_FAMILY_ID,
+                        demo_owner[0],
+                        DEMO_DISASTER_ID,
+                        2,
+                        1,
+                        DEMO_FAMILY_LOCATION["latitude"],
+                        DEMO_FAMILY_LOCATION["longitude"],
+                        json.dumps(
+                            {
+                                "pets": True,
+                                "immediate_medication": True,
+                                "medical_notes": "Insulin-dependent diabetes; needs refrigerated insulin.",
+                                "accessibility_notes": DEMO_FAMILY_ACCESSIBILITY,
+                                "other_special_care": None,
+                            }
+                        ),
+                        json.dumps({"has_car": False}),
+                        stamp,
+                        stamp,
+                    ),
+                )
             await connection.execute(
                 "INSERT INTO disaster_updates (id, disaster_id, title, message, severity, published_at) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
                 (
                     "demo_update",
                     DEMO_DISASTER_ID,
-                    "Demo hurricane update",
-                    "Fictional exercise only. Follow instructions from local officials.",
-                    "warning",
+                    "Hurricane season: keep your plan current",
+                    "Fictional exercise only. No hurricane is active. Keep your household "
+                    "profile up to date so Haven can plan the right shelter for you.",
+                    "info",
                     stamp,
                 ),
             )
@@ -177,7 +220,7 @@ async def _seed_golden_gate_scenario(locations: dict) -> None:
                 (
                     "act_demo_update",
                     DEMO_DISASTER_ID,
-                    "Broadcast sent to all families: Demo hurricane update",
+                    "Broadcast sent to all families: Hurricane season: keep your plan current",
                     "demo_update",
                     stamp,
                 ),
@@ -194,7 +237,7 @@ async def main() -> None:
     for email, password in (await seed_demo_data()).items():
         print(f"{email}: password: {password}")
     print(
-        f"Golden Gate Estates ready: {len(DEMO_SHELTER_OPERATIONS)} simulated hubs and 1,000 synthetic households."
+        f"Golden Gate Estates ready: {len(DEMO_SHELTER_OPERATIONS)} simulated hubs and 1,000 synthetic households plus the demo family household."
     )
 
 

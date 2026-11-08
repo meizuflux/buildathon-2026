@@ -51,6 +51,10 @@ demo-data:
 analyze-allocation *args:
     uv run --locked python scripts/analyze_allocation.py {{args}}
 
+# Compare the old nearest-shelter approach with Haven's personalized allocation.
+compare-naive *args:
+    uv run --locked python scripts/compare_naive.py {{args}}
+
 # Preview updating only the curated demo shelter network (add --apply to change it).
 refresh-demo-shelters *args:
     uv run --locked python -m haven.refresh_demo_shelters {{args}}
