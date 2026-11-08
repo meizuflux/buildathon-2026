@@ -1,6 +1,27 @@
-﻿# Haven mobile app
+# Haven mobile app
 
 React Native / Expo SDK 54 app connected to the Litestar backend copied from `origin/master` at `1d3c8ee8535951a7443e2d3511d96f3bf03a7b7d`. All integration work is on the `app` branch. The backend source is unchanged; `npm run backend:verify` compares every imported backend file with that source commit.
+
+## Resident dashboard demo
+
+A deterministic, offline demo of the resident-facing "Your household plan" dashboard. It needs no backend and no sign-in.
+
+```sh
+npm run demo            # Expo web dev server with simulated data
+npm run demo -- export  # static build in dist-demo/
+```
+
+- **Scenario:** the fictional Alvarez household (2 adults, 2 children, 1 dog, a wheelchair-accessible entrance need, a vehicle) and three fictional shelters near Seminole Heights, Tampa Bay. Lakeview Recreation Center is recommended at the start.
+- **Presenter controls:** open them from the dark "Demo — simulated conditions" button. They let you:
+  - change the wheelchair requirement
+  - trigger road closures, broadcasts and availability updates
+  - go offline, advance time (stale data), or make the next message fail
+  - reset
+- **What the dashboard never does:** it does not reserve a space or claim a placement, does not claim messages were delivered or read, and does not invent emergency numbers. Coordinator replies are labelled as simulated.
+- **Where the code lives:**
+  - Rules and state: `src/demo/`. `recommend.ts` is a pure rule function with no scores; tests are in `tests/resident-demo.test.ts`.
+  - UI: `src/components/dashboard/` and `src/screens/PlanDashboard.tsx`.
+- **Mode:** the dashboard replaces the app shell only when `EXPO_PUBLIC_DATA_MODE=mock`. The default `api` mode is unchanged.
 
 ## Start the app with the real backend
 

@@ -26,7 +26,7 @@ export function Journey({ rec, household, closures, travelling, online, onLeft }
 
   return (
     <View style={s.section} nativeID="journey">
-      <Heading>Journey to {d.shelter.name}</Heading>
+      <Heading>{rec.status === 'recommended' || rec.keptBecauseTravelling ? 'Journey to' : 'Journey to possible option:'} {d.shelter.name}</Heading>
       <View style={[s.panel, { gap: 16 }]}>
         <View style={{ gap: 8 }} accessibilityRole="list">
           <Leg icon="circle" title="Start" body={household.location.label} />

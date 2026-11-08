@@ -36,13 +36,14 @@ export default function PlanDashboard() {
   const [presenter, setPresenter] = useState(() => width >= WIDE);
   const [tab, setTab] = useState<'official' | 'coordinator' | 'changes'>('official');
   const [composing, setComposing] = useState(false);
+  const [dock, setDock] = useState(0);
 
   const rec = view.recommendation;
   const d = rec.destination;
   const stale = state.online && !!d && view.now - d.shelter.spacesReportedAt > STALE_AFTER_MINUTES;
   const message = () => { setTab('coordinator'); setTimeout(() => scrollTo('updates'), 0); };
   const reviewJourney = () => scrollTo('journey');
-  const showSticky = !wide && !composing && !editing && !updating && rec.status === 'recommended' && !!d?.route;
+  const showSticky = !wide && !presenter && !composing && !editing && !updating && rec.status === 'recommended' && !!d?.route;
 
   const instruction = view.instruction && <OfficialInstructionBand instruction={view.instruction} />;
   const recommendation = (
@@ -63,11 +64,8 @@ export default function PlanDashboard() {
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: c.cream }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: wide ? 32 : 16, paddingTop: 16, paddingBottom: showSticky ? 112 : 48 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: wide ? 32 : 16, paddingTop: 16, paddingBottom: presenter ? dock + 24 : showSticky ? 112 : 48 }}>
         <View style={{ width: '100%', maxWidth: 1180, alignSelf: 'center', gap: 24 }}>
-          {presenter && (
-            <PresenterPanel state={state} dispatch={dispatch} onEditNeeds={() => setEditing(true)} onClose={() => setPresenter(false)} />
-          )}
           <View role="main" style={{ gap: 24 }}>
             <Header household={view.household.name} online={state.online} now={view.now}
               onHousehold={() => setEditing(true)} onPresenter={() => setPresenter(!presenter)} presenterOpen={presenter} />
@@ -86,6 +84,15 @@ export default function PlanDashboard() {
       {showSticky && (
         <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, paddingBottom: 20, backgroundColor: c.surface, borderTopWidth: 1, borderTopColor: c.border }}>
           <Action title="Review journey" icon="map" onPress={reviewJourney} />
+        </View>
+      )}
+      {presenter && (
+        // Floating dock, apart from the resident layout. Hidden with its own button or the demo label.
+        <View onLayout={(e) => setDock(e.nativeEvent.layout.height)}
+          style={{ position: 'absolute', left: 8, right: 8, bottom: 8, maxHeight: wide ? '42%' : '55%', borderRadius: 14, shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } }}>
+          <ScrollView style={{ borderRadius: 14 }}>
+            <PresenterPanel state={state} dispatch={dispatch} onEditNeeds={() => setEditing(true)} onClose={() => setPresenter(false)} />
+          </ScrollView>
         </View>
       )}
       <EditNeedsSheet visible={editing} household={state.household} online={state.online}

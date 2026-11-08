@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { Page, Row, Icon, Title, Body, Attribution, Button, Metadata, Empty, QueryState, date, useUI, type IconName } from '../../components/common/ui';
 import { type, type Palette } from '../../constants/theme';
 import { useHousehold, usePlan, useAlerts, useReports } from '../../hooks/queries';
 import { showSafetyStatus } from '../../utils/shelter';
-import { config } from '../../constants/config';
-import { DemoProvider } from '../../demo/store';
-import PlanDashboard from '../../screens/PlanDashboard';
 
 const hazards: { name: string; icon: IconName; matches: string[] }[] = [
   { name: 'All', icon: 'layers', matches: [] },
@@ -17,10 +14,7 @@ const hazards: { name: string; icon: IconName; matches: string[] }[] = [
   { name: 'Fire', icon: 'sun', matches: ['fire'] },
   { name: 'Quakes', icon: 'activity', matches: ['quake', 'seismic'] },
 ];
-export default function Index() {
-  return config.mode === 'mock' ? <DemoProvider><PlanDashboard /></DemoProvider> : <Home />;
-}
-function Home() {
+export default function Home() {
   const { c, s } = useUI(); const local = createLocal(c);
   const household = useHousehold(); const plan = usePlan(); const alerts = useAlerts(); const reports = useReports();
   const [filter, setFilter] = useState('All'); const [expanded, setExpanded] = useState<string | null>(null);

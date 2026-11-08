@@ -163,7 +163,11 @@ export function describeChange(before: Recommendation | null, after: Recommendat
   const b = before.destination;
   const a = after.destination;
   if (b?.shelter.id !== a?.shelter.id) {
-    if (a && b) lines.push(`Recommended destination changed from ${b.shelter.name} to ${a.shelter.name}.`);
+    if (a && b) {
+      lines.push(after.status === 'recommended'
+        ? `Recommended destination changed from ${b.shelter.name} to ${a.shelter.name}.`
+        : `${b.shelter.name} can no longer be recommended. ${a.shelter.name} is a possible option but is not verified.`);
+    }
     else if (a) lines.push(`${a.shelter.name} is now the best available option.`);
     else if (b) lines.push(`${b.shelter.name} can no longer be recommended.`);
   } else if (a && b) {

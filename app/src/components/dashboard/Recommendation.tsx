@@ -39,7 +39,8 @@ export function Recommendation({ rec, household, now, updating, lastChange, onRe
     </InlineNotice>
   );
 
-  if (rec.status !== 'recommended' || !rec.destination) {
+  // After the household has left, keep showing their destination (with any advisory) instead of switching views.
+  if (!rec.destination || (rec.status !== 'recommended' && !rec.keptBecauseTravelling)) {
     return <View style={{ gap: 16 }}>{changed}<NoVerifiedDestination rec={rec} household={household} onMessage={onMessage} onEditNeeds={onEditNeeds} /></View>;
   }
 
@@ -58,7 +59,9 @@ export function Recommendation({ rec, household, now, updating, lastChange, onRe
         <Journey assessment={d} household={household} />
 
         <View style={{ gap: 12 }}>
-          <Text style={s.instruction}>Recommended because it meets your household’s listed requirements.</Text>
+          <Text style={s.instruction}>{rec.status === 'recommended'
+            ? 'Recommended because it meets your household’s listed requirements.'
+            : 'Chosen before you left. It no longer meets every listed requirement; see the notice above.'}</Text>
           <View style={{ gap: 8 }} accessibilityRole="list">
             {d.checks.filter((x) => x.state === 'confirmed').slice(0, 3).map((x) => (
               <StatusLabel key={x.requirement} tone="confirmed" icon="check-circle">{x.label}</StatusLabel>

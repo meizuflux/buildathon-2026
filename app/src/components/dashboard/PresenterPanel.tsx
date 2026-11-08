@@ -75,7 +75,7 @@ function Control({ icon, title, detail, onPress, disabled, selected, compact }: 
       accessibilityState={{ disabled: !!disabled, selected: !!selected }} disabled={disabled} onPress={onPress}
       style={({ pressed }) => [{ minHeight: 44, borderRadius: 10, borderWidth: 1, borderColor: selected ? c.presenterText : '#3A4A5A',
         backgroundColor: selected ? '#33475A' : '#243240', paddingHorizontal: 12, paddingVertical: compact ? 8 : 10, gap: 2, justifyContent: 'center',
-        flexGrow: compact ? 0 : 1, flexBasis: compact ? 'auto' : 200 }, (pressed || disabled) && { opacity: disabled ? 0.5 : 0.75 }]}>
+        flexGrow: compact ? 0 : 1, flexBasis: compact ? 'auto' : 150 }, (pressed || disabled) && { opacity: disabled ? 0.5 : 0.75 }]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         {icon && <Icon name={icon} size={16} color={c.presenterText} />}
         {selected && !icon && <Icon name="check" size={16} color={c.presenterText} />}

@@ -80,3 +80,21 @@ html[data-theme="dark"], html[data-theme="dark"] body, html[data-theme="dark"] #
 .shelter-map .leaflet-control-attribution a { color: #246B68; }
 .shelter-map[data-night="true"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.8); }
 .shelter-map[data-night="true"] .leaflet-control-zoom a { color: #F0F6FC; background: #161E27; }
+
+/* Resident dashboard */
+[role="radio"]:focus-visible,
+[role="tabpanel"] [role="button"]:focus-visible,
+[role="heading"]:focus-visible {
+  outline: 2px solid #07717C;
+  outline-offset: 3px;
+}
+[role="heading"]:focus:not(:focus-visible) { outline: none; }
+.journey-closure {
+  display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 12px;
+  background: #FFFFFF; border: 2px solid #B42318;
+  color: #B42318; font: 600 18px/1 'IBMPlexSans_600SemiBold', sans-serif;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

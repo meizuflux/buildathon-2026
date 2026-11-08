@@ -20,7 +20,7 @@ export function Header({ household, online, now, onHousehold, onPresenter, prese
           </View>
           <Text style={{ fontFamily: type.semibold, fontSize: 17, color: c.ink }}>Haven</Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', flexShrink: 1 }}>
           <DemoLabel now={now} onPress={onPresenter} open={presenterOpen} />
           <Pressable accessibilityRole="button" accessibilityLabel={`Household: ${household}. Edit household needs`} onPress={onHousehold}
             style={({ pressed }) => [{ minHeight: 44, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface, flexDirection: 'row', alignItems: 'center', gap: 8 }, pressed && { opacity: 0.7 }]}>

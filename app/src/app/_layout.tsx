@@ -16,6 +16,8 @@ import { SignIn } from '../components/auth/SignIn';
 import { config } from '../constants/config';
 import { SyncProvider } from '../hooks/useSync';
 import { ThemeProvider, useTheme } from '../hooks/useTheme';
+import { DemoProvider } from '../demo/store';
+import PlanDashboard from '../screens/PlanDashboard';
 export const unstable_settings = { initialRouteName: '(tabs)' };
 const client = new QueryClient({ defaultOptions: { queries: { staleTime: 30000, retry: 1, gcTime: 24 * 60 * 60 * 1000 }, mutations: { retry: false } } });
 export default function RootLayout() { return <ThemeProvider><Application /></ThemeProvider>; }
@@ -27,5 +29,7 @@ function Application() {
 function SessionApp() {
   const { palette: colors, dark } = useTheme(); const auth = useAuth();
   if (!auth.ready) return <View style={{ flex: 1, backgroundColor: colors.cream, justifyContent: 'center' }}><ActivityIndicator color={colors.green} /></View>;
+  // Demo mode: the resident dashboard is the whole app, with simulated data and no sign-in.
+  if (config.mode === 'mock') return <><StatusBar style={dark ? 'light' : 'dark'} /><DemoProvider><PlanDashboard /></DemoProvider></>;
   if (config.mode === 'api' && !auth.user) return <><StatusBar style={dark ? 'light' : 'dark'} /><SignIn /></>;
   return <SyncProvider key={auth.user?.id ?? 'local'}><StatusBar style={dark ? 'light' : 'dark'} /><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.cream } }}><Stack.Screen name="(tabs)" /><Stack.Screen name="(onboarding)/index" options={{ presentation: 'modal' }} /><Stack.Screen name="assistance/new" options={{ presentation: 'modal' }} /><Stack.Screen name="reports/index" options={{ presentation: 'modal' }} /></Stack></SyncProvider>; }
