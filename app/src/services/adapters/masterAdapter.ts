@@ -1,7 +1,7 @@
 ﻿import { z } from 'zod';
 import type { ApiAdapter } from '../api/types';
 import type { CacheStore } from '../../storage/cache';
-import type { HouseholdInput, Household, ResponsePlan, SituationReport, SupportMessage, Source } from '../../types/models';
+import type { HouseholdInput, Household, ResponsePlan, SituationReport, SupportMessage, Source, Disaster } from '../../types/models';
 import { userSchema, familySchema, disasterSchema, masterPlanSchema, masterUpdateSchema, masterReportSchema, type MasterFamily, type MasterPlan } from '../api/masterSchemas';
 import { ApiError, type makeHttpClient } from '../api/http';
 import { coordinate } from '../../utils/shelter';
@@ -26,8 +26,10 @@ export function mapPlan(plan: MasterPlan, disasterType: string): ResponsePlan {
   };
 }
 export function createMasterAdapter(http: ReturnType<typeof makeHttpClient>, store: CacheStore, origin: string): ApiAdapter {
-  async function user() { return http('/api/me', userSchema); }
-  async function family() { const me = await user(); return me.family_id ? http('/api/families/' + encodeURIComponent(me.family_id), familySchema) : null; }
+  let userRequest: Promise<z.infer<typeof userSchema>> | undefined;
+  async function user() { userRequest ??= http('/api/me', userSchema).finally(() => { userRequest = undefined; }); return userRequest; }
+  let familyRequest: Promise<MasterFamily | null> | undefined;
+  async function family() { familyRequest ??= (async () => { const me = await user(); return me.family_id ? http('/api/families/' + encodeURIComponent(me.family_id), familySchema) : null; })().finally(() => { familyRequest = undefined; }); return familyRequest; }
   async function requiredFamily() { const result = await family(); if (!result) throw new ApiError('Add your household first.'); return result; }
   function metadataKey(id: string) { return 'master-profile:' + origin + ':' + id; }
   async function mapFamily(raw: MasterFamily): Promise<Household> {
@@ -39,7 +41,9 @@ export function createMasterAdapter(http: ReturnType<typeof makeHttpClient>, sto
       needs: inferredNeeds, otherNeeds: raw.needs.other_special_care ?? '', hasCar: raw.resources.has_car, canDrive: false, seats: 0, needsTransport: local?.needsTransport ?? false, needsShelter: false, needsFood: false,
       location: { label: sameCoordinates && local ? local.location.label : `${raw.location.latitude.toFixed(5)}, ${raw.location.longitude.toFixed(5)}`, ...raw.location }, locationMode: local?.locationMode ?? 'home', ...(local?.homeLocation ? { homeLocation: local.homeLocation } : {}), id: raw.id, disasterId: raw.disaster_id, updatedAt: raw.updated_at };
   }
-  const getDisasters: ApiAdapter['getDisasters'] = async () => (await http('/api/disasters', z.object({ disasters: z.array(disasterSchema) }))).disasters.map(d => ({ id: d.id, name: d.name, type: d.type, status: d.status, affectedArea: d.affected_area, updatedAt: d.updated_at }));
+  const loadDisasters = async (): Promise<Disaster[]> => (await http('/api/disasters', z.object({ disasters: z.array(disasterSchema) }))).disasters.map(d => ({ id: d.id, name: d.name, type: d.type, status: d.status, affectedArea: d.affected_area, updatedAt: d.updated_at }));
+  let disastersRequest: Promise<Disaster[]> | undefined;
+  const getDisasters: ApiAdapter['getDisasters'] = () => (disastersRequest ??= loadDisasters().finally(() => { disastersRequest = undefined; }));
   async function disasterId() { const profile = await family(); return profile?.disaster_id ?? (await getDisasters())[0]?.id; }
   async function save(input: HouseholdInput, update: boolean) {
     const current = update ? await requiredFamily() : null;

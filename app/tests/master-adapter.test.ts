@@ -34,3 +34,23 @@ test('local-only fields stay off the backend payload and unsupported features re
   assert.deepEqual(await api.getAssistanceRequests(), []);
   assert.equal(calls.length, 0);
 });
+
+test('concurrent reads share the profile and disaster requests', async () => {
+  const calls: string[] = [];
+  const http = (async (path: string) => {
+    calls.push(path); await new Promise(resolve => setTimeout(resolve, 10));
+    if (path === '/api/me') return { id: 'user-1', role: 'family', family_id: 'family-1' };
+    if (path === '/api/families/family-1') return { id: 'family-1', disaster_id: 'disaster-1', adults: 2, children: 1, location: { latitude: 1, longitude: 2 }, needs: { pets: false, immediate_medication: false, medical_notes: null, accessibility_notes: null, other_special_care: null }, resources: { has_car: false }, created_at: 'now', updated_at: 'now' };
+    if (path === '/api/disasters') return { disasters: [{ id: 'disaster-1', type: 'hurricane', name: 'Hurricane', status: 'active', affected_area: 'Area', updated_at: 'now' }] };
+    throw new Error('unexpected request: ' + path);
+  }) as unknown as Parameters<typeof createMasterAdapter>[0];
+  const store: CacheStore = { async get<T>() { return null as T | null; }, async set() {}, async remove() {} };
+  const api = createMasterAdapter(http, store, 'http://test');
+  const [first, second] = await Promise.all([api.getHousehold(), api.getHousehold()]);
+  assert.deepEqual(first, second);
+  assert.equal(calls.filter(path => path === '/api/me').length, 1);
+  assert.equal(calls.filter(path => path === '/api/families/family-1').length, 1);
+  const [a, b] = await Promise.all([api.getDisasters(), api.getDisasters()]);
+  assert.deepEqual(a, b);
+  assert.equal(calls.filter(path => path === '/api/disasters').length, 1);
+});
