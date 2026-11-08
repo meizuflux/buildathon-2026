@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet, TextInput, ActivityIndicator, RefreshControl, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, Image, Pressable, ScrollView, StyleSheet, TextInput, ActivityIndicator, RefreshControl, KeyboardAvoidingView, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router, type Href } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,7 +41,7 @@ export function QueryState({ query, children }: { query: { isPending: boolean; i
 export function Page({ title, subtitle, children, action, footer }: { title: string; subtitle?: string; children: React.ReactNode; action?: React.ReactNode; footer?: React.ReactNode }) { const { c, s } = useUI();
   const sync = useSyncContext();
   const theme = useTheme();
-  return <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: c.cream }}><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><View style={s.topbar}><Row style={s.brandRow}><Row style={s.brandGroup}><View style={s.brandMark}><View style={s.brandMarkBar} /><View style={[s.brandMarkBar, s.brandMarkBarShort]} /><View style={[s.brandMarkBar, s.brandMarkBarShorter]} /></View><Text style={s.brandName}>Haven</Text></Row><Row style={{ gap: 4 }}>
+  return <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: c.cream }}><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><View style={s.topbar}><Row style={s.brandRow}><Row style={s.brandGroup}><Image source={require('../../../assets/haven-mark.png')} style={s.brandMark} accessible={false} aria-hidden /><Text style={s.brandName}>Haven</Text></Row><Row style={{ gap: 4 }}>
     {!sync.online && <Text style={s.caption}>Offline</Text>}
     {!!sync.syncError && <Text style={s.caption}>Connection issue</Text>}
     <Pressable accessibilityRole="button" accessibilityLabel="Open updates" onPress={() => router.push('/updates')} style={s.headerIcon}><Icon name="bell" size={20} color={c.ink} /></Pressable>
@@ -78,10 +78,7 @@ const createStyles = (c: Palette) => StyleSheet.create({
   topbar: { minHeight: 54, paddingVertical: 2, paddingHorizontal: 20, backgroundColor: c.chrome, borderBottomWidth: 1, borderBottomColor: c.border, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 12 },
   brandRow: { width: '100%', maxWidth: 440, alignSelf: 'center', justifyContent: 'space-between' },
   brandGroup: { gap: 8 },
-  brandMark: { width: 23, height: 22, justifyContent: 'center', gap: 2, overflow: 'hidden' },
-  brandMarkBar: { width: 18, height: 4, borderRadius: 2, backgroundColor: c.green, transform: [{ skewX: '-28deg' }] },
-  brandMarkBarShort: { width: 14 },
-  brandMarkBarShorter: { width: 10 },
+  brandMark: { width: 26, height: 26 },
   brandName: { fontFamily: type.semibold, fontSize: 17, lineHeight: 22, color: c.ink },
   headerIcon: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' },
   divider: { height: 16, backgroundColor: c.transparent },

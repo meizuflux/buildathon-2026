@@ -4,6 +4,7 @@
     "slug": "haven-response",
     "scheme": "haven",
     "version": "1.0.0",
+    "icon": "./assets/icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -11,12 +12,19 @@
       "bundleIdentifier": "org.haven.response"
     },
     "android": {
-      "package": "org.haven.response"
+      "package": "org.haven.response",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-foreground.png",
+        "backgroundImage": "./assets/adaptive-background.png",
+        "monochromeImage": "./assets/adaptive-foreground.png",
+        "backgroundColor": "#1d4ed8"
+      }
     },
     "web": {
       "bundler": "metro",
       "output": "single",
-      "name": "Haven"
+      "name": "Haven",
+      "favicon": "./assets/haven-mark.png"
     },
     "plugins": [
       "expo-router",
