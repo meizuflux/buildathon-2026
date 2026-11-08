@@ -2,8 +2,6 @@
 
 import asyncio
 import json
-import os
-import secrets
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -14,7 +12,11 @@ from haven.db import connect, database_path
 from haven.demo_households import generate_households
 from haven.startup import initialize_database
 
-DEMO_ACCOUNTS = (("family@demo.example", "family"), ("government@demo.example", "operator"))
+# Fixed, deliberately simple sign-ins for the disposable demo database: (email, role, password).
+DEMO_ACCOUNTS = (
+    ("family@family.com", "family", "family"),
+    ("gov@gov.com", "operator", "gov"),
+)
 DEMO_FAMILY_ID = "demo_family_resident"
 # Matches WHEELCHAIR_YES in app/src/demo/live.ts so the household app shows the need as confirmed.
 DEMO_FAMILY_ACCESSIBILITY = "Wheelchair-accessible entrance needed"
@@ -27,7 +29,7 @@ DEMO_FAMILY_LOCATION = {"latitude": 26.31402411, "longitude": -81.58765271}
 
 
 async def seed_demo_data() -> dict[str, str]:
-    """Discard the configured SQLite database and return fresh demo credentials."""
+    """Discard the configured SQLite database and return the demo credentials."""
     locations = json.loads(DEMO_LOCATIONS.read_text(encoding="utf-8"))
     path = database_path()
     for suffix in ("", "-wal", "-shm", "-journal"):
@@ -36,8 +38,7 @@ async def seed_demo_data() -> dict[str, str]:
     created = {}
     async with connect() as connection:
         async with connection:
-            for email, role in DEMO_ACCOUNTS:
-                password = os.environ.get("DEMO_PASSWORD") or secrets.token_urlsafe(18)
+            for email, role, password in DEMO_ACCOUNTS:
                 password_hash = await asyncio.to_thread(hash_password, password)
                 await connection.execute(
                     "INSERT INTO users (id, email, password_hash, role, created_at) "

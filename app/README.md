@@ -35,13 +35,13 @@ npm run demo -- export  # static build in dist-demo/
 
 ```sh
 # from the repository root, once: seed fictional demo data with a known password
-cd backend && DATABASE_PATH=../.runtime/live-demo.sqlite3 DEMO_PASSWORD=demo-password-2026 uv run --locked python -c "import asyncio; from haven.demo_data import main; asyncio.run(main())"
+cd backend && DATABASE_PATH=../.runtime/live-demo.sqlite3 uv run --locked python -c "import asyncio; from haven.demo_data import main; asyncio.run(main())"
 DATABASE_PATH=../.runtime/live-demo.sqlite3 uv run --locked litestar --app haven.app:app run --port 8000
 # then, in app/
-npm run demo:live        # sign in as family@demo.example
+npm run demo:live        # sign in as family@family.com (password: family)
 ```
 
-`family@demo.example` has a seeded household (the backend seeds it; see [../docs/hurricane-demo.md](../docs/hurricane-demo.md)). The app follows the hurricane status, polled every 5 seconds: in peace the Plan tab shows "All clear" and the needs on file, with no shelter. When an operator initiates the hurricane from the government dashboard, the app switches within about 5 seconds to the evacuation order, jumps to the Plan tab and shows the shelter assignment; resetting returns it to All clear. If the status request fails, the app keeps the last known phase.
+`family@family.com` has a seeded household (the backend seeds it; see [../docs/hurricane-demo.md](../docs/hurricane-demo.md)). The app follows the hurricane status, polled every 5 seconds: in peace the Plan tab shows "All clear" and the needs on file, with no shelter. When an operator initiates the hurricane from the government dashboard, the app switches within about 5 seconds to the evacuation order, jumps to the Plan tab and shows the shelter assignment; resetting returns it to All clear. If the status request fails, the app keeps the last known phase.
 
 The same dashboard reads the signed-in family's profile, plan, shelters and official updates from the API:
 

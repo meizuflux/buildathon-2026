@@ -129,14 +129,14 @@ just compare-naive --json comparison.json            # also write the full compa
 
 ```sh
 cd backend
-DEMO_PASSWORD=<choose one> just demo-data      # rebuilds the disposable demo database
+just demo-data                                 # rebuilds the disposable demo database
 just dev                                       # API on http://127.0.0.1:8000
 cd ../frontend && npm run dev                  # dashboard on http://localhost:5173
 cd ../app && npm run demo:live                 # household app on http://localhost:8081
 ```
 
-Sign in to the dashboard as `government@demo.example` and to the household app as
-`family@demo.example`. Then: show the green peace dashboard and the phone's "All clear" →
+Sign in to the dashboard as `gov@gov.com` (password `gov`) and to the household app as
+`family@family.com` (password `family`). Then: show the green peace dashboard and the phone's "All clear" →
 **Preview evacuation**, play "Nearest shelter (old)" and point at the red households and the
 over-capacity shelters → switch to "Haven personalized" → **Initiate hurricane** (the phone switches to
 the evacuation order within about 5 seconds) → **Reset to peace** to rehearse again. Keep the
@@ -147,7 +147,7 @@ remove it; families see it like any broadcast to all households.
 
 ## Demo household
 
-`just demo-data` also gives `family@demo.example` a household profile: 2 adults, 1 child, a pet,
+`just demo-data` also gives `family@family.com` a household profile: 2 adults, 1 child, a pet,
 immediate medication (insulin), a wheelchair-accessible entrance need and no car, placed where the
 nearest shelter has no medical staff or medication. Nearest-shelter routing would fail them; Haven's
 plan sends them to a shelter that supports every need.

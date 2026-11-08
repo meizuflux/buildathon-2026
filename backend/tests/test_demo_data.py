@@ -20,27 +20,22 @@ from haven.demo_households import generate_households
 
 def test_demo_accounts_can_sign_in(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "demo.sqlite3"))
-    monkeypatch.delenv("DEMO_PASSWORD", raising=False)
     created = asyncio.run(seed_demo_data())
-    assert set(created) == {email for email, _ in DEMO_ACCOUNTS}
-    assert all(created.values())
+    assert created == {"family@family.com": "family", "gov@gov.com": "gov"}
     with TestClient(app=app) as client:
-        for email, role in DEMO_ACCOUNTS:
-            response = client.post(
-                "/api/auth/login", json={"email": email, "password": created[email]}
-            )
+        for email, role, password in DEMO_ACCOUNTS:
+            response = client.post("/api/auth/login", json={"email": email, "password": password})
             assert response.status_code == 200
             assert response.json()["user"]["role"] == role
 
 
-def test_shared_demo_password_and_seeded_golden_gate_scenario(tmp_path, monkeypatch):
+def test_seeded_golden_gate_scenario(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "activity.sqlite3"))
-    monkeypatch.setenv("DEMO_PASSWORD", "shared-demo-password")
-    assert set(asyncio.run(seed_demo_data()).values()) == {"shared-demo-password"}
+    asyncio.run(seed_demo_data())
     with TestClient(app=app) as client:
         operator = client.post(
             "/api/auth/login",
-            json={"email": "government@demo.example", "password": "shared-demo-password"},
+            json={"email": "gov@gov.com", "password": "gov"},
         )
         assert operator.status_code == 200
         headers = {"Authorization": f"Bearer {operator.json()['access_token']}"}
@@ -76,8 +71,8 @@ def test_reseeding_recreates_the_entire_demo_database(tmp_path, monkeypatch):
         response = client.post(
             "/api/auth/login",
             json={
-                "email": "government@demo.example",
-                "password": first_credentials["government@demo.example"],
+                "email": "gov@gov.com",
+                "password": first_credentials["gov@gov.com"],
             },
         )
         old_token = response.json()["access_token"]
@@ -89,7 +84,7 @@ def test_reseeding_recreates_the_entire_demo_database(tmp_path, monkeypatch):
         connection.execute("PRAGMA user_version = 999")
         connection.commit()
     second_credentials = asyncio.run(seed_demo_data())
-    assert first_credentials != second_credentials
+    assert first_credentials == second_credentials
     with closing(sqlite3.connect(database_path())) as connection:
         assert connection.execute("SELECT count(*) FROM shelters").fetchone()[0] == 9
         assert connection.execute("SELECT count(*) FROM families").fetchone()[0] == 1001
@@ -144,10 +139,8 @@ def test_reseeding_recreates_the_entire_demo_database(tmp_path, monkeypatch):
             client.get("/api/me", headers={"Authorization": f"Bearer {old_token}"}).status_code
             == 401
         )
-        for email, role in DEMO_ACCOUNTS:
-            response = client.post(
-                "/api/auth/login", json={"email": email, "password": second_credentials[email]}
-            )
+        for email, role, password in DEMO_ACCOUNTS:
+            response = client.post("/api/auth/login", json={"email": email, "password": password})
             assert response.status_code == 200
             assert response.json()["user"]["role"] == role
 
@@ -207,7 +200,7 @@ def test_demo_family_is_failed_by_nearest_shelter_but_not_by_haven(tmp_path, mon
         ).fetchone()
         assert row is not None
         adults, children, latitude, longitude, needs_json, resources_json, email = row
-        assert email == "family@demo.example"
+        assert email == "family@family.com"
         assert (adults, children) == (2, 1)
         needs = json.loads(needs_json)
         assert needs["pets"] and needs["immediate_medication"] and needs["medical_notes"]
