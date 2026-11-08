@@ -31,9 +31,15 @@ Existing accounts created with the earlier scrypt implementation cannot sign in;
 
 ## Demo data
 
-Run `just demo-data` to create seven fictional donation hubs in the Tampa scenario area (`DEMO_CENTER` in `demo_data.py`), a family account (`family@demo.example`), a government operator (`government@demo.example`), one hub staff account per hub (for example `staff.downtown-fire@demo.example`), and a few sample requests and pledges. The script generates a separate password for each account and prints it once when the account is created; set `DEMO_PASSWORD` to give every new account that password instead. Re-running the script leaves existing accounts, passwords, and rows unchanged. These accounts are intended for demo databases.
+With the API stopped, run `just demo-data` to delete and recreate the configured SQLite database (`DATABASE_PATH`, default `disaster_response.sqlite3`). Every run starts fresh, discarding all existing records, edits, accounts, and sessions. The command creates a family account (`family@demo.example`) and a government operator (`government@demo.example`) and prints fresh generated passwords. Restart the API and sign in with those credentials.
 
-The script also creates a fictional active Tampa hurricane, 20 fictional shelters and 1,000 synthetic family profiles with allocated plans, plus an official demo update. Synthetic family accounts cannot sign in; use the demo family account to exercise registration/profile creation independently. Locations and addresses are fictional and must not be used for emergency response. The scenario is inserted only when its disaster ID is absent, so reruns preserve edits. Use a separate `DATABASE_PATH` for a fresh demo. Disaster creation is otherwise outside the REST contract.
+The script creates a fictional active hurricane in **Golden Gate Estates, Naples**, 1,000 synthetic households at distinct real houses, seven simulated shelters at local school sites, allocated plans, and an official demo update. Synthetic family accounts cannot sign in; use the demo family account to exercise registration/profile creation independently. The household characteristics, shelter operations, capacities, capabilities, and supplies are fictional; these records do not describe actual residents or current shelter availability.
+
+Household profiles use a repeatable random sample (seed 42), shuffled across the house locations. Sizes range from one to eight people, including single adults, single parents, couples, families with children, and larger households. Car access, pets, medication urgency, accessibility needs, and other care needs vary across profiles, with specific notes about dogs/cats, prescription refills, walkers/wheelchairs, infant supplies, allergies, and power-dependent equipment. Guaranteed examples include a four-person household with a car and dog, and a single adult without a car who needs mobility and medication assistance. The distribution is designed for demo coverage rather than population estimates; seeding generates current plans for every household.
+
+House locations come from Collier County's current single-family address points on Estates roads. Every selected point was checked to intersect a distinct 2025 building footprint. Shelters use county address coordinates for Palmetto Ridge High, Corkscrew Middle, Cypress Palm Middle, Sabal Palm Elementary, Big Cypress Elementary, Estates Elementary, and Corkscrew Elementary. The fixture and its source links are in [`src/haven/data/golden_gate_estates.json`](src/haven/data/golden_gate_estates.json). Seeding works offline. To deliberately refresh the source snapshot, run `python scripts/refresh_demo_locations.py` with network access; review the resulting fixture before committing it.
+
+Demo data is disposable: there are no data migrations, version markers, or compatibility IDs. Change the seed or fixture and rerun `just demo-data` to rebuild the scenario and its allocations. The simulated shelter capacity totals 4,000. Disaster creation is otherwise outside the REST contract.
 
 ## Disaster response API
 
@@ -56,17 +62,8 @@ All paths below start with `/api`. Handlers are grouped in `haven/routers`, with
 | POST | `/families/{family_id}/reports` | Submit an idempotent family report. |
 | GET | `/disasters/{disaster_id}/reports` | List family reports as an operator. |
 | GET | `/disasters/{disaster_id}/activity` | Operator timeline of recorded actions, newest first; optional `limit` (1–1000, default 50). |
-| GET | `/resource-types` | List the seeded supply catalog (authenticated users). |
-| GET, POST | `/organizations` | List or create organizations for a disaster (operator only). |
-| GET, PATCH | `/organizations/{organization_id}` | Read or update an organization (operator only). |
-| GET | `/inventory` | List organization stock for a disaster (operator only). |
-| PATCH | `/organizations/{organization_id}/inventory` | Set stock quantities for an organization (operator only). |
-| GET, POST | `/needs` | List or create resource needs (operator only). |
-| PATCH | `/needs/{need_id}` | Update a need (operator only). |
-| GET, POST | `/shipments` | List or create shipments (operator only). |
-| PATCH | `/shipments/{shipment_id}` | Update a shipment's status, ETA, or notes (operator only). |
 
-Family and plan listings accept `limit` (1–1000, default 100) and `offset` (default 0), and return `total`, `limit`, and `offset`. Shelter listings already include resource availability, capabilities, and capacity.
+Family and plan listings accept `limit` (1–1000, default 100) and `offset` (default 0), and return `total`, `limit`, and `offset`. Shelter listings include resource availability labels, capabilities, and capacity; these describe shelter readiness and are not an inventory tracker or resource request system.
 
 PATCH requests merge supplied nested fields, preserving omitted fields. Nullable notes may be cleared with `null`. Coordinates, counts, capacities, and enumerated values are validated. Errors use `{"error":{"code":"...","message":"..."}}` consistently.
 

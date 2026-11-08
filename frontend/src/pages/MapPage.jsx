@@ -12,7 +12,7 @@ export default function MapPage() {
   const [params, setParams] = useSearchParams()
   const [selectedId, setSelectedId] = useState(params.get('shelter'))
   const [focus, setFocus] = useState(null)
-  const [layers, setLayers] = useState({ shelters: true, families: true, organizations: true, reports: true, shipments: true })
+  const [layers, setLayers] = useState({ shelters: true, families: true, reports: true })
   const [families, setFamilies] = useState([])
   const [familyError, setFamilyError] = useState(null)
   const [form, setForm] = useState(null) // { id|null, draft }
@@ -104,8 +104,6 @@ export default function MapPage() {
         families={families}
         familyError={familyError}
         reports={d.reports}
-        organizations={d.organizations}
-        shipments={d.shipments}
         disasterId={d.disasterId}
         selectedId={selectedId}
         onSelect={selectShelter}

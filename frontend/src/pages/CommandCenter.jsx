@@ -2,15 +2,11 @@ import { Link } from 'react-router-dom'
 import { AlertTriangle, ArrowRight, Info, Siren } from 'lucide-react'
 import { useData } from '../data.jsx'
 import { PageHeader, Empty } from '../components/ui.jsx'
-import { coverageByResource, isLate } from '../lib/logistics.js'
 import { cap, fullTime, timeAgo } from '../lib/format.js'
 
 const LEVEL_ICON = { critical: Siren, warning: AlertTriangle, info: Info }
 const REF_LINK = {
   shelter: (id) => `/map?shelter=${id}`,
-  organization: (id) => `/organizations/${id}`,
-  need: (id) => `/logistics/needs?focus=${id}`,
-  shipment: () => '/logistics/dispatch',
   update: () => '/comms/broadcasts',
   report: (id) => `/map?report=${id}`,
 }
@@ -20,28 +16,20 @@ export default function CommandCenter() {
   const sheltersActive = d.shelters.filter((s) => s.status !== 'closed')
   const total = sheltersActive.reduce((n, s) => n + (s.capacity.total_people || 0), 0)
   const free = sheltersActive.reduce((n, s) => n + Math.max(0, s.capacity.available_people || 0), 0)
-  const openNeeds = d.needs.filter((n) => n.status === 'open')
-  const inTransit = d.shipments.filter((s) => s.status === 'in_transit')
-  const late = d.shipments.filter(isLate).length
   const help = d.reports.filter((r) => r.type === 'need_help' && r.status === 'received').length
 
-  const coverage = coverageByResource(d).filter((r) => r.needed > 0).sort((a, b) => b.uncovered / (b.needed || 1) - a.uncovered / (a.needed || 1))
   const recentBroadcasts = d.updates.filter((u) => u.status !== 'scheduled').sort((a, b) => (b.published_at || '').localeCompare(a.published_at || '')).slice(0, 3)
 
   return (
     <div className="page">
       <PageHeader title="Command Center" subtitle={d.disaster ? `${d.disaster.name} · ${d.disaster.affected_area}` : 'Loading…'}>
         <Link to="/comms/broadcasts" className="btn btn-primary">Send broadcast</Link>
-        <Link to="/logistics/needs" className="btn">Dispatch resources</Link>
       </PageHeader>
 
       <section className="kpis" aria-label="Key figures">
         <Kpi label="People sheltered" value={(total - free).toLocaleString()} sub={`${sheltersActive.length} active sites`} to="/map" />
         <Kpi label="Spaces free" value={free.toLocaleString()} sub={total ? `${Math.round(((total - free) / total) * 100)}% occupied` : '—'} meter={total ? (total - free) / total : 0} to="/map" />
         <Kpi label="Open help requests" value={help} tone={help ? 'alert' : ''} sub={`${d.reports.length} reports total`} to="/comms/reports" />
-        <Kpi label="Open needs" value={openNeeds.length} tone={openNeeds.some((n) => n.priority === 'critical') ? 'alert' : ''}
-          sub={`${openNeeds.filter((n) => n.priority === 'critical').length} critical`} to="/logistics/needs" />
-        <Kpi label="Shipments in transit" value={inTransit.length} tone={late ? 'warn' : ''} sub={late ? `${late} running late` : 'all on time'} to="/logistics/dispatch" />
       </section>
 
       <section className="card-panel operational-alerts">
@@ -85,36 +73,6 @@ export default function CommandCenter() {
       </div>
 
       <div className="cc-grid cc-grid-even">
-        <section className="card-panel">
-          <div className="panel-title">
-            <h2>Supply coverage</h2>
-            <Link to="/logistics/inventory" className="link-sm">Inventory <ArrowRight size={13} /></Link>
-          </div>
-          {coverage.length === 0 && <Empty>No open resource needs.</Empty>}
-          <div className="table-scroll"><table className="table compact">
-            <thead><tr><th>Resource</th><th className="num">Still needed</th><th className="num">On the way</th><th className="num">Spare stock</th><th>Status</th></tr></thead>
-            <tbody>
-              {coverage.map((c) => {
-                const r = d.rt(c.resource_type_id)
-                const gap = c.uncovered - c.available
-                return (
-                  <tr key={c.resource_type_id}>
-                    <td>{r.name}<div className="muted small">{c.needCount} open need{c.needCount === 1 ? '' : 's'}</div></td>
-                    <td className="num">{c.needed} <span className="muted small">{r.unit}</span></td>
-                    <td className="num">{c.inTransit}</td>
-                    <td className="num">{c.available}</td>
-                    <td>
-                      {c.uncovered === 0 ? <span className="badge lvl-ok">Covered</span>
-                        : gap > 0 ? <span className="badge lvl-full">Short {gap}</span>
-                        : <span className="badge lvl-low">Needs dispatch</span>}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table></div>
-        </section>
-
         <section className="card-panel">
           <div className="panel-title">
             <h2>Recent broadcasts</h2>

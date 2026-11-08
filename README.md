@@ -4,15 +4,15 @@
 
 <h1 align="center">Haven</h1>
 
-<p align="center">Disaster response coordination for government operations teams and relief partners.</p>
+<p align="center">Disaster response coordination for government operations teams.</p>
 
-Haven is a disaster response coordination project. It brings together a government operations dashboard, a partner portal for shelters and relief organizations, and an API for managing households, shelters, plans, supplies, and response activity.
+Haven is a disaster response coordination project. It brings together a government operations dashboard and an API for managing family profiles, shelters, allocation plans, alerts, official updates, and reports.
 
 ## Project structure
 
-- [`backend/`](backend/) — Litestar API with an SQLite database, authentication, shelter allocation, and logistics endpoints.
-- [`frontend/`](frontend/) — React/Vite operations dashboard.
-- [`3rdparty/`](3rdparty/) — React/Vite partner portal.
+- [`app/`](app/) — Mobile app placeholder.
+- [`backend/`](backend/) — Litestar API with an SQLite database, authentication, family profiles, shelters, alerts, reports, and shelter allocation.
+- [`frontend/`](frontend/) — React/Vite operations dashboard, with preview-only WIP screens for logistics.
 
 ## Getting started
 
@@ -45,26 +45,16 @@ npm run dev
 
 Open http://localhost:5173 and sign in with the operator account. Vite forwards `/api` requests to the local API by default. Set `HAVEN_API_URL` before starting Vite to change the target.
 
-To start the partner portal in another terminal:
-
-```sh
-cd 3rdparty
-npm install
-npm run dev
-```
-
-Open http://localhost:5174. Its development server forwards `/api` to http://127.0.0.1:8000 by default; set `HAVEN_API_URL` to change that target. **The partner portal depends on partner-specific API functionality that is not currently implemented in the backend.**
-
 ## Demo data
 
-With the API stopped or running, initialize a fictional scenario and demo accounts:
+With the API stopped, recreate the disposable demo database and accounts:
 
 ```sh
 cd backend
 just demo-data
 ```
 
-The command prints generated passwords when it first creates the accounts; save them to sign in. Existing accounts and passwords are left unchanged on subsequent runs. The scenario contains synthetic households and shelters and must not be used for real emergency response. See the [backend README](backend/README.md#demo-data) for details.
+Every run deletes and rebuilds the configured SQLite database and prints fresh demo passwords. Restart the API and sign in with those credentials. The scenario places 1,000 synthetic households at actual houses in Golden Gate Estates, Naples, and seven simulated shelters at local school sites. Household profiles and shelter operations are fictional and must not be used for real emergency response. See the [backend README](backend/README.md#demo-data) for details.
 
 ## Development and checks
 
@@ -78,10 +68,6 @@ just check
 # Dashboard production build
 cd ../frontend
 npm run build
-
-# Partner portal production build
-cd ../3rdparty
-npm run build
 ```
 
-See the [backend README](backend/README.md) for API, authentication, and allocation details, and the [dashboard README](frontend/README.md) and [partner portal README](3rdparty/README.md) for component-specific information.
+See the [backend README](backend/README.md) for API, authentication, and allocation details, and the [dashboard README](frontend/README.md) for frontend information.

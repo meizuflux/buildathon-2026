@@ -1,17 +1,17 @@
-"""Create demo accounts, the fictional Tampa scenario, donation hubs, depots, shelter needs, and
-sample citizen activity."""
+"""Recreate the disposable demo database with accounts and a complete scenario."""
 
 import asyncio
 import json
 import math
 import os
 import secrets
+from pathlib import Path
 from uuid import uuid4
 
 from haven.allocation import recompute_disasters
 from haven.auth import hash_password, now, timestamp
-from haven.db import connect
-from haven.donations.matching import match_waiting_requests
+from haven.db import connect, database_path
+from haven.demo_households import generate_households
 from haven.startup import initialize_database
 
 # Demo region: the fictional Tampa hurricane scenario (see seed_tampa_scenario). Hubs are
@@ -246,201 +246,42 @@ DEMO_PLEDGES = (
 )
 
 
-async def seed_demo_data() -> dict[str, str | None]:
-    """Create hubs, missing accounts, and sample activity; return passwords only for new accounts.
-
-    New accounts get a generated password each, or `DEMO_PASSWORD` for all of them when that is set.
-    """
-    await seed_hubs()
-    shared = os.environ.get("DEMO_PASSWORD")
-    created = {}
-    pending = []
-    async with connect() as connection:
-        for email, role, hub_id in DEMO_ACCOUNTS:
-            if await (
-                await connection.execute("SELECT 1 FROM users WHERE email = ?", (email,))
-            ).fetchone():
-                created[email] = None
-                continue
-            password = shared or secrets.token_urlsafe(18)
-            password_hash = await asyncio.to_thread(hash_password, password)
-            pending.append((email, role, hub_id, password, password_hash))
-        async with connection:
-            for email, role, hub_id, password, password_hash in pending:
-                user_id = "user_" + uuid4().hex
-                await connection.execute(
-                    "INSERT INTO users (id, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?) "
-                    "ON CONFLICT(email) DO NOTHING",
-                    (user_id, email, password_hash, role, timestamp(now())),
-                )
-                created[email] = password if await connection.changes() else None
-                if created[email] and hub_id:
-                    await connection.execute(
-                        "INSERT INTO hub_staff (user_id, hub_id) VALUES (?, ?)", (user_id, hub_id)
-                    )
-    await seed_activity()
-    return created
-
-
-async def seed_hubs() -> int:
-    """Insert demo hubs, depots, and shelter needs into the Tampa scenario; existing rows are left
-    unchanged. Returns the number of hubs created.
-
-    Seeds the Tampa scenario first because every organization belongs to its disaster.
-    """
-    await seed_tampa_scenario()
-    created = 0
-    stamp = timestamp(now())
-    async with connect() as connection:
-        async with connection:
-            for hub_id, name, site_type, address, lat, lng, capacity, supplies in DEMO_HUBS:
-                organization = {
-                    "disaster_id": DEMO_DISASTER_ID,
-                    "name": name,
-                    "type": ORG_TYPE_FOR_SITE[site_type],
-                    "services": ["distribution"],
-                    "status": "active",
-                    "address": address,
-                    "location": {"latitude": lat, "longitude": lng},
-                    "contact": {"name": None, "phone": None, "email": staff_email(hub_id)},
-                    "coverage_radius_km": 5,
-                    "notes": "",
-                }
-                await connection.execute(
-                    "INSERT INTO organizations VALUES (?, ?, ?, ?) ON CONFLICT(id) DO NOTHING",
-                    (hub_id, DEMO_DISASTER_ID, json.dumps(organization), stamp),
-                )
-                if not await connection.changes():
-                    continue
-                created += 1
-                # Storage sized so the starting stock fills the hub to its scenario percentage.
-                storage = math.ceil(sum(q for q, _ in supplies.values()) * 100 / capacity)
-                await connection.execute(
-                    "INSERT INTO hubs (organization_id, site_type, storage_units) VALUES (?, ?, ?)",
-                    (hub_id, site_type, storage),
-                )
-                for resource_type_id, (quantity, _) in supplies.items():
-                    await connection.execute(
-                        "INSERT INTO inventory (organization_id, resource_type_id, quantity, "
-                        "reserved, updated_at) VALUES (?, ?, ?, 0, ?)",
-                        (hub_id, resource_type_id, quantity, stamp),
-                    )
-            for org_id, name, kind, services, address, lat, lng, notes, stock in DEMO_DEPOTS:
-                organization = {
-                    "disaster_id": DEMO_DISASTER_ID,
-                    "name": name,
-                    "type": kind,
-                    "services": services,
-                    "status": "active",
-                    "address": address,
-                    "location": {"latitude": lat, "longitude": lng},
-                    "contact": {"name": None, "phone": None, "email": None},
-                    "coverage_radius_km": 25,
-                    "notes": notes,
-                }
-                await connection.execute(
-                    "INSERT INTO organizations VALUES (?, ?, ?, ?) ON CONFLICT(id) DO NOTHING",
-                    (org_id, DEMO_DISASTER_ID, json.dumps(organization), stamp),
-                )
-                if not await connection.changes():
-                    continue
-                for resource_type_id, quantity in stock.items():
-                    await connection.execute(
-                        "INSERT INTO inventory (organization_id, resource_type_id, quantity, "
-                        "reserved, updated_at) VALUES (?, ?, ?, 0, ?)",
-                        (org_id, resource_type_id, quantity, stamp),
-                    )
-            for need_id, shelter_id, resource_type_id, quantity, priority, notes in DEMO_NEEDS:
-                await connection.execute(
-                    "INSERT INTO needs (id, disaster_id, requester_kind, requester_id, "
-                    "resource_type_id, quantity_needed, quantity_fulfilled, priority, status, "
-                    "needed_by, notes, created_at, updated_at) "
-                    "VALUES (?, ?, 'shelter', ?, ?, ?, 0, ?, 'open', NULL, ?, ?, ?) "
-                    "ON CONFLICT(id) DO NOTHING",
-                    (
-                        need_id,
-                        DEMO_DISASTER_ID,
-                        shelter_id,
-                        resource_type_id,
-                        quantity,
-                        priority,
-                        notes,
-                        stamp,
-                        stamp,
-                    ),
-                )
-    return created
-
-
-def synthetic_user(index: int) -> str:
-    """One of the Tampa scenario's synthetic family accounts (they can't sign in)."""
-    return f"demo_tampa_user_{index + 1:04d}"
-
-
-async def seed_activity() -> None:
-    """Sample requests (matched to hubs) and pending pledges from the scenario's synthetic families,
-    so the demo family account starts with no activity of its own. Existing rows are left
-    unchanged."""
-    async with connect() as connection:
-        stamp = timestamp(now())
-        await connection.execute("BEGIN IMMEDIATE")
-        try:
-            for index, (request_id, items, lat, lng, address, notes) in enumerate(DEMO_REQUESTS):
-                await connection.execute(
-                    "INSERT INTO supply_requests (id, user_id, items_json, latitude, longitude, address, notes, status, "
-                    "created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'open', ?, ?) ON CONFLICT(id) DO NOTHING",
-                    (
-                        request_id,
-                        synthetic_user(index),
-                        json.dumps(items),
-                        lat,
-                        lng,
-                        address,
-                        notes,
-                        stamp,
-                        stamp,
-                    ),
-                )
-            for index, (pledge_id, hub_id, items, notes) in enumerate(DEMO_PLEDGES, 10):
-                await connection.execute(
-                    "INSERT INTO pledges (id, user_id, hub_id, items_json, notes, status, created_at, updated_at) "
-                    "VALUES (?, ?, ?, ?, ?, 'pending', ?, ?) ON CONFLICT(id) DO NOTHING",
-                    (
-                        pledge_id,
-                        synthetic_user(index),
-                        hub_id,
-                        json.dumps(items),
-                        notes,
-                        stamp,
-                        stamp,
-                    ),
-                )
-            await match_waiting_requests(connection)
-            await connection.execute("COMMIT")
-        except BaseException:
-            await connection.execute("ROLLBACK")
-            raise
-
-
-DEMO_DISASTER_ID = "demo_tampa_hurricane"
-
-
-async def seed_tampa_scenario() -> None:
-    """Insert a fictional scenario once, without overwriting subsequent edits."""
+async def seed_demo_data() -> dict[str, str]:
+    """Discard the configured SQLite database and return fresh demo credentials."""
+    locations = json.loads(DEMO_LOCATIONS.read_text(encoding="utf-8"))
+    path = database_path()
+    for suffix in ("", "-wal", "-shm", "-journal"):
+        Path(str(path) + suffix).unlink(missing_ok=True)
     await initialize_database()
+    created = {}
+    async with connect() as connection:
+        async with connection:
+            for email, role in DEMO_ACCOUNTS:
+                password = secrets.token_urlsafe(18)
+                password_hash = await asyncio.to_thread(hash_password, password)
+                await connection.execute(
+                    "INSERT INTO users (id, email, password_hash, role, created_at) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    ("user_" + uuid4().hex, email, password_hash, role, timestamp(now())),
+                )
+                created[email] = password
+    await _seed_golden_gate_scenario(locations)
+    return created
+
+
+DEMO_DISASTER_ID = "demo_golden_gate_hurricane"
+DEMO_LOCATIONS = Path(__file__).with_name("data") / "golden_gate_estates.json"
+DEMO_NAME = "Demo Hurricane — Golden Gate Estates"
+DEMO_AREA = "Golden Gate Estates, Naples, Florida (fictional demo)"
+# Simulated shelter capacities for this exercise.
+SHELTER_CAPACITIES = (800, 600, 600, 600, 500, 500, 400)
+
+
+async def _seed_golden_gate_scenario(locations: dict) -> None:
+    """Populate an empty database using the offline geography fixture."""
     async with connect() as connection:
         await connection.execute("BEGIN IMMEDIATE")
         try:
-            # A marker prevents reruns from undoing operator edits or resurrecting records.
-            existing = await (
-                await connection.execute(
-                    "SELECT 1 FROM disasters WHERE id = ?",
-                    (DEMO_DISASTER_ID,),
-                )
-            ).fetchone()
-            if existing:
-                await connection.execute("COMMIT")
-                return
             stamp = timestamp(now())
             await connection.execute(
                 "INSERT INTO disasters (id, type, name, status, affected_area, updated_at) "
@@ -448,14 +289,15 @@ async def seed_tampa_scenario() -> None:
                 (
                     DEMO_DISASTER_ID,
                     "hurricane",
-                    "Demo Hurricane Tampa",
+                    DEMO_NAME,
                     "active",
-                    "Tampa, Florida (fictional demo)",
+                    DEMO_AREA,
                     stamp,
                 ),
             )
-            for i in range(20):
-                capacity = {"total_people": 200, "available_people": 200}
+            for i, site in enumerate(locations["shelters"]):
+                total = SHELTER_CAPACITIES[i]
+                capacity = {"total_people": total, "available_people": total}
                 capabilities = {
                     "pets_allowed": i % 3 != 0,
                     "child_friendly": True,
@@ -474,12 +316,12 @@ async def seed_tampa_scenario() -> None:
                     "capacity_json, capabilities_json, resources_json, updated_at) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
-                        f"demo_tampa_shelter_{i + 1:02d}",
+                        f"demo_shelter_{i + 1:02d}",
                         DEMO_DISASTER_ID,
-                        f"Demo Shelter {i + 1:02d}",
-                        f"Fictional location {i + 1}, Tampa, FL",
-                        27.87 + (i // 5) * 0.05,
-                        -82.55 + (i % 5) * 0.05,
+                        f"Demo — {site['name']}",
+                        site["address"],
+                        site["latitude"],
+                        site["longitude"],
                         "open",
                         json.dumps(capacity),
                         json.dumps(capabilities),
@@ -487,33 +329,30 @@ async def seed_tampa_scenario() -> None:
                         stamp,
                     ),
                 )
-            for i in range(1000):
-                user_id = f"demo_tampa_user_{i + 1:04d}"
+            households = generate_households(len(locations["households"]))
+            for i, (home, profile) in enumerate(
+                zip(locations["households"], households, strict=True)
+            ):
+                family_id = f"demo_family_{i + 1:04d}"
+                user_id = f"demo_user_{i + 1:04d}"
                 await connection.execute(
                     "INSERT INTO users (id, email, password_hash, role, created_at) "
                     "VALUES (?, ?, ?, ?, ?)",
                     (user_id, f"synthetic-family-{i + 1:04d}@demo.invalid", "!", "family", stamp),
                 )
-                needs = {
-                    "pets": i % 5 == 0,
-                    "immediate_medication": i % 17 == 0,
-                    "medical_notes": None,
-                    "accessibility_notes": "Mobility assistance" if i % 13 == 0 else None,
-                    "other_special_care": None,
-                }
                 await connection.execute(
                     "INSERT INTO families (id, owner_user_id, disaster_id, adults, children, latitude, longitude, "
                     "needs_json, resources_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
-                        f"demo_tampa_family_{i + 1:04d}",
+                        family_id,
                         user_id,
                         DEMO_DISASTER_ID,
-                        1 + i % 2,
-                        i % 3,
-                        27.86 + (i % 20) * 0.01,
-                        -82.57 + (i % 23) * 0.01,
-                        json.dumps(needs),
-                        json.dumps({"has_car": i % 4 != 0}),
+                        profile["adults"],
+                        profile["children"],
+                        home["latitude"],
+                        home["longitude"],
+                        json.dumps(profile["needs"]),
+                        json.dumps(profile["resources"]),
                         stamp,
                         stamp,
                     ),
@@ -522,7 +361,7 @@ async def seed_tampa_scenario() -> None:
                 "INSERT INTO disaster_updates (id, disaster_id, title, message, severity, published_at) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
                 (
-                    "demo_tampa_update",
+                    "demo_update",
                     DEMO_DISASTER_ID,
                     "Demo hurricane update",
                     "Fictional exercise only. Follow instructions from local officials.",
@@ -538,19 +377,10 @@ async def seed_tampa_scenario() -> None:
 
 
 async def main() -> None:
+    print(f"Recreating disposable demo database: {database_path()}")
     for email, password in (await seed_demo_data()).items():
-        if password is None:
-            print(f"{email}: already exists; left unchanged")
-        else:
-            print(f"{email}: created; password: {password}")
-    await seed_tampa_scenario()
-    print("Tampa scenario ready: 20 fictional shelters and 1,000 synthetic families.")
-    print(f"Logistics ready: {len(DEMO_DEPOTS)} depots and {len(DEMO_NEEDS)} open shelter needs.")
-    print(
-        f"Seeded {len(DEMO_HUBS)} donation hubs, {len(DEMO_REQUESTS)} sample requests, "
-        f"{len(DEMO_PLEDGES)} sample pledges."
-    )
-    print("Passwords are shown only when accounts are created.")
+        print(f"{email}: password: {password}")
+    print("Golden Gate Estates ready: 7 simulated shelters and 1,000 synthetic households.")
 
 
 if __name__ == "__main__":

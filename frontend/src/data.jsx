@@ -11,16 +11,10 @@ const COLLECTIONS = {
   shelters: (d) => api.listShelters(d),
   updates: (d) => api.listUpdates(d),
   reports: (d) => api.listReports(d),
-  organizations: (d) => api.listOrganizations(d),
-  inventory: (d) => api.listInventory(d),
-  needs: (d) => api.listNeeds(d),
-  shipments: (d) => api.listShipments(d),
   activity: (d) => api.listActivity(d),
   alerts: (d) => api.listAlerts(d),
 }
-// These interfaces are retained for unavailable features, but the backend has
-// no corresponding collections to poll yet.
-const EMPTY = { ...Object.fromEntries(Object.keys(COLLECTIONS).map((k) => [k, []])), alerts: null, conversations: [], partnerAccounts: [] }
+const EMPTY = { ...Object.fromEntries(Object.keys(COLLECTIONS).map((k) => [k, []])), alerts: null }
 
 export function DataProvider({ children }) {
   const { expire } = useAuth()
@@ -32,7 +26,6 @@ export function DataProvider({ children }) {
       return null
     }
   })
-  const [resourceTypes, setResourceTypes] = useState([])
   const [data, setData] = useState(EMPTY)
   const [errors, setErrors] = useState({})
   const [lastSync, setLastSync] = useState(null)
@@ -54,7 +47,6 @@ export function DataProvider({ children }) {
         setDisasterId((cur) => (list.some((d) => d.id === cur) ? cur : (list.find((d) => d.status === 'active') || list[0])?.id ?? null))
       })
       .catch((e) => fail('disasters', e))
-    api.listResourceTypes().then(setResourceTypes).catch((e) => fail('resource types', e))
   }, [fail])
 
   const refresh = useCallback(async () => {
@@ -73,7 +65,7 @@ export function DataProvider({ children }) {
       }
     })
     setData((prev) => ({ ...prev, ...next }))
-    setErrors((prev) => ({ ...Object.fromEntries(Object.keys(COLLECTIONS).map((k) => [k, null])), disasters: prev.disasters, 'resource types': prev['resource types'], ...errs }))
+    setErrors((prev) => ({ ...Object.fromEntries(Object.keys(COLLECTIONS).map((k) => [k, null])), disasters: prev.disasters, ...errs }))
     setLastSync(new Date().toISOString())
     setLoaded(true)
   }, [expire])
@@ -109,29 +101,19 @@ export function DataProvider({ children }) {
   )
 
   const value = useMemo(() => {
-    const rtById = Object.fromEntries(resourceTypes.map((r) => [r.id, r]))
-    const site = (ref) => {
-      if (!ref) return null
-      if (ref.kind === 'shelter') return data.shelters.find((s) => s.id === ref.id) || null
-      if (ref.kind === 'organization') return data.organizations.find((o) => o.id === ref.id) || null
-      return null
-    }
     return {
       ...data,
       disasters,
       disasterId,
       disaster: disasters.find((d) => d.id === disasterId) || null,
       setDisasterId,
-      resourceTypes,
-      rt: (id) => rtById[id] || { id, name: id, unit: '', category: 'other' },
-      site,
       errors,
       lastSync,
       loaded,
       refresh,
       mutate,
     }
-  }, [data, disasters, disasterId, resourceTypes, errors, lastSync, loaded, refresh, mutate])
+  }, [data, disasters, disasterId, errors, lastSync, loaded, refresh, mutate])
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>
 }

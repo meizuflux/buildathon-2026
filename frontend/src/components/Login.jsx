@@ -27,7 +27,7 @@ export default function Login() {
           <span className="brand-mark" aria-hidden="true" />
           Haven <span className="brand-sub">Operations</span>
         </div>
-        <p className="muted">Sign in with your operator account to manage relief locations, communications and logistics.</p>
+        <p className="muted">Sign in with your operator account to manage shelters, families and emergency communications.</p>
         <label className="field">
           <span>Email</span>
           <input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />

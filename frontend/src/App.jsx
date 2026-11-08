@@ -10,11 +10,7 @@ import FamilyDetail from './pages/FamilyDetail.jsx'
 import MapPage from './pages/MapPage.jsx'
 import Broadcasts from './pages/Broadcasts.jsx'
 import FamilyReports from './pages/FamilyReports.jsx'
-import Needs from './pages/Needs.jsx'
-import Dispatch from './pages/Dispatch.jsx'
-import Inventory from './pages/Inventory.jsx'
-import Organizations from './pages/Organizations.jsx'
-import OrganizationDetail from './pages/OrganizationDetail.jsx'
+import Logistics from './pages/Logistics.jsx'
 
 export default function App() {
   const { user } = useAuth()
@@ -32,19 +28,12 @@ export default function App() {
           <Route path="comms/broadcasts" element={<Broadcasts />} />
           <Route path="comms/reports" element={<FamilyReports />} />
           <Route path="logistics" element={<Navigate to="/logistics/needs" replace />} />
-          <Route path="logistics/needs" element={<Needs />} />
-          <Route path="logistics/dispatch" element={<Dispatch />} />
-          <Route path="logistics/inventory" element={<Inventory />} />
-          <Route path="organizations" element={<Organizations />} />
-          <Route path="organizations/:id" element={<OrganizationDetail />} />
-          <Route path="partners" element={<Unavailable name="Partner accounts" />} />
+          <Route path="logistics/needs" element={<Logistics section="needs" />} />
+          <Route path="logistics/dispatch" element={<Logistics section="dispatch" />} />
+          <Route path="logistics/inventory" element={<Logistics section="inventory" />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </DataProvider>
   )
-}
-
-function Unavailable({ name }) {
-  return <div className="page"><h1>{name}</h1><p>This feature is unavailable with the current server.</p></div>
 }

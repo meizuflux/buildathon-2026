@@ -1,18 +1,14 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Bell, Building2, FileText, KeyRound, LayoutDashboard, Map, Megaphone, PackageSearch, RefreshCw, Truck, Users, Warehouse } from 'lucide-react'
+import { Bell, FileText, LayoutDashboard, Map, Megaphone, PackageSearch, RefreshCw, Truck, Users, Warehouse } from 'lucide-react'
 import { useAuth } from '../auth.jsx'
 import { useData } from '../data.jsx'
 import { DISASTER_TYPES } from '../lib/constants.js'
 import { timeAgo } from '../lib/format.js'
-import { isLate, needProgress } from '../lib/logistics.js'
 
 export default function Layout() {
   const { user, logout } = useAuth()
   const d = useData()
 
-  const criticalNeeds = d.needs.filter((n) => n.status === 'open' && n.priority === 'critical' && needProgress(n, d.shipments).uncovered > 0).length
-  const late = d.shipments.filter(isLate).length
-  const pendingApproval = d.shipments.filter((s) => s.status === 'requested').length
   const helpOpen = d.reports.filter((r) => r.type === 'need_help' && r.status === 'received').length
 
   const nav = [
@@ -27,13 +23,9 @@ export default function Layout() {
       { to: '/comms/reports', label: 'Family reports', icon: FileText, badge: helpOpen, tone: 'alert' },
     ] },
     { section: 'Logistics', items: [
-      { to: '/logistics/needs', label: 'Needs', icon: PackageSearch, badge: criticalNeeds, tone: 'alert' },
-      { to: '/logistics/dispatch', label: 'Dispatch', icon: Truck, badge: late + pendingApproval, tone: 'warn' },
-      { to: '/logistics/inventory', label: 'Inventory', icon: Warehouse },
-    ] },
-    { section: 'Network', items: [
-      { to: '/organizations', label: 'Organizations', icon: Building2 },
-      { to: '/partners', label: 'Portal access', icon: KeyRound },
+      { to: '/logistics/needs', label: 'Needs', icon: PackageSearch, wip: true },
+      { to: '/logistics/dispatch', label: 'Dispatch', icon: Truck, wip: true },
+      { to: '/logistics/inventory', label: 'Inventory', icon: Warehouse, wip: true },
     ] },
   ]
 
@@ -50,10 +42,11 @@ export default function Layout() {
           {nav.map((g, i) => (
             <div key={i} className="nav-group">
               {g.section && <div className="nav-section">{g.section}</div>}
-              {g.items.map(({ to, label, icon: Icon, end, badge, tone }) => (
+              {g.items.map(({ to, label, icon: Icon, end, badge, tone, wip }) => (
                 <NavLink key={to} to={to} end={end} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                   <Icon size={17} aria-hidden="true" />
                   <span>{label}</span>
+                  {wip && <span className="nav-wip" title="Work in progress">WIP</span>}
                   {badge > 0 && <span className={`nav-badge tone-${tone}`}>{badge}</span>}
                 </NavLink>
               ))}
