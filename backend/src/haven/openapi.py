@@ -16,8 +16,9 @@ class ErrorResponse(TypedDict):
 
 class User(TypedDict):
     id: str
-    role: Literal["family", "operator"]
+    role: Literal["family", "operator", "hub_staff"]
     family_id: str | None
+    hub_id: str | None
 
 
 class Registration(TypedDict):
