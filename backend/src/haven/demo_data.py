@@ -54,18 +54,18 @@ DEMO_DISASTER_ID = "golden_gate_hurricane"
 DEMO_LOCATIONS = Path(__file__).with_name("data") / "golden_gate_estates.json"
 DEMO_NAME = "Golden Gate Estates"
 DEMO_AREA = "Golden Gate Estates, Naples, Florida"
-# Simulated shelter capacities for this exercise.
+# Simulated shelter capacities and capabilities for this exercise.
 DEMO_SHELTER_OPERATIONS = {
-    # Capacity, medical staff, pets, special care, clothes availability.
-    "shelter_01": (1800, True, True, True, "available"),
-    "shelter_04": (1200, True, True, True, "available"),
-    "shelter_05": (500, True, True, True, "available"),
-    "shelter_06": (500, True, True, True, "limited"),
-    "shelter_08": (500, False, True, False, "limited"),
-    "shelter_09": (250, True, False, True, "available"),
-    "shelter_10": (500, True, True, True, "available"),
-    "shelter_11": (500, False, False, True, "limited"),
-    "shelter_12": (250, True, False, True, "limited"),
+    # Capacity, medical staff, pets, wheelchair, child_friendly, special care, clothes availability.
+    "shelter_01": (1800, True, True, True, True, True, "available"),
+    "shelter_04": (1200, True, True, True, True, True, "available"),
+    "shelter_05": (500, False, True, True, True, False, "available"),
+    "shelter_06": (500, False, False, False, True, False, "limited"),
+    "shelter_08": (500, False, True, True, True, False, "limited"),
+    "shelter_09": (250, False, False, True, False, True, "available"),
+    "shelter_10": (500, False, False, False, True, False, "available"),
+    "shelter_11": (500, False, False, False, True, False, "limited"),
+    "shelter_12": (250, True, False, True, False, False, "limited"),
 }
 
 
@@ -74,7 +74,7 @@ def demo_shelter_snapshots(locations: dict[str, Any]) -> list[dict[str, Any]]:
     result = []
     for i, site in enumerate(locations["shelters"]):
         identity = site.get("id", f"shelter_{i + 1:02d}")
-        total, medical, pets, special_care, clothes = DEMO_SHELTER_OPERATIONS[identity]
+        total, medical, pets, wheelchair, child_friendly, special_care, clothes = DEMO_SHELTER_OPERATIONS[identity]
         result.append(
             {
                 "id": identity,
@@ -87,8 +87,8 @@ def demo_shelter_snapshots(locations: dict[str, Any]) -> list[dict[str, Any]]:
                 "capacity": {"total_people": total, "available_people": total},
                 "capabilities": {
                     "pets_allowed": pets,
-                    "child_friendly": True,
-                    "wheelchair_accessible": True,
+                    "child_friendly": child_friendly,
+                    "wheelchair_accessible": wheelchair,
                     "medical_staff": ["General medical staff"] if medical else [],
                     "special_care_notes": "General special care" if special_care else None,
                 },
