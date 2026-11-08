@@ -17,7 +17,7 @@ DEMO_ACCOUNTS = (
     ("family@family.com", "family", "family"),
     ("gov@gov.com", "operator", "gov"),
 )
-DEMO_FAMILY_ID = "family_resident"
+DEMO_FAMILY_ID = "family_0000"
 # Matches WHEELCHAIR_YES in app/src/resident/api.ts so the household app shows the need as confirmed.
 DEMO_FAMILY_ACCESSIBILITY = "Wheelchair-accessible entrance needed"
 # Home of the demo household: golden_gate_estates.json households[61]. Its nearest shelter by
@@ -147,11 +147,11 @@ async def _seed_golden_gate_scenario(locations: dict) -> None:
                 zip(locations["households"], households, strict=True)
             ):
                 family_id = f"family_{i + 1:04d}"
-                user_id = f"user_{i + 1:04d}"
+                user_id = f"user_{i + 1}"
                 await connection.execute(
                     "INSERT INTO users (id, email, password_hash, role, created_at) "
                     "VALUES (?, ?, ?, ?, ?)",
-                    (user_id, f"synthetic-family-{i + 1:04d}@haven.local", "!", "family", stamp),
+                    (user_id, f"synthetic-family-{i + 1}@haven.local", "!", "family", stamp),
                 )
                 await connection.execute(
                     "INSERT INTO families (id, owner_user_id, disaster_id, adults, children, latitude, longitude, "

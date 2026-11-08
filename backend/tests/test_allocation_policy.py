@@ -40,7 +40,10 @@ def test_allocator_policy_avoids_unhelpful_moves_without_mutating_inputs():
         [incumbent, arriving], [near, far], {"incumbent": "near"}
     )
 
-    assert {family_id: selected["id"] for family_id, selected in assigned.items()} == {
+    assert {
+        family_id: (selected["id"] if selected is not None else None)
+        for family_id, selected in assigned.items()
+    } == {
         "incumbent": "near",
         "arriving": "far",
     }

@@ -221,6 +221,7 @@ def test_demo_family_is_failed_by_nearest_shelter_but_not_by_haven(tmp_path, mon
         assert created.status_code == 201
         family_data = created.json()
         family_id = family_data["id"]
+        assert family_id == "family_0000"
 
     with closing(sqlite3.connect(database_path())) as connection:
         shelters = [
