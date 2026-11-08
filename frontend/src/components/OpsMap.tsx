@@ -22,18 +22,6 @@ export function familyKind(f: Family): FamilyKind {
   return 'plain'
 }
 
-const compact = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n))
-
-// Peace mode: every non-closed shelter is a green pin labelled with its total capacity.
-function standbyIcon(s: Shelter, selected: boolean) {
-  return L.divIcon({
-    className: '',
-    iconSize: [46, 46],
-    iconAnchor: [23, 23],
-    html: `<div class="hx-pin lvl-ok standby${selected ? ' selected' : ''}"><svg viewBox="0 0 46 46" aria-hidden="true"><circle class="bg" cx="23" cy="23" r="19"/><circle class="arc" cx="23" cy="23" r="19" pathLength="100" stroke-dasharray="100 100" transform="rotate(-90 23 23)"/></svg><span class="n">${compact(s.capacity.total_people || 0)}</span></div>`,
-  })
-}
-
 function shelterIcon(s: Shelter, selected: boolean) {
   const level = shelterLevel(s)
   const pct = (occupancy(s) * 100).toFixed(1)
@@ -103,7 +91,6 @@ type OpsMapProps = {
   home?: Location | null
   line?: [number, number][] | null
   zoomControl?: boolean
-  standby?: boolean
   extraPoints?: [number, number][]
   children?: ReactNode
 }
@@ -113,7 +100,7 @@ const ALL_LAYERS: MapLayers = { shelters: true, families: true, reports: true }
 export default function OpsMap({
   shelters = [], families = [], reports = [], layers = ALL_LAYERS, selectedId, onSelect, focus, fitKey,
   picking = false, draftLocation, onPick, popups = true, home, line, zoomControl = true,
-  standby = false, extraPoints, children,
+  extraPoints, children,
 }: OpsMapProps) {
   const points = useMemo(() => {
     const pts: [number, number][] = [
@@ -124,7 +111,6 @@ export default function OpsMap({
     if (extraPoints) pts.push(...extraPoints)
     return pts
   }, [shelters, families, home, extraPoints])
-  const shownShelters = useMemo(() => (standby ? shelters.filter((s) => s.status !== 'closed') : shelters), [shelters, standby])
 
   return (
     <div className={`hx-map ${picking ? 'is-picking' : ''}`}>
@@ -139,7 +125,7 @@ export default function OpsMap({
         {line && <Polyline positions={line} pathOptions={{ color: '#5b9cf0', weight: 2, dashArray: '6 6', opacity: 0.9 }} />}
 
         {layers.families && families.map((f) => {
-          const kind = standby ? 'plain' : familyKind(f)
+          const kind = familyKind(f)
           return (
             <CircleMarker key={f.id} center={[f.location.latitude, f.location.longitude]} radius={kind === 'med' ? 3.8 : 3.2}
               pathOptions={{ stroke: false, fillColor: FAMILY_COLOR[kind], fillOpacity: kind === 'med' ? 0.85 : kind === 'nocar' ? 0.6 : 0.45 }}>
@@ -171,12 +157,12 @@ export default function OpsMap({
           </Marker>
         ))}
 
-        {layers.shelters && shownShelters.map((s) => (
-          <Marker key={s.id} position={[s.location.latitude, s.location.longitude]} icon={standby ? standbyIcon(s, s.id === selectedId) : shelterIcon(s, s.id === selectedId)}
+        {layers.shelters && shelters.map((s) => (
+          <Marker key={s.id} position={[s.location.latitude, s.location.longitude]} icon={shelterIcon(s, s.id === selectedId)}
             zIndexOffset={s.id === selectedId ? 1000 : 500}
             eventHandlers={{ click: () => { if (!picking) onSelect?.(s.id) } }}>
             <Tooltip direction="top" offset={[0, -22]}>{s.name}</Tooltip>
-            {popups && !onSelect && !picking && !standby && (
+            {popups && !onSelect && !picking && (
               <Popup>
                 <div className="pop-title">{s.name}</div>
                 <div className="pop-meta">{s.address}</div>
