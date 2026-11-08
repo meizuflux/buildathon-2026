@@ -1,22 +1,82 @@
-"""Pure shelter matching policy, independent of storage and API orchestration.
+"""Coordinated household allocation with Google OR-Tools CP-SAT.
 
-Allocation uses a deterministic scarcity-first greedy heuristic. Existing
-reservations at open/full shelters are retained first; new or displaced households then
-consider medication urgency before the number of eligible shelters, followed
-by families without a car and larger households. Each such family receives
-its closest remaining compatible shelter. This is coordinated across a
-disaster. A bounded search refines small pools to maximize households placed,
-then people served, then minimize total travel distance; larger pools retain
-the heuristic result. Capacity does not block a destination: remaining
-households overflow the least-loaded compatible shelter, or use the
-least-mismatched open/full shelter with a critical plan alert.
+Every household gets one open/full destination whenever one exists. Requirements
+outrank capacity, balanced utilization, supplies, travel without a car, all travel,
+and finally moves.
+Capacity is soft: shortages produce overflow rather than dropped households.
+The bounded solver starts from complete assignments and never returns a result
+worse than its seed under the same lexicographic objective.
 """
 
+import logging
 import math
+import time
+from dataclasses import dataclass, field
 from typing import Any
 
-_MAX_REFINEMENT_FAMILIES = 64
-_MAX_REFINEMENT_NODES = 10_000
+from ortools.sat.python import cp_model
+
+logger = logging.getLogger(__name__)
+DEFAULT_SOLVE_SECONDS = 5.0
+_CLINICAL_REQUIREMENTS = {"medical_staff", "medication", "wheelchair_accessible", "special_care"}
+_SUPPLY_PENALTY = {"available": 0, "limited": 1, "unknown": 2, "unavailable": 3}
+
+
+# Care and other required needs are protected before every profile below.
+PRIORITY_PROFILES = {
+    "needs_first": (
+        "physical_overflow",
+        "budget_overflow",
+        "peak_overflow",
+        "supplies",
+        "no_car_distance",
+        "distance",
+        "moves",
+    ),
+    "headroom": (
+        "physical_overflow",
+        "budget_overflow",
+        "peak_overflow",
+        "headroom",
+        "supplies",
+        "no_car_distance",
+        "distance",
+        "moves",
+    ),
+    "balanced": (
+        "physical_overflow",
+        "budget_overflow",
+        "peak_overflow",
+        "utilization",
+        "supplies",
+        "no_car_distance",
+        "distance",
+        "moves",
+    ),
+    "travel_then_balance": (
+        "physical_overflow",
+        "budget_overflow",
+        "peak_overflow",
+        "supplies",
+        "no_car_distance",
+        "distance",
+        "utilization",
+        "moves",
+    ),
+}
+DEFAULT_PRIORITY_PROFILE = "balanced"
+
+
+@dataclass
+class AllocationDiagnostics:
+    """Optional search evidence for evaluation tools; never part of a family plan."""
+
+    profile: str = ""
+    status: str = "NOT_RUN"
+    elapsed_seconds: float = 0.0
+    stages: list[dict[str, Any]] = field(default_factory=list)
+    initial_score: dict[str, int] = field(default_factory=dict)
+    final_score: dict[str, int] = field(default_factory=dict)
 
 
 def household_size(family: dict[str, Any]) -> int:
@@ -56,7 +116,7 @@ def compatibility_mismatches(family: dict[str, Any], shelter: dict[str, Any]) ->
 
 
 def distance(family: dict[str, Any], shelter: dict[str, Any]) -> float:
-    """Great-circle distance in kilometers, used only to order candidates."""
+    """Great-circle distance in kilometers for the travel objectives."""
     start, end = family["location"], shelter["location"]
     lat1, lat2 = math.radians(start["latitude"]), math.radians(end["latitude"])
     dlat = lat2 - lat1
@@ -65,378 +125,343 @@ def distance(family: dict[str, Any], shelter: dict[str, Any]) -> float:
     return 6371.0088 * 2 * math.asin(math.sqrt(min(1.0, max(0.0, a))))
 
 
+def _needs_score(family: dict[str, Any], shelter: dict[str, Any]) -> tuple[int, int]:
+    unmet = compatibility_mismatches(family, shelter)
+    clinical = sum(item in _CLINICAL_REQUIREMENTS for item in unmet)
+    return clinical, len(unmet) - clinical
+
+
+def _supply_cost(family: dict[str, Any], shelter: dict[str, Any]) -> int:
+    fields = ["food", "water", "clothes"]
+    if family["needs"].get("immediate_medication"):
+        fields.append("medication")
+    return household_size(family) * sum(
+        _SUPPLY_PENALTY[shelter["resources"].get(field, "unknown")] for field in fields
+    )
+
+
 def allocate_disaster(
     families: list[dict[str, Any]],
     shelters: list[dict[str, Any]],
     prior_shelter: dict[str, str | None],
     *,
-    max_refinement_families: int | None = None,
-    max_refinement_nodes: int | None = None,
+    max_solve_seconds: float | None = None,
+    priority_profile: str | None = None,
+    diagnostics: AllocationDiagnostics | None = None,
 ) -> tuple[dict[str, dict[str, Any] | None], dict[str, int]]:
-    """Return shelter choices and remaining budgets for one disaster pool.
+    """Return complete choices and remaining budgets without mutating inputs.
 
-    This function only evaluates the supplied family, shelter, and reservation
-    snapshots. It performs no database reads, writes, or input mutation.
+    Minimum unmet clinical requirements, then other requirements, are determined
+    per household. Because capacities are soft, these minima can all be achieved
+    simultaneously; eliminating worse matches makes them hard solver guarantees,
+    including on timeout. Subsequent objectives are solved in order, fixing each
+    optimum before starting the next. An unproved stage stops the search.
+
+    Distance is rounded to meters and summed per household. Supply labels are
+    preferences weighted by household size, never invented inventory quantities.
+    Closed/absent shelters are the only reason a destination can be None.
     """
-    if max_refinement_families is None:
-        max_refinement_families = _MAX_REFINEMENT_FAMILIES
-    if max_refinement_nodes is None:
-        max_refinement_nodes = _MAX_REFINEMENT_NODES
+    started = time.monotonic()
+    profile = DEFAULT_PRIORITY_PROFILE if priority_profile is None else priority_profile
+    if profile not in PRIORITY_PROFILES:
+        raise ValueError(f"Unknown allocation priority profile: {profile}")
+    objective_names = PRIORITY_PROFILES[profile]
+    if diagnostics is not None:
+        diagnostics.profile = profile
+        diagnostics.stages.clear()
+        diagnostics.initial_score.clear()
+        diagnostics.final_score.clear()
+    remaining = {s["id"]: s["allocation_budget"] for s in shelters}
+    destinations = sorted(
+        (s for s in shelters if s["status"] in {"open", "full"}), key=lambda s: s["id"]
+    )
+    if not families or not destinations:
+        if diagnostics is not None:
+            diagnostics.status = "EMPTY" if not families else "NO_DESTINATION"
+            diagnostics.elapsed_seconds = time.monotonic() - started
+        return {f["id"]: None for f in families}, remaining
 
-    remaining = {shelter["id"]: shelter["allocation_budget"] for shelter in shelters}
-
-    def initial_options(family: dict[str, Any]) -> list[dict[str, Any]]:
-        size = household_size(family)
-        return [
-            shelter
-            for shelter in shelters
-            if compatible(family, shelter) and shelter["allocation_budget"] >= size
-        ]
-
-    options_by_family = {family["id"]: initial_options(family) for family in families}
-
-    def priority(family: dict[str, Any]) -> tuple[Any, ...]:
-        options = options_by_family[family["id"]]
-        needs = family["needs"]
-        has_car = bool(family["resources"].get("has_car"))
-        return (
-            0 if needs.get("immediate_medication") else 1,
-            len(options),
-            1 if has_car else 0,
-            -household_size(family),
-            family["created_at"],
-            family["id"],
+    ordered = sorted(families, key=lambda f: (f["created_at"], f["id"]))
+    sizes = [household_size(f) for f in ordered]
+    total_people = sum(sizes)
+    totals = [int(s["capacity"]["total_people"]) for s in destinations]
+    # A full shelter offers no new budget even if its stored count is positive.
+    budgets = [s["allocation_budget"] if s["status"] == "open" else 0 for s in destinations]
+    effective_capacity = [max(0, min(totals[j], budgets[j])) for j in range(len(destinations))]
+    options: list[list[int]] = []
+    trips: list[dict[int, int]] = []
+    supplies: list[dict[int, int]] = []
+    moves: list[dict[int, int]] = []
+    for family in ordered:
+        scores = [_needs_score(family, shelter) for shelter in destinations]
+        best_needs = min(scores)
+        eligible = [j for j, score in enumerate(scores) if score == best_needs]
+        options.append(eligible)
+        trips.append({j: round(distance(family, destinations[j]) * 1000) for j in eligible})
+        supplies.append({j: _supply_cost(family, destinations[j]) for j in eligible})
+        previous = prior_shelter.get(family["id"])
+        moves.append(
+            {j: int(previous is not None and previous != destinations[j]["id"]) for j in eligible}
         )
+
+    def loads_for(selection: list[int]) -> list[int]:
+        loads = [0] * len(destinations)
+        for i, j in enumerate(selection):
+            loads[j] += sizes[i]
+        return loads
+
+    def score(selection: list[int]) -> tuple[int, ...]:
+        loads = loads_for(selection)
+        physical = [max(0, loads[j] - totals[j]) for j in range(len(destinations))]
+        values = (
+            sum(physical),
+            sum(max(0, loads[j] - budgets[j]) for j in range(len(destinations))),
+            max(
+                (1000 * physical[j] + max(1, totals[j]) - 1) // max(1, totals[j])
+                for j in range(len(destinations))
+            ),
+            sum(supplies[i][j] for i, j in enumerate(selection)),
+            sum(
+                trips[i][j]
+                for i, j in enumerate(selection)
+                if not ordered[i]["resources"].get("has_car")
+            ),
+            sum(trips[i][j] for i, j in enumerate(selection)),
+            sum(moves[i][j] for i, j in enumerate(selection)),
+        )
+        by_name = dict(zip(PRIORITY_PROFILES["needs_first"], values, strict=True))
+        by_name["utilization"] = sum(
+            max(0, 20 * loads[j] - step * effective_capacity[j])
+            for j in range(len(destinations))
+            for step in range(1, 20)
+        )
+        by_name["headroom"] = sum(
+            max(0, 20 * loads[j] - 17 * effective_capacity[j]) for j in range(len(destinations))
+        )
+        return tuple(by_name[name] for name in objective_names)
+
+    # Always have a complete, needs-respecting placement before calling CP-SAT.
+    best = [0] * len(ordered)
+    loads = [0] * len(destinations)
+    for i in sorted(
+        range(len(ordered)),
+        key=lambda i: (
+            len(options[i]),
+            not ordered[i]["needs"].get("immediate_medication", False),
+            bool(ordered[i]["resources"].get("has_car")),
+            -sizes[i],
+            i,
+        ),
+    ):
+
+        def seed_key(j: int) -> tuple[int, ...]:
+            projected = loads[j] + sizes[i]
+            marginal = {
+                "physical_overflow": max(0, projected - totals[j]) - max(0, loads[j] - totals[j]),
+                "budget_overflow": max(0, projected - budgets[j]) - max(0, loads[j] - budgets[j]),
+                "peak_overflow": (1000 * max(0, projected - totals[j]) + max(1, totals[j]) - 1)
+                // max(1, totals[j]),
+                "utilization": sum(
+                    max(0, 20 * projected - step * effective_capacity[j])
+                    - max(0, 20 * loads[j] - step * effective_capacity[j])
+                    for step in range(1, 20)
+                ),
+                "headroom": max(0, 20 * projected - 17 * effective_capacity[j])
+                - max(0, 20 * loads[j] - 17 * effective_capacity[j]),
+                "supplies": supplies[i][j],
+                "no_car_distance": trips[i][j] if not ordered[i]["resources"].get("has_car") else 0,
+                "distance": trips[i][j],
+                "moves": moves[i][j],
+            }
+            return tuple(marginal[name] for name in objective_names) + (j,)
+
+        best[i] = min(options[i], key=seed_key)
+        loads[best[i]] += sizes[i]
+
+    # A prior complete result can be better than the greedy seed, particularly
+    # after a bounded run. Retain it unless this invocation improves the score.
+    previous = [
+        next(
+            (j for j in options[i] if destinations[j]["id"] == prior_shelter.get(f["id"])), best[i]
+        )
+        for i, f in enumerate(ordered)
+    ]
+    if score(previous) < score(best):
+        best = previous
+    best_score = score(best)
+
+    if diagnostics is not None:
+        diagnostics.initial_score = dict(zip(objective_names, best_score, strict=True))
+        diagnostics.status = "OPTIMAL"
+
+    global_utilization_bound = sum(
+        max(0, 20 * total_people - step * sum(effective_capacity)) for step in range(1, 20)
+    )
+    # Jensen's lower bound is attainable when every site lies in the same 5%
+    # utilization band. Then plain per-site bounds express the optimum exactly,
+    # avoiding 19 auxiliary congestion variables per site in the common case.
+    band_optimum = (
+        profile == "balanced"
+        and best_score[:3] == (0, 0, 0)
+        and best_score[3] == global_utilization_bound
+        and sum(effective_capacity) > 0
+    )
+    band = min(19, 20 * total_people // max(1, sum(effective_capacity)))
+    model = cp_model.CpModel()
+    choices = [
+        {j: model.new_bool_var(f"assign_{i}_{j}") for j in eligible}
+        for i, eligible in enumerate(options)
+    ]
+    for row in choices:
+        model.add_exactly_one(row.values())
+    physical_overflow = []
+    utilization = []
+    headroom = []
+    budget_overflow = []
+    peak_overflow = model.new_int_var(0, total_people * 1000, "peak_overflow_per_thousand")
+    for j in range(len(destinations)):
+        load = cp_model.LinearExpr.sum(
+            [sizes[i] * row[j] for i, row in enumerate(choices) if j in row]
+        )
+        physical = model.new_int_var(0, total_people, f"physical_overflow_{j}")
+        budget = model.new_int_var(0, total_people, f"budget_overflow_{j}")
+        model.add_max_equality(physical, [0, load - totals[j]])
+        model.add_max_equality(budget, [0, load - budgets[j]])
+        model.add(peak_overflow * max(1, totals[j]) >= physical * 1000)
+        if "headroom" in objective_names:
+            excess = model.new_int_var(0, total_people * 20, f"headroom_{j}")
+            model.add(excess >= 20 * load - 17 * effective_capacity[j])
+            headroom.append(excess)
+        if band_optimum:
+            model.add(20 * load >= band * effective_capacity[j])
+            if band < 19:
+                model.add(20 * load <= (band + 1) * effective_capacity[j])
+        elif "utilization" in objective_names:
+            for step in range(1, 20):
+                excess = model.new_int_var(0, total_people * 20, f"utilization_{j}_{step}")
+                model.add(excess >= 20 * load - step * effective_capacity[j])
+                utilization.append(excess)
+        physical_overflow.append(physical)
+        budget_overflow.append(budget)
+
+    def assignment_cost(
+        costs: list[dict[int, int]], *, without_car: bool = False
+    ) -> cp_model.LinearExpr:
+        return cp_model.LinearExpr.sum(
+            [
+                costs[i][j] * variable
+                for i, row in enumerate(choices)
+                for j, variable in row.items()
+                if not without_car or not ordered[i]["resources"].get("has_car")
+            ]
+        )
+
+    baseline_objectives = [
+        cp_model.LinearExpr.sum(physical_overflow),
+        cp_model.LinearExpr.sum(budget_overflow),
+        peak_overflow,
+        assignment_cost(supplies),
+        assignment_cost(trips, without_car=True),
+        assignment_cost(trips),
+        assignment_cost(moves),
+    ]
+    objective_map = dict(zip(PRIORITY_PROFILES["needs_first"], baseline_objectives, strict=True))
+    objective_map["utilization"] = (
+        cp_model.LinearExpr.constant(global_utilization_bound)
+        if band_optimum
+        else cp_model.LinearExpr.sum(utilization)
+    )
+    objective_map["headroom"] = cp_model.LinearExpr.sum(headroom)
+    lower_bounds = {
+        "physical_overflow": max(0, total_people - sum(totals)),
+        "budget_overflow": max(0, total_people - sum(budgets)),
+        "peak_overflow": (
+            1000 * max(0, total_people - sum(totals)) + sum(max(1, total) for total in totals) - 1
+        )
+        // sum(max(1, total) for total in totals),
+        "utilization": global_utilization_bound,
+        "headroom": max(0, 20 * total_people - 17 * sum(effective_capacity)),
+        "supplies": sum(min(row.values()) for row in supplies),
+        "distance": sum(min(row.values()) for row in trips),
+        "no_car_distance": sum(
+            min(trips[i].values())
+            for i, family in enumerate(ordered)
+            if not family["resources"].get("has_car")
+        ),
+    }
+    objectives = [objective_map[name] for name in objective_names]
+    solver = cp_model.CpSolver()
+    solver.parameters.num_search_workers = 1
+    solver.parameters.random_seed = 0
+    seconds = DEFAULT_SOLVE_SECONDS if max_solve_seconds is None else max_solve_seconds
+    deadline = time.monotonic() + max(0.0, seconds)
+    for index, objective in enumerate(objectives):
+        # An attained valid lower bound proves optimality without search.
+        lower_bound = lower_bounds.get(objective_names[index], 0)
+        if best_score[index] == lower_bound:
+            model.add(objective == lower_bound)
+            if diagnostics is not None:
+                diagnostics.stages.append(
+                    {
+                        "objective": objective_names[index],
+                        "status": "OPTIMAL",
+                        "value": lower_bound,
+                        "bound": lower_bound,
+                        "seconds": 0.0,
+                    }
+                )
+            continue
+        time_left = deadline - time.monotonic()
+        if time_left <= 0:
+            if diagnostics is not None:
+                diagnostics.status = "TIME_LIMIT"
+            logger.info("Allocation search budget exhausted; retaining complete best placement.")
+            break
+        model.clear_hints()
+        for i, row in enumerate(choices):
+            for j, variable in row.items():
+                model.add_hint(variable, int(best[i] == j))
+        model.add(objective <= best_score[index])
+        model.minimize(objective)
+        solver.parameters.max_time_in_seconds = time_left
+        stage_started = time.monotonic()
+        status = solver.solve(model)
+        if diagnostics is not None:
+            diagnostics.status = solver.status_name(status)
+            diagnostics.stages.append(
+                {
+                    "objective": objective_names[index],
+                    "status": solver.status_name(status),
+                    "value": solver.objective_value
+                    if status in {cp_model.OPTIMAL, cp_model.FEASIBLE}
+                    else None,
+                    "bound": solver.best_objective_bound,
+                    "seconds": round(time.monotonic() - stage_started, 6),
+                }
+            )
+        if status == cp_model.MODEL_INVALID or status == cp_model.INFEASIBLE:
+            raise RuntimeError(f"Invalid allocation model: {solver.status_name(status)}")
+        if status not in {cp_model.OPTIMAL, cp_model.FEASIBLE}:
+            logger.info("Allocation search stopped without a solution; retaining complete seed.")
+            break
+        candidate = [
+            next(j for j, variable in row.items() if solver.boolean_value(variable))
+            for row in choices
+        ]
+        candidate_score = score(candidate)
+        if candidate_score < best_score:
+            best, best_score = candidate, candidate_score
+        if status != cp_model.OPTIMAL:
+            logger.info("Allocation stage %s not proved optimal; retaining best placement.", index)
+            break
+        model.add(objective == best_score[index])
 
     assigned: dict[str, dict[str, Any] | None] = {}
-    ordered_families = sorted(families, key=priority)
-    protected_ids: set[str] = set()
-    shelters_by_id = {shelter["id"]: shelter for shelter in shelters}
-
-    # Keep existing reservations when the family still matches the shelter.
-    # New eligibility changes or capacity reductions cannot displace an
-    # incumbent, even if the existing reservation already exceeds capacity.
-    for family in ordered_families:
-        previous_id = prior_shelter.get(family["id"])
-        previous = shelters_by_id.get(previous_id)
-        size = household_size(family)
-        if previous is not None and previous["status"] in {"open", "full"}:
-            assigned[family["id"]] = previous
-            protected_ids.add(family["id"])
-            remaining[previous["id"]] -= size
-    remaining_after_reservations = remaining.copy()
-
-    # Greedy scarcity-first placement fills the remaining capacity with
-    # new families and families whose previous reservations were released.
-    for family in ordered_families:
-        if family["id"] in assigned:
-            continue
-        size = household_size(family)
-        feasible = [
-            shelter
-            for shelter in shelters
-            if compatible(family, shelter) and remaining[shelter["id"]] >= size
-        ]
-        feasible.sort(
-            key=lambda shelter: (
-                round(distance(family, shelter), 9),
-                shelter["id"],
-            )
-        )
-        selected = feasible[0] if feasible else None
-        if selected is not None:
-            remaining[selected["id"]] -= size
+    for i, family in enumerate(ordered):
+        selected = destinations[best[i]]
         assigned[family["id"]] = selected
-    total_remaining = sum(remaining.values())
-
-    # A bounded augmenting repair handles simple household-size traps. It
-    # never unassigns a placed family: it moves one incumbent to a shelter
-    # with enough spare space, then uses the freed space for a waiting
-    # household. At most one new family is placed per pass.
-    repair_checks = 0
-    repair_exhausted = False
-    for _ in range(min(len(ordered_families), 64)):
-        repaired = False
-        for waiting in ordered_families:
-            repair_checks += 1
-            if repair_checks > 10_000:
-                repair_exhausted = True
-                break
-            if assigned[waiting["id"]] is not None:
-                continue
-            waiting_size = household_size(waiting)
-            if not options_by_family[waiting["id"]] or total_remaining < waiting_size:
-                continue
-            direct = []
-            for shelter in shelters:
-                repair_checks += 1
-                if repair_checks > 10_000:
-                    repair_exhausted = True
-                    break
-                if compatible(waiting, shelter) and remaining[shelter["id"]] >= waiting_size:
-                    direct.append(shelter)
-            if repair_exhausted:
-                break
-            direct.sort(
-                key=lambda shelter: (
-                    round(distance(waiting, shelter), 9),
-                    shelter["id"],
-                )
-            )
-            if direct:
-                selected = direct[0]
-                remaining[selected["id"]] -= waiting_size
-                total_remaining -= waiting_size
-                assigned[waiting["id"]] = selected
-                repaired = True
-                break
-
-            moves: list[tuple[tuple[Any, ...], dict[str, Any], dict[str, Any], dict[str, Any]]] = []
-            for incumbent in ordered_families:
-                repair_checks += 1
-                if repair_checks > 10_000:
-                    repair_exhausted = True
-                    break
-                if incumbent["id"] in protected_ids:
-                    continue
-                source = assigned[incumbent["id"]]
-                if source is None or not compatible(waiting, source):
-                    continue
-                incumbent_size = household_size(incumbent)
-                if remaining[source["id"]] + incumbent_size < waiting_size:
-                    continue
-                for target in shelters:
-                    repair_checks += 1
-                    if repair_checks > 10_000:
-                        repair_exhausted = True
-                        break
-                    if target["id"] == source["id"] or not compatible(incumbent, target):
-                        continue
-                    if remaining[target["id"]] < incumbent_size:
-                        continue
-                    key = (
-                        round(distance(waiting, source), 9),
-                        0 if incumbent["resources"].get("has_car") else 1,
-                        round(distance(incumbent, target), 9),
-                        incumbent["id"],
-                        target["id"],
-                    )
-                    moves.append((key, incumbent, source, target))
-                if repair_exhausted:
-                    break
-            if moves:
-                _, incumbent, source, target = min(moves, key=lambda move: move[0])
-                incumbent_size = household_size(incumbent)
-                waiting_size = household_size(waiting)
-                remaining[source["id"]] += incumbent_size
-                remaining[target["id"]] -= incumbent_size
-                remaining[source["id"]] -= waiting_size
-                total_remaining -= waiting_size
-                assigned[incumbent["id"]] = target
-                assigned[waiting["id"]] = source
-                repaired = True
-                break
-
-            # A two-shelter exchange can recover space when neither
-            # household can move alone (for example sizes 4 and 3 in
-            # capacities 6 and 4). The waiting household then takes the
-            # freed places without evicting either incumbent.
-            if not repair_exhausted:
-                swaps: list[
-                    tuple[
-                        tuple[Any, ...],
-                        dict[str, Any],
-                        dict[str, Any],
-                        dict[str, Any],
-                        dict[str, Any],
-                        dict[str, Any],
-                    ]
-                ] = []
-                for first in ordered_families:
-                    repair_checks += 1
-                    if repair_checks > 10_000:
-                        repair_exhausted = True
-                        break
-                    if first["id"] in protected_ids:
-                        continue
-                    source = assigned[first["id"]]
-                    if source is None or not compatible(waiting, source):
-                        continue
-                    first_size = household_size(first)
-                    if remaining[source["id"]] + first_size < waiting_size:
-                        continue
-                    for target in shelters:
-                        repair_checks += 1
-                        if repair_checks > 10_000:
-                            repair_exhausted = True
-                            break
-                        if target["id"] == source["id"] or not compatible(first, target):
-                            continue
-                        for second in ordered_families:
-                            repair_checks += 1
-                            if repair_checks > 10_000:
-                                repair_exhausted = True
-                                break
-                            if (
-                                second["id"] in protected_ids
-                                or (assigned_second := assigned[second["id"]]) is None
-                                or assigned_second["id"] != target["id"]
-                                or not compatible(second, source)
-                            ):
-                                continue
-                            second_size = household_size(second)
-                            if remaining[target["id"]] + second_size < first_size:
-                                continue
-                            if remaining[source["id"]] + first_size < second_size + waiting_size:
-                                continue
-                            key = (
-                                round(distance(waiting, source), 9),
-                                0 if first["resources"].get("has_car") else 1,
-                                0 if second["resources"].get("has_car") else 1,
-                                first["id"],
-                                second["id"],
-                                target["id"],
-                            )
-                            swaps.append((key, waiting, source, first, target, second))
-                        if repair_exhausted:
-                            break
-                    if repair_exhausted:
-                        break
-                if swaps:
-                    _, _, source, first, target, second = min(swaps, key=lambda swap: swap[0])
-                    first_size = household_size(first)
-                    second_size = household_size(second)
-                    waiting_size = household_size(waiting)
-                    remaining[source["id"]] += first_size - second_size - waiting_size
-                    remaining[target["id"]] += second_size - first_size
-                    total_remaining -= waiting_size
-                    assigned[first["id"]] = target
-                    assigned[second["id"]] = source
-                    assigned[waiting["id"]] = source
-                    repaired = True
-                    break
-        if not repaired or repair_exhausted:
-            break
-
-    # Refine small pools against an explicit objective while keeping
-    # existing reservations fixed. The greedy/repair result seeds the
-    # search, so hitting the node bound can never make placement worse.
-    movable_families = [family for family in ordered_families if family["id"] not in protected_ids]
-    if movable_families and len(movable_families) <= max_refinement_families:
-
-        def refinement_score(
-            selection: dict[str, dict[str, Any] | None],
-        ) -> tuple[int, int, float]:
-            placed = [family for family in movable_families if selection[family["id"]] is not None]
-            people = sum(household_size(family) for family in placed)
-            travel = sum(
-                round(distance(family, shelter), 9)
-                for family in placed
-                if (shelter := selection[family["id"]]) is not None
-            )
-            return len(placed), people, -travel
-
-        best_selection = {family["id"]: assigned[family["id"]] for family in movable_families}
-        best_score = refinement_score(best_selection)
-        search_selection: dict[str, dict[str, Any] | None] = {}
-        search_remaining = remaining_after_reservations.copy()
-        search_nodes = 0
-        remaining_people_upper_bound = [0] * (len(movable_families) + 1)
-        for index in range(len(movable_families) - 1, -1, -1):
-            remaining_people_upper_bound[index] = remaining_people_upper_bound[
-                index + 1
-            ] + household_size(movable_families[index])
-
-        def search(index: int, placed_count: int, placed_people: int, travel: float) -> None:
-            nonlocal best_score, best_selection, search_nodes
-            if search_nodes >= max_refinement_nodes:
-                return
-            search_nodes += 1
-            families_left = len(movable_families) - index
-            if placed_count + families_left < best_score[0]:
-                return
-            if (
-                placed_count + families_left == best_score[0]
-                and placed_people + remaining_people_upper_bound[index] < best_score[1]
-            ):
-                return
-            if index == len(movable_families):
-                score = (placed_count, placed_people, -travel)
-                if score > best_score:
-                    best_score = score
-                    best_selection = search_selection.copy()
-                return
-
-            family = movable_families[index]
-            size = household_size(family)
-            feasible = [
-                shelter
-                for shelter in shelters
-                if compatible(family, shelter) and search_remaining[shelter["id"]] >= size
-            ]
-            feasible.sort(
-                key=lambda shelter: (
-                    round(distance(family, shelter), 9),
-                    shelter["id"],
-                )
-            )
-            for shelter in feasible:
-                if search_nodes >= max_refinement_nodes:
-                    break
-                trip = round(distance(family, shelter), 9)
-                search_remaining[shelter["id"]] -= size
-                search_selection[family["id"]] = shelter
-                search(index + 1, placed_count + 1, placed_people + size, travel + trip)
-                search_remaining[shelter["id"]] += size
-            if search_nodes < max_refinement_nodes:
-                search_selection[family["id"]] = None
-                search(index + 1, placed_count, placed_people, travel)
-
-        search(0, 0, 0, 0.0)
-        assigned.update(best_selection)
-        remaining = remaining_after_reservations.copy()
-        for family in movable_families:
-            selected = best_selection[family["id"]]
-            if selected is not None:
-                remaining[selected["id"]] -= household_size(family)
-
-    # Capacity is a warning threshold, not a reason to leave a household
-    # without a destination. Fill unmatched households next, choosing a
-    # compatible shelter first, then the smallest physical/budget overflow.
-    # If no compatible open shelter exists, use the least-mismatched open
-    # or full shelter and expose the unmet requirements in a critical alert.
-    mismatch_weights = {
-        "pets": 3,
-        "child_friendly": 2,
-        "wheelchair_accessible": 5,
-        "medical_staff": 8,
-        "special_care": 6,
-        "medication": 8,
-    }
-    for family in ordered_families:
-        if assigned[family["id"]] is not None:
-            continue
-        size = household_size(family)
-        candidates = [shelter for shelter in shelters if shelter["status"] in {"open", "full"}]
-        if not candidates:
-            continue
-
-        def fallback_key(shelter: dict[str, Any]) -> tuple[Any, ...]:
-            mismatches = compatibility_mismatches(family, shelter)
-            projected_people = shelter["allocation_budget"] - remaining[shelter["id"]] + size
-            physical_overflow = max(0, projected_people - int(shelter["capacity"]["total_people"]))
-            budget_overflow = max(0, projected_people - shelter["allocation_budget"])
-            return (
-                len(mismatches),
-                sum(mismatch_weights[item] for item in mismatches),
-                physical_overflow,
-                budget_overflow,
-                round(distance(family, shelter), 9),
-                shelter["id"],
-            )
-
-        selected = min(candidates, key=fallback_key)
-        remaining[selected["id"]] -= size
-        assigned[family["id"]] = selected
-
+        remaining[selected["id"]] -= sizes[i]
+    if diagnostics is not None:
+        diagnostics.final_score = dict(zip(objective_names, best_score, strict=True))
+        diagnostics.elapsed_seconds = time.monotonic() - started
     return assigned, remaining

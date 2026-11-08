@@ -1,0 +1,5311 @@
+{
+  "input": "Synthetic demo: previous seven-site baseline and final nine-hub network; three household seeds",
+  "created_at": "2026-11-08T04:23:11.118697+00:00",
+  "seconds_per_case": 5.0,
+  "allocator_sha256": "997b12064b4a8dc134f0b707b803b99a25a8408d5a7aad162823e535b46d3e0f",
+  "ortools_version": "9.15.6755",
+  "python_version": "3.14.7",
+  "priorities": {
+    "needs_first": [
+      "physical_overflow",
+      "budget_overflow",
+      "peak_overflow",
+      "supplies",
+      "no_car_distance",
+      "distance",
+      "moves"
+    ],
+    "headroom": [
+      "physical_overflow",
+      "budget_overflow",
+      "peak_overflow",
+      "headroom",
+      "supplies",
+      "no_car_distance",
+      "distance",
+      "moves"
+    ],
+    "balanced": [
+      "physical_overflow",
+      "budget_overflow",
+      "peak_overflow",
+      "utilization",
+      "supplies",
+      "no_car_distance",
+      "distance",
+      "moves"
+    ],
+    "travel_then_balance": [
+      "physical_overflow",
+      "budget_overflow",
+      "peak_overflow",
+      "supplies",
+      "no_car_distance",
+      "distance",
+      "utilization",
+      "moves"
+    ]
+  },
+  "cases": [
+    {
+      "seed": 42,
+      "scenario": "previous_seven_sites",
+      "profile": "needs_first",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 1,
+        "full_open_shelters": 3,
+        "max_utilization": 1.0,
+        "min_utilization": 0.0,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 502,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 6.691,
+            "p50_km": 5.738,
+            "p95_km": 14.244,
+            "max_km": 18.042,
+            "total_km": 6691.218
+          },
+          "car": {
+            "count": 732,
+            "mean_km": 6.849,
+            "p50_km": 5.86,
+            "p95_km": 14.375,
+            "max_km": 18.042,
+            "total_km": 5013.764
+          },
+          "no_car": {
+            "count": 268,
+            "mean_km": 6.259,
+            "p50_km": 5.507,
+            "p95_km": 13.52,
+            "max_km": 17.199,
+            "total_km": 1677.455
+          },
+          "clinical": {
+            "count": 664,
+            "mean_km": 7.09,
+            "p50_km": 6.263,
+            "p95_km": 14.796,
+            "max_km": 18.042,
+            "total_km": 4707.997
+          },
+          "pets": {
+            "count": 376,
+            "mean_km": 6.341,
+            "p50_km": 5.431,
+            "p95_km": 14.283,
+            "max_km": 17.176,
+            "total_km": 2384.379
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge High School",
+            "status": "open",
+            "people": 745,
+            "total_people": 800,
+            "usable_capacity": 800,
+            "utilization": 0.9313,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_02",
+            "name": "Demo \u2014 Corkscrew Middle School",
+            "status": "open",
+            "people": 423,
+            "total_people": 600,
+            "usable_capacity": 600,
+            "utilization": 0.705,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_03",
+            "name": "Demo \u2014 Cypress Palm Middle School",
+            "status": "open",
+            "people": 600,
+            "total_people": 600,
+            "usable_capacity": 600,
+            "utilization": 1.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Sabal Palm Elementary School",
+            "status": "open",
+            "people": 0,
+            "total_people": 600,
+            "usable_capacity": 600,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress Elementary School",
+            "status": "open",
+            "people": 500,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 1.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 79,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.158,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_07",
+            "name": "Demo \u2014 Corkscrew Elementary School",
+            "status": "open",
+            "people": 400,
+            "total_people": 400,
+            "usable_capacity": 400,
+            "utilization": 1.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "needs_first",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 1.1162520410725847,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 502.0,
+            "bound": 502.0,
+            "seconds": 0.070145
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 1677460.0,
+            "bound": 1677460.0,
+            "seconds": 0.290733
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 6691224.0,
+            "bound": 6691224.0,
+            "seconds": 0.663002
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "supplies": 502,
+          "no_car_distance": 1916847,
+          "distance": 7484010,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "supplies": 502,
+          "no_car_distance": 1677460,
+          "distance": 6691224,
+          "moves": 0
+        }
+      },
+      "repeat_moved_households": 0,
+      "source_run": "iteration-01-original-sites"
+    },
+    {
+      "seed": 42,
+      "scenario": "base",
+      "profile": "needs_first",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 4,
+        "full_open_shelters": 2,
+        "max_utilization": 1.0,
+        "min_utilization": 0.0,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 0,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 3.192,
+            "p50_km": 3.049,
+            "p95_km": 5.929,
+            "max_km": 7.613,
+            "total_km": 3191.971
+          },
+          "car": {
+            "count": 732,
+            "mean_km": 3.262,
+            "p50_km": 3.089,
+            "p95_km": 5.984,
+            "max_km": 7.613,
+            "total_km": 2387.733
+          },
+          "no_car": {
+            "count": 268,
+            "mean_km": 3.001,
+            "p50_km": 2.847,
+            "p95_km": 5.809,
+            "max_km": 7.352,
+            "total_km": 804.238
+          },
+          "clinical": {
+            "count": 664,
+            "mean_km": 3.203,
+            "p50_km": 3.004,
+            "p95_km": 6.054,
+            "max_km": 7.613,
+            "total_km": 2126.765
+          },
+          "pets": {
+            "count": 376,
+            "mean_km": 3.384,
+            "p50_km": 3.169,
+            "p95_km": 6.271,
+            "max_km": 7.613,
+            "total_km": 1272.274
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 879,
+            "total_people": 1800,
+            "usable_capacity": 1800,
+            "utilization": 0.4883,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 620,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.5167,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 498,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.996,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 250,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 1.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 500,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 1.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 0,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "needs_first",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 0.5375300409505144,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 804235.0,
+            "bound": 804235.0,
+            "seconds": 0.0655
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 3191970.0,
+            "bound": 3191970.0,
+            "seconds": 0.362913
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "supplies": 0,
+          "no_car_distance": 804235,
+          "distance": 3513447,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "supplies": 0,
+          "no_car_distance": 804235,
+          "distance": 3191970,
+          "moves": 0
+        }
+      },
+      "repeat_moved_households": 0,
+      "input_sha256": "80da310998077a6b39f01af9b67fc939837f1acadba6514bcf391bcbf5f7d782",
+      "source_run": "iteration-07-validation-matrix"
+    },
+    {
+      "seed": 42,
+      "scenario": "base",
+      "profile": "headroom",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 4,
+        "full_open_shelters": 0,
+        "max_utilization": 0.85,
+        "min_utilization": 0.0,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 0,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 3.347,
+            "p50_km": 3.089,
+            "p95_km": 6.486,
+            "max_km": 11.683,
+            "total_km": 3347.233
+          },
+          "car": {
+            "count": 732,
+            "mean_km": 3.474,
+            "p50_km": 3.199,
+            "p95_km": 6.679,
+            "max_km": 11.683,
+            "total_km": 2542.996
+          },
+          "no_car": {
+            "count": 268,
+            "mean_km": 3.001,
+            "p50_km": 2.847,
+            "p95_km": 5.809,
+            "max_km": 7.352,
+            "total_km": 804.238
+          },
+          "clinical": {
+            "count": 664,
+            "mean_km": 3.353,
+            "p50_km": 3.062,
+            "p95_km": 6.512,
+            "max_km": 11.683,
+            "total_km": 2226.082
+          },
+          "pets": {
+            "count": 376,
+            "mean_km": 3.494,
+            "p50_km": 3.233,
+            "p95_km": 6.709,
+            "max_km": 8.687,
+            "total_km": 1313.802
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 987,
+            "total_people": 1800,
+            "usable_capacity": 1800,
+            "utilization": 0.5483,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 698,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.5817,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 425,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.85,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 212,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.848,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 425,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.85,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 0,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "headroom",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 1.3316649999469519,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "headroom",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 804235.0,
+            "bound": 804235.0,
+            "seconds": 0.278447
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 3347233.0,
+            "bound": 3347233.0,
+            "seconds": 0.941041
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "headroom": 0,
+          "supplies": 0,
+          "no_car_distance": 897295,
+          "distance": 3901285,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "headroom": 0,
+          "supplies": 0,
+          "no_car_distance": 804235,
+          "distance": 3347233,
+          "moves": 0
+        }
+      },
+      "repeat_moved_households": 0,
+      "input_sha256": "80da310998077a6b39f01af9b67fc939837f1acadba6514bcf391bcbf5f7d782",
+      "source_run": "iteration-07-validation-matrix"
+    },
+    {
+      "seed": 7,
+      "scenario": "base",
+      "profile": "needs_first",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 4,
+        "full_open_shelters": 3,
+        "max_utilization": 1.0,
+        "min_utilization": 0.0,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 0,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 3.183,
+            "p50_km": 3.049,
+            "p95_km": 5.812,
+            "max_km": 8.708,
+            "total_km": 3182.968
+          },
+          "car": {
+            "count": 742,
+            "mean_km": 3.212,
+            "p50_km": 3.055,
+            "p95_km": 5.887,
+            "max_km": 8.708,
+            "total_km": 2383.367
+          },
+          "no_car": {
+            "count": 258,
+            "mean_km": 3.099,
+            "p50_km": 3.009,
+            "p95_km": 5.665,
+            "max_km": 7.352,
+            "total_km": 799.601
+          },
+          "clinical": {
+            "count": 674,
+            "mean_km": 3.193,
+            "p50_km": 3.049,
+            "p95_km": 5.866,
+            "max_km": 8.708,
+            "total_km": 2151.999
+          },
+          "pets": {
+            "count": 408,
+            "mean_km": 3.364,
+            "p50_km": 3.197,
+            "p95_km": 6.068,
+            "max_km": 8.708,
+            "total_km": 1372.391
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 896,
+            "total_people": 1800,
+            "usable_capacity": 1800,
+            "utilization": 0.4978,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 601,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.5008,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 500,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 1.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 250,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 1.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 500,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 1.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 0,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "needs_first",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 0.6371785000665113,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 799603.0,
+            "bound": 799603.0,
+            "seconds": 0.066559
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 3182968.0,
+            "bound": 3182968.0,
+            "seconds": 0.453728
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "supplies": 0,
+          "no_car_distance": 799603,
+          "distance": 3615101,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "supplies": 0,
+          "no_car_distance": 799603,
+          "distance": 3182968,
+          "moves": 0
+        }
+      },
+      "repeat_moved_households": 0,
+      "input_sha256": "f10ea8e09de1b3352e36e9d1bbe40041c7e92450cd215f744a58a03046cfaebd",
+      "source_run": "iteration-07-validation-matrix"
+    },
+    {
+      "seed": 7,
+      "scenario": "base",
+      "profile": "headroom",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 4,
+        "full_open_shelters": 0,
+        "max_utilization": 0.85,
+        "min_utilization": 0.0,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 0,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 3.385,
+            "p50_km": 3.108,
+            "p95_km": 6.462,
+            "max_km": 12.667,
+            "total_km": 3385.378
+          },
+          "car": {
+            "count": 742,
+            "mean_km": 3.485,
+            "p50_km": 3.155,
+            "p95_km": 6.689,
+            "max_km": 12.667,
+            "total_km": 2585.777
+          },
+          "no_car": {
+            "count": 258,
+            "mean_km": 3.099,
+            "p50_km": 3.009,
+            "p95_km": 5.665,
+            "max_km": 7.352,
+            "total_km": 799.601
+          },
+          "clinical": {
+            "count": 674,
+            "mean_km": 3.414,
+            "p50_km": 3.101,
+            "p95_km": 6.682,
+            "max_km": 12.667,
+            "total_km": 2301.027
+          },
+          "pets": {
+            "count": 408,
+            "mean_km": 3.552,
+            "p50_km": 3.261,
+            "p95_km": 6.725,
+            "max_km": 12.344,
+            "total_km": 1449.089
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 1023,
+            "total_people": 1800,
+            "usable_capacity": 1800,
+            "utilization": 0.5683,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 662,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.5517,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 425,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.85,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 212,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.848,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 425,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.85,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 0,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "headroom",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 0.5965195000171661,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "headroom",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 799603.0,
+            "bound": 799603.0,
+            "seconds": 0.066809
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 3385375.0,
+            "bound": 3385375.0,
+            "seconds": 0.415954
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "headroom": 0,
+          "supplies": 0,
+          "no_car_distance": 799603,
+          "distance": 3948722,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "headroom": 0,
+          "supplies": 0,
+          "no_car_distance": 799603,
+          "distance": 3385375,
+          "moves": 0
+        }
+      },
+      "repeat_moved_households": 0,
+      "input_sha256": "f10ea8e09de1b3352e36e9d1bbe40041c7e92450cd215f744a58a03046cfaebd",
+      "source_run": "iteration-07-validation-matrix"
+    },
+    {
+      "seed": 97,
+      "scenario": "base",
+      "profile": "needs_first",
+      "metrics": {
+        "households": 1000,
+        "people": 2811,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 4,
+        "full_open_shelters": 3,
+        "max_utilization": 1.0,
+        "min_utilization": 0.0,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 0,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 3.224,
+            "p50_km": 3.049,
+            "p95_km": 5.995,
+            "max_km": 9.049,
+            "total_km": 3223.678
+          },
+          "car": {
+            "count": 743,
+            "mean_km": 3.287,
+            "p50_km": 3.082,
+            "p95_km": 6.216,
+            "max_km": 9.049,
+            "total_km": 2442.165
+          },
+          "no_car": {
+            "count": 257,
+            "mean_km": 3.041,
+            "p50_km": 2.889,
+            "p95_km": 5.658,
+            "max_km": 7.27,
+            "total_km": 781.512
+          },
+          "clinical": {
+            "count": 666,
+            "mean_km": 3.284,
+            "p50_km": 3.066,
+            "p95_km": 6.212,
+            "max_km": 8.602,
+            "total_km": 2187.391
+          },
+          "pets": {
+            "count": 381,
+            "mean_km": 3.452,
+            "p50_km": 3.295,
+            "p95_km": 6.325,
+            "max_km": 8.602,
+            "total_km": 1315.263
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 904,
+            "total_people": 1800,
+            "usable_capacity": 1800,
+            "utilization": 0.5022,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 657,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.5475,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 500,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 1.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 250,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 1.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 500,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 1.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 0,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "needs_first",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 1.9659283750224859,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 781512.0,
+            "bound": 781512.0,
+            "seconds": 0.336609
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 3223674.0,
+            "bound": 3223674.0,
+            "seconds": 1.518269
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "supplies": 0,
+          "no_car_distance": 792652,
+          "distance": 3704532,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "supplies": 0,
+          "no_car_distance": 781512,
+          "distance": 3223674,
+          "moves": 0
+        }
+      },
+      "repeat_moved_households": 0,
+      "input_sha256": "ec90f31b8ccb53a884f3965338486024bf16c745aa010413e5bd703e3515ab41",
+      "source_run": "iteration-07-validation-matrix"
+    },
+    {
+      "seed": 97,
+      "scenario": "base",
+      "profile": "headroom",
+      "metrics": {
+        "households": 1000,
+        "people": 2811,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 4,
+        "full_open_shelters": 0,
+        "max_utilization": 0.85,
+        "min_utilization": 0.0,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 0,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 3.432,
+            "p50_km": 3.105,
+            "p95_km": 6.685,
+            "max_km": 10.449,
+            "total_km": 3432.439
+          },
+          "car": {
+            "count": 743,
+            "mean_km": 3.568,
+            "p50_km": 3.214,
+            "p95_km": 7.392,
+            "max_km": 10.449,
+            "total_km": 2650.926
+          },
+          "no_car": {
+            "count": 257,
+            "mean_km": 3.041,
+            "p50_km": 2.889,
+            "p95_km": 5.658,
+            "max_km": 7.27,
+            "total_km": 781.512
+          },
+          "clinical": {
+            "count": 666,
+            "mean_km": 3.502,
+            "p50_km": 3.119,
+            "p95_km": 6.948,
+            "max_km": 10.449,
+            "total_km": 2332.501
+          },
+          "pets": {
+            "count": 381,
+            "mean_km": 3.614,
+            "p50_km": 3.362,
+            "p95_km": 6.727,
+            "max_km": 10.086,
+            "total_km": 1377.013
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 1028,
+            "total_people": 1800,
+            "usable_capacity": 1800,
+            "utilization": 0.5711,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 721,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.6008,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 425,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.85,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 212,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.848,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 425,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.85,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 0,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.0,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "headroom",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 1.4280934580601752,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "headroom",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 781512.0,
+            "bound": 781512.0,
+            "seconds": 0.297337
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 3432439.0,
+            "bound": 3432439.0,
+            "seconds": 1.017582
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "headroom": 0,
+          "supplies": 0,
+          "no_car_distance": 898563,
+          "distance": 4057884,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "headroom": 0,
+          "supplies": 0,
+          "no_car_distance": 781512,
+          "distance": 3432439,
+          "moves": 0
+        }
+      },
+      "repeat_moved_households": 0,
+      "input_sha256": "ec90f31b8ccb53a884f3965338486024bf16c745aa010413e5bd703e3515ab41",
+      "source_run": "iteration-07-validation-matrix"
+    },
+    {
+      "seed": 42,
+      "scenario": "base",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 0,
+        "max_utilization": 0.5,
+        "min_utilization": 0.45,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 788,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 3.654,
+            "p50_km": 3.127,
+            "p95_km": 8.37,
+            "max_km": 14.33,
+            "total_km": 3654.05
+          },
+          "car": {
+            "count": 732,
+            "mean_km": 4.03,
+            "p50_km": 3.545,
+            "p95_km": 8.918,
+            "max_km": 14.33,
+            "total_km": 2949.933
+          },
+          "no_car": {
+            "count": 268,
+            "mean_km": 2.627,
+            "p50_km": 2.615,
+            "p95_km": 4.471,
+            "max_km": 6.486,
+            "total_km": 704.117
+          },
+          "clinical": {
+            "count": 664,
+            "mean_km": 3.717,
+            "p50_km": 3.114,
+            "p95_km": 8.737,
+            "max_km": 14.33,
+            "total_km": 2467.839
+          },
+          "pets": {
+            "count": 376,
+            "mean_km": 3.968,
+            "p50_km": 3.28,
+            "p95_km": 9.303,
+            "max_km": 14.33,
+            "total_km": 1491.865
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 810,
+            "total_people": 1800,
+            "usable_capacity": 1800,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 540,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 250,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.5,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 125,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.5,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 234,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.468,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 113,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.452,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 3.5511311249574646,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "utilization",
+            "status": "OPTIMAL",
+            "value": 224460,
+            "bound": 224460,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 788.0,
+            "bound": 788.0,
+            "seconds": 0.246246
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 704118.0,
+            "bound": 704118.0,
+            "seconds": 1.14332
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 3654056.0,
+            "bound": 3654056.0,
+            "seconds": 2.029898
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 224460,
+          "supplies": 788,
+          "no_car_distance": 1570636,
+          "distance": 5646574,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 224460,
+          "supplies": 788,
+          "no_car_distance": 704118,
+          "distance": 3654056,
+          "moves": 0
+        }
+      },
+      "repeat_moved_households": 0,
+      "input_sha256": "80da310998077a6b39f01af9b67fc939837f1acadba6514bcf391bcbf5f7d782",
+      "source_run": "iteration-08-final-balanced"
+    },
+    {
+      "seed": 42,
+      "scenario": "capacity_shortage",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 347,
+        "budget_overflow_people": 347,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 9,
+        "max_utilization": 1.1458,
+        "min_utilization": 1.13,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 800,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 6.857,
+            "p50_km": 5.8,
+            "p95_km": 15.354,
+            "max_km": 22.278,
+            "total_km": 6856.634
+          },
+          "car": {
+            "count": 732,
+            "mean_km": 8.405,
+            "p50_km": 7.813,
+            "p95_km": 16.543,
+            "max_km": 22.278,
+            "total_km": 6152.517
+          },
+          "no_car": {
+            "count": 268,
+            "mean_km": 2.627,
+            "p50_km": 2.615,
+            "p95_km": 4.471,
+            "max_km": 6.486,
+            "total_km": 704.117
+          },
+          "clinical": {
+            "count": 664,
+            "mean_km": 6.945,
+            "p50_km": 5.873,
+            "p95_km": 15.675,
+            "max_km": 22.278,
+            "total_km": 4611.277
+          },
+          "pets": {
+            "count": 376,
+            "mean_km": 7.156,
+            "p50_km": 6.109,
+            "p95_km": 15.884,
+            "max_km": 22.278,
+            "total_km": 2690.615
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 825,
+            "total_people": 720,
+            "usable_capacity": 720,
+            "utilization": 1.1458,
+            "physical_overflow": 105,
+            "budget_overflow": 105
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 550,
+            "total_people": 480,
+            "usable_capacity": 480,
+            "utilization": 1.1458,
+            "physical_overflow": 70,
+            "budget_overflow": 70
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 229,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.145,
+            "physical_overflow": 29,
+            "budget_overflow": 29
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 229,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.145,
+            "physical_overflow": 29,
+            "budget_overflow": 29
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 229,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.145,
+            "physical_overflow": 29,
+            "budget_overflow": 29
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 114,
+            "total_people": 100,
+            "usable_capacity": 100,
+            "utilization": 1.14,
+            "physical_overflow": 14,
+            "budget_overflow": 14
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 229,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.145,
+            "physical_overflow": 29,
+            "budget_overflow": 29
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 229,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.145,
+            "physical_overflow": 29,
+            "budget_overflow": 29
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 113,
+            "total_people": 100,
+            "usable_capacity": 100,
+            "utilization": 1.13,
+            "physical_overflow": 13,
+            "budget_overflow": 13
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "UNKNOWN",
+        "elapsed_seconds": 5.106356458971277,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 347,
+            "bound": 347,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 347,
+            "bound": 347,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 146.0,
+            "bound": 146.0,
+            "seconds": 1.157122
+          },
+          {
+            "objective": "utilization",
+            "status": "OPTIMAL",
+            "value": 587860,
+            "bound": 587860,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 800.0,
+            "bound": 800.0,
+            "seconds": 1.801032
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 704118.0,
+            "bound": 704118.0,
+            "seconds": 1.703209
+          },
+          {
+            "objective": "distance",
+            "status": "UNKNOWN",
+            "value": null,
+            "bound": 0.0,
+            "seconds": 0.280273
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 347,
+          "budget_overflow": 347,
+          "peak_overflow": 146,
+          "utilization": 587860,
+          "supplies": 801,
+          "no_car_distance": 1755979,
+          "distance": 6507395,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 347,
+          "budget_overflow": 347,
+          "peak_overflow": 146,
+          "utilization": 587860,
+          "supplies": 800,
+          "no_car_distance": 704118,
+          "distance": 6856646,
+          "moves": 0
+        }
+      },
+      "input_sha256": "9785fc6b8ab1fd6c80fce723e1dd0f4c2d576140824fe77057122d54ca1234ad",
+      "source_run": "iteration-08-final-balanced"
+    },
+    {
+      "seed": 42,
+      "scenario": "medical_outage",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 0,
+        "unmet_households": 270,
+        "unavoidable_unmet_households": 270,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {
+          "medical_staff": 270,
+          "medication": 198
+        },
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 0,
+        "max_utilization": 0.5,
+        "min_utilization": 0.45,
+        "essential_supply_shortfall_person_labels": 543,
+        "people_with_limited_clothes_label": 788,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 3.589,
+            "p50_km": 3.148,
+            "p95_km": 8.0,
+            "max_km": 14.33,
+            "total_km": 3588.546
+          },
+          "car": {
+            "count": 732,
+            "mean_km": 3.947,
+            "p50_km": 3.574,
+            "p95_km": 8.48,
+            "max_km": 14.33,
+            "total_km": 2888.982
+          },
+          "no_car": {
+            "count": 268,
+            "mean_km": 2.61,
+            "p50_km": 2.593,
+            "p95_km": 4.471,
+            "max_km": 6.486,
+            "total_km": 699.564
+          },
+          "clinical": {
+            "count": 664,
+            "mean_km": 3.639,
+            "p50_km": 3.107,
+            "p95_km": 8.293,
+            "max_km": 14.33,
+            "total_km": 2416.205
+          },
+          "pets": {
+            "count": 376,
+            "mean_km": 3.914,
+            "p50_km": 3.257,
+            "p95_km": 8.848,
+            "max_km": 14.33,
+            "total_km": 1471.722
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 810,
+            "total_people": 1800,
+            "usable_capacity": 1800,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 540,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 250,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.5,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 125,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.5,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 234,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.468,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 113,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.452,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 4.05101600009948,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "utilization",
+            "status": "OPTIMAL",
+            "value": 224460,
+            "bound": 224460,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 2417.0,
+            "bound": 2417.0,
+            "seconds": 0.425589
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 699564.0,
+            "bound": 699564.0,
+            "seconds": 1.093361
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 3588550.0,
+            "bound": 3588550.0,
+            "seconds": 2.377017
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 224460,
+          "supplies": 2417,
+          "no_car_distance": 1453991,
+          "distance": 5525426,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 224460,
+          "supplies": 2417,
+          "no_car_distance": 699564,
+          "distance": 3588550,
+          "moves": 0
+        }
+      },
+      "input_sha256": "f1781d6ef4b425bed482787f5d24aa48cbd01bf06ddaa635b466645b6af4d467",
+      "source_run": "iteration-08-final-balanced"
+    },
+    {
+      "seed": 42,
+      "scenario": "shelter_closed",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 0,
+        "max_utilization": 0.696,
+        "min_utilization": 0.65,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 1138,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 3.715,
+            "p50_km": 3.331,
+            "p95_km": 8.159,
+            "max_km": 13.078,
+            "total_km": 3714.994
+          },
+          "car": {
+            "count": 732,
+            "mean_km": 3.973,
+            "p50_km": 3.664,
+            "p95_km": 8.607,
+            "max_km": 13.078,
+            "total_km": 2908.179
+          },
+          "no_car": {
+            "count": 268,
+            "mean_km": 3.011,
+            "p50_km": 2.847,
+            "p95_km": 6.639,
+            "max_km": 8.848,
+            "total_km": 806.815
+          },
+          "clinical": {
+            "count": 664,
+            "mean_km": 3.769,
+            "p50_km": 3.409,
+            "p95_km": 8.25,
+            "max_km": 13.078,
+            "total_km": 2502.689
+          },
+          "pets": {
+            "count": 376,
+            "mean_km": 3.957,
+            "p50_km": 3.724,
+            "p95_km": 8.341,
+            "max_km": 12.039,
+            "total_km": 1487.917
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "closed",
+            "people": 0,
+            "total_people": 1800,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 780,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.65,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 330,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.66,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 325,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.65,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 325,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.65,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 174,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.696,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 325,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.65,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 325,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.65,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 163,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.652,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 3.718951749964617,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "utilization",
+            "status": "OPTIMAL",
+            "value": 332020,
+            "bound": 332020,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 1138.0,
+            "bound": 1138.0,
+            "seconds": 0.260727
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 806816.0,
+            "bound": 806816.0,
+            "seconds": 1.00557
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 3715005.0,
+            "bound": 3715005.0,
+            "seconds": 2.329215
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 332020,
+          "supplies": 1138,
+          "no_car_distance": 1840269,
+          "distance": 6455549,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 332020,
+          "supplies": 1138,
+          "no_car_distance": 806816,
+          "distance": 3715005,
+          "moves": 0
+        }
+      },
+      "input_sha256": "1ea65ec3014cc8da58461369c99104a0db802861b2333ef29aef07a4d2f83d11",
+      "source_run": "iteration-08-final-balanced"
+    },
+    {
+      "seed": 42,
+      "scenario": "no_open",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 1000,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 0,
+        "max_utilization": null,
+        "min_utilization": null,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 0,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          },
+          "car": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          },
+          "no_car": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          },
+          "clinical": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          },
+          "pets": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "closed",
+            "people": 0,
+            "total_people": 1800,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "closed",
+            "people": 0,
+            "total_people": 1200,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "closed",
+            "people": 0,
+            "total_people": 250,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "closed",
+            "people": 0,
+            "total_people": 250,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "NO_DESTINATION",
+        "elapsed_seconds": 8.541974239051342e-06,
+        "stages": [],
+        "initial_score": {},
+        "final_score": {}
+      },
+      "input_sha256": "4df061c003a411d4486edc6ce93570e1050dd9b05b52140a11aee0582acfef61",
+      "source_run": "iteration-08-final-balanced"
+    },
+    {
+      "seed": 7,
+      "scenario": "base",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 0,
+        "max_utilization": 0.5,
+        "min_utilization": 0.45,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 788,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 3.731,
+            "p50_km": 3.164,
+            "p95_km": 8.504,
+            "max_km": 16.156,
+            "total_km": 3731.147
+          },
+          "car": {
+            "count": 742,
+            "mean_km": 4.08,
+            "p50_km": 3.379,
+            "p95_km": 9.36,
+            "max_km": 16.156,
+            "total_km": 3027.29
+          },
+          "no_car": {
+            "count": 258,
+            "mean_km": 2.728,
+            "p50_km": 2.635,
+            "p95_km": 5.042,
+            "max_km": 6.355,
+            "total_km": 703.857
+          },
+          "clinical": {
+            "count": 674,
+            "mean_km": 3.799,
+            "p50_km": 3.127,
+            "p95_km": 9.287,
+            "max_km": 16.156,
+            "total_km": 2560.445
+          },
+          "pets": {
+            "count": 408,
+            "mean_km": 3.966,
+            "p50_km": 3.239,
+            "p95_km": 10.121,
+            "max_km": 14.7,
+            "total_km": 1618.135
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 810,
+            "total_people": 1800,
+            "usable_capacity": 1800,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 540,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 250,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.5,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 125,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.5,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 234,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.468,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 113,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.452,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 3.8760005419608206,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "utilization",
+            "status": "OPTIMAL",
+            "value": 224460,
+            "bound": 224460,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 788.0,
+            "bound": 788.0,
+            "seconds": 0.227928
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 703857.0,
+            "bound": 703857.0,
+            "seconds": 0.863507
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 3731160.0,
+            "bound": 3731160.0,
+            "seconds": 2.655677
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 224460,
+          "supplies": 788,
+          "no_car_distance": 1645687,
+          "distance": 5848072,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 224460,
+          "supplies": 788,
+          "no_car_distance": 703857,
+          "distance": 3731160,
+          "moves": 0
+        }
+      },
+      "repeat_moved_households": 0,
+      "input_sha256": "f10ea8e09de1b3352e36e9d1bbe40041c7e92450cd215f744a58a03046cfaebd",
+      "source_run": "iteration-08-final-balanced"
+    },
+    {
+      "seed": 7,
+      "scenario": "capacity_shortage",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 347,
+        "budget_overflow_people": 347,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 9,
+        "max_utilization": 1.1458,
+        "min_utilization": 1.14,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 800,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 6.928,
+            "p50_km": 6.206,
+            "p95_km": 14.774,
+            "max_km": 20.926,
+            "total_km": 6927.999
+          },
+          "car": {
+            "count": 742,
+            "mean_km": 8.388,
+            "p50_km": 8.006,
+            "p95_km": 15.349,
+            "max_km": 20.926,
+            "total_km": 6224.142
+          },
+          "no_car": {
+            "count": 258,
+            "mean_km": 2.728,
+            "p50_km": 2.635,
+            "p95_km": 5.042,
+            "max_km": 6.355,
+            "total_km": 703.857
+          },
+          "clinical": {
+            "count": 674,
+            "mean_km": 7.011,
+            "p50_km": 6.072,
+            "p95_km": 15.022,
+            "max_km": 20.926,
+            "total_km": 4725.128
+          },
+          "pets": {
+            "count": 408,
+            "mean_km": 6.887,
+            "p50_km": 5.745,
+            "p95_km": 15.179,
+            "max_km": 20.926,
+            "total_km": 2809.844
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 825,
+            "total_people": 720,
+            "usable_capacity": 720,
+            "utilization": 1.1458,
+            "physical_overflow": 105,
+            "budget_overflow": 105
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 550,
+            "total_people": 480,
+            "usable_capacity": 480,
+            "utilization": 1.1458,
+            "physical_overflow": 70,
+            "budget_overflow": 70
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 229,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.145,
+            "physical_overflow": 29,
+            "budget_overflow": 29
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 228,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.14,
+            "physical_overflow": 28,
+            "budget_overflow": 28
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 229,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.145,
+            "physical_overflow": 29,
+            "budget_overflow": 29
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 114,
+            "total_people": 100,
+            "usable_capacity": 100,
+            "utilization": 1.14,
+            "physical_overflow": 14,
+            "budget_overflow": 14
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 229,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.145,
+            "physical_overflow": 29,
+            "budget_overflow": 29
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 229,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.145,
+            "physical_overflow": 29,
+            "budget_overflow": 29
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 114,
+            "total_people": 100,
+            "usable_capacity": 100,
+            "utilization": 1.14,
+            "physical_overflow": 14,
+            "budget_overflow": 14
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "UNKNOWN",
+        "elapsed_seconds": 5.094864082988352,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 347,
+            "bound": 347,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 347,
+            "bound": 347,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 146.0,
+            "bound": 146.0,
+            "seconds": 0.899648
+          },
+          {
+            "objective": "utilization",
+            "status": "OPTIMAL",
+            "value": 587860,
+            "bound": 587860,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 800.0,
+            "bound": 800.0,
+            "seconds": 1.631729
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 703857.0,
+            "bound": 703857.0,
+            "seconds": 1.432492
+          },
+          {
+            "objective": "distance",
+            "status": "UNKNOWN",
+            "value": null,
+            "bound": 3192261.0,
+            "seconds": 0.976658
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 347,
+          "budget_overflow": 347,
+          "peak_overflow": 146,
+          "utilization": 587860,
+          "supplies": 801,
+          "no_car_distance": 1643932,
+          "distance": 6272414,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 347,
+          "budget_overflow": 347,
+          "peak_overflow": 146,
+          "utilization": 587860,
+          "supplies": 800,
+          "no_car_distance": 703857,
+          "distance": 6927995,
+          "moves": 0
+        }
+      },
+      "input_sha256": "a4f902c806395ac77c5eb8bb7c1f731e5cada5df733548b57d904cba162c2a10",
+      "source_run": "iteration-08-final-balanced"
+    },
+    {
+      "seed": 7,
+      "scenario": "medical_outage",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 0,
+        "unmet_households": 265,
+        "unavoidable_unmet_households": 265,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {
+          "medical_staff": 265,
+          "medication": 192
+        },
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 0,
+        "max_utilization": 0.5,
+        "min_utilization": 0.45,
+        "essential_supply_shortfall_person_labels": 513,
+        "people_with_limited_clothes_label": 788,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 3.674,
+            "p50_km": 3.144,
+            "p95_km": 8.453,
+            "max_km": 14.7,
+            "total_km": 3673.617
+          },
+          "car": {
+            "count": 742,
+            "mean_km": 4.007,
+            "p50_km": 3.375,
+            "p95_km": 9.27,
+            "max_km": 14.7,
+            "total_km": 2973.536
+          },
+          "no_car": {
+            "count": 258,
+            "mean_km": 2.713,
+            "p50_km": 2.613,
+            "p95_km": 5.042,
+            "max_km": 6.355,
+            "total_km": 700.081
+          },
+          "clinical": {
+            "count": 674,
+            "mean_km": 3.768,
+            "p50_km": 3.166,
+            "p95_km": 9.004,
+            "max_km": 14.7,
+            "total_km": 2539.351
+          },
+          "pets": {
+            "count": 408,
+            "mean_km": 4.005,
+            "p50_km": 3.249,
+            "p95_km": 10.485,
+            "max_km": 14.7,
+            "total_km": 1633.84
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 810,
+            "total_people": 1800,
+            "usable_capacity": 1800,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 540,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 250,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.5,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 125,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.5,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 234,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.468,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 113,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.452,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 3.25952750002034,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "utilization",
+            "status": "OPTIMAL",
+            "value": 224460,
+            "bound": 224460,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 2327.0,
+            "bound": 2327.0,
+            "seconds": 0.325087
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 700082.0,
+            "bound": 700082.0,
+            "seconds": 0.958867
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 3673627.0,
+            "bound": 3673627.0,
+            "seconds": 1.84116
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 224460,
+          "supplies": 2327,
+          "no_car_distance": 1442604,
+          "distance": 5636883,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 224460,
+          "supplies": 2327,
+          "no_car_distance": 700082,
+          "distance": 3673627,
+          "moves": 0
+        }
+      },
+      "input_sha256": "c9d2a252fdb1fa39c0dea7ea47f3802bb2cef5bf06b1933adb185e61f62060f0",
+      "source_run": "iteration-08-final-balanced"
+    },
+    {
+      "seed": 7,
+      "scenario": "shelter_closed",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 0,
+        "max_utilization": 0.68,
+        "min_utilization": 0.65,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 1138,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 3.864,
+            "p50_km": 3.457,
+            "p95_km": 8.511,
+            "max_km": 14.467,
+            "total_km": 3863.573
+          },
+          "car": {
+            "count": 742,
+            "mean_km": 4.137,
+            "p50_km": 3.735,
+            "p95_km": 9.023,
+            "max_km": 14.467,
+            "total_km": 3069.738
+          },
+          "no_car": {
+            "count": 258,
+            "mean_km": 3.077,
+            "p50_km": 2.888,
+            "p95_km": 6.377,
+            "max_km": 8.626,
+            "total_km": 793.835
+          },
+          "clinical": {
+            "count": 674,
+            "mean_km": 3.889,
+            "p50_km": 3.414,
+            "p95_km": 8.783,
+            "max_km": 14.467,
+            "total_km": 2621.108
+          },
+          "pets": {
+            "count": 408,
+            "mean_km": 4.107,
+            "p50_km": 3.627,
+            "p95_km": 8.905,
+            "max_km": 14.331,
+            "total_km": 1675.548
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "closed",
+            "people": 0,
+            "total_people": 1800,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 780,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.65,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 340,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.68,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 325,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.65,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 325,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.65,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 164,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.656,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 325,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.65,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 325,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.65,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 163,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.652,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 2.491941125015728,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "utilization",
+            "status": "OPTIMAL",
+            "value": 332020,
+            "bound": 332020,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 1138.0,
+            "bound": 1138.0,
+            "seconds": 0.206076
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 793836.0,
+            "bound": 793836.0,
+            "seconds": 0.692743
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 3863579.0,
+            "bound": 3863579.0,
+            "seconds": 1.481581
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 332020,
+          "supplies": 1138,
+          "no_car_distance": 1690409,
+          "distance": 6280886,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 332020,
+          "supplies": 1138,
+          "no_car_distance": 793836,
+          "distance": 3863579,
+          "moves": 0
+        }
+      },
+      "input_sha256": "1066b0d9a632a195ea8a40ed27f8c1e649aea9f07600d8cd905206a9bddd78be",
+      "source_run": "iteration-08-final-balanced"
+    },
+    {
+      "seed": 7,
+      "scenario": "no_open",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2747,
+        "unassigned_households": 1000,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 0,
+        "max_utilization": null,
+        "min_utilization": null,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 0,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          },
+          "car": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          },
+          "no_car": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          },
+          "clinical": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          },
+          "pets": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "closed",
+            "people": 0,
+            "total_people": 1800,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "closed",
+            "people": 0,
+            "total_people": 1200,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "closed",
+            "people": 0,
+            "total_people": 250,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "closed",
+            "people": 0,
+            "total_people": 250,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "NO_DESTINATION",
+        "elapsed_seconds": 4.083034582436085e-06,
+        "stages": [],
+        "initial_score": {},
+        "final_score": {}
+      },
+      "input_sha256": "6f0ffc228972e226d3be6e3a14d925dec3d8ad84db6826d75446e96ecb328db8",
+      "source_run": "iteration-08-final-balanced"
+    },
+    {
+      "seed": 97,
+      "scenario": "base",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2811,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 0,
+        "max_utilization": 0.5,
+        "min_utilization": 0.45,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 788,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 3.65,
+            "p50_km": 3.101,
+            "p95_km": 8.401,
+            "max_km": 14.135,
+            "total_km": 3650.353
+          },
+          "car": {
+            "count": 743,
+            "mean_km": 3.989,
+            "p50_km": 3.379,
+            "p95_km": 8.796,
+            "max_km": 14.135,
+            "total_km": 2963.733
+          },
+          "no_car": {
+            "count": 257,
+            "mean_km": 2.672,
+            "p50_km": 2.622,
+            "p95_km": 4.824,
+            "max_km": 5.817,
+            "total_km": 686.62
+          },
+          "clinical": {
+            "count": 666,
+            "mean_km": 3.633,
+            "p50_km": 3.067,
+            "p95_km": 8.465,
+            "max_km": 14.135,
+            "total_km": 2419.844
+          },
+          "pets": {
+            "count": 381,
+            "mean_km": 3.823,
+            "p50_km": 3.236,
+            "p95_km": 8.687,
+            "max_km": 14.135,
+            "total_km": 1456.62
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 810,
+            "total_people": 1800,
+            "usable_capacity": 1800,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 588,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.49,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 250,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.5,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 125,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.5,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 250,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.5,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 113,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.452,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 4.203092457959428,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "utilization",
+            "status": "OPTIMAL",
+            "value": 235980,
+            "bound": 235980,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 788.0,
+            "bound": 788.0,
+            "seconds": 1.103221
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 686622.0,
+            "bound": 686622.0,
+            "seconds": 0.864852
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 3650365.0,
+            "bound": 3650365.0,
+            "seconds": 2.091501
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 235980,
+          "supplies": 792,
+          "no_car_distance": 1488504,
+          "distance": 5648087,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 235980,
+          "supplies": 788,
+          "no_car_distance": 686622,
+          "distance": 3650365,
+          "moves": 0
+        }
+      },
+      "repeat_moved_households": 0,
+      "input_sha256": "ec90f31b8ccb53a884f3965338486024bf16c745aa010413e5bd703e3515ab41",
+      "source_run": "iteration-08-final-balanced"
+    },
+    {
+      "seed": 97,
+      "scenario": "capacity_shortage",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2811,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 411,
+        "budget_overflow_people": 411,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 9,
+        "max_utilization": 1.1729,
+        "min_utilization": 1.17,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 819,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 6.708,
+            "p50_km": 5.592,
+            "p95_km": 14.719,
+            "max_km": 22.047,
+            "total_km": 6707.954
+          },
+          "car": {
+            "count": 743,
+            "mean_km": 8.104,
+            "p50_km": 7.618,
+            "p95_km": 15.578,
+            "max_km": 22.047,
+            "total_km": 6021.335
+          },
+          "no_car": {
+            "count": 257,
+            "mean_km": 2.672,
+            "p50_km": 2.622,
+            "p95_km": 4.824,
+            "max_km": 5.817,
+            "total_km": 686.62
+          },
+          "clinical": {
+            "count": 666,
+            "mean_km": 6.721,
+            "p50_km": 5.596,
+            "p95_km": 14.694,
+            "max_km": 22.047,
+            "total_km": 4476.29
+          },
+          "pets": {
+            "count": 381,
+            "mean_km": 6.831,
+            "p50_km": 5.609,
+            "p95_km": 14.465,
+            "max_km": 21.913,
+            "total_km": 2602.568
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 844,
+            "total_people": 720,
+            "usable_capacity": 720,
+            "utilization": 1.1722,
+            "physical_overflow": 124,
+            "budget_overflow": 124
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 563,
+            "total_people": 480,
+            "usable_capacity": 480,
+            "utilization": 1.1729,
+            "physical_overflow": 83,
+            "budget_overflow": 83
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 234,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.17,
+            "physical_overflow": 34,
+            "budget_overflow": 34
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 234,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.17,
+            "physical_overflow": 34,
+            "budget_overflow": 34
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 234,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.17,
+            "physical_overflow": 34,
+            "budget_overflow": 34
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 117,
+            "total_people": 100,
+            "usable_capacity": 100,
+            "utilization": 1.17,
+            "physical_overflow": 17,
+            "budget_overflow": 17
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 234,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.17,
+            "physical_overflow": 34,
+            "budget_overflow": 34
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 234,
+            "total_people": 200,
+            "usable_capacity": 200,
+            "utilization": 1.17,
+            "physical_overflow": 34,
+            "budget_overflow": 34
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 117,
+            "total_people": 100,
+            "usable_capacity": 100,
+            "utilization": 1.17,
+            "physical_overflow": 17,
+            "budget_overflow": 17
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "UNKNOWN",
+        "elapsed_seconds": 5.117853457923047,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 411,
+            "bound": 411,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 411,
+            "bound": 411,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 173.0,
+            "bound": 173.0,
+            "seconds": 0.94394
+          },
+          {
+            "objective": "utilization",
+            "status": "OPTIMAL",
+            "value": 612180,
+            "bound": 612180,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 819.0,
+            "bound": 819.0,
+            "seconds": 1.765306
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 686622.0,
+            "bound": 686622.0,
+            "seconds": 1.219507
+          },
+          {
+            "objective": "distance",
+            "status": "UNKNOWN",
+            "value": null,
+            "bound": 3202557.0,
+            "seconds": 1.005906
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 411,
+          "budget_overflow": 411,
+          "peak_overflow": 173,
+          "utilization": 612180,
+          "supplies": 819,
+          "no_car_distance": 1593453,
+          "distance": 6404669,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 411,
+          "budget_overflow": 411,
+          "peak_overflow": 173,
+          "utilization": 612180,
+          "supplies": 819,
+          "no_car_distance": 686622,
+          "distance": 6707951,
+          "moves": 0
+        }
+      },
+      "input_sha256": "57f78a8cc1ad23d724893420158ca0f75e4a85dc1dd5bbda0fc8767a8d696835",
+      "source_run": "iteration-08-final-balanced"
+    },
+    {
+      "seed": 97,
+      "scenario": "medical_outage",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2811,
+        "unassigned_households": 0,
+        "unmet_households": 263,
+        "unavoidable_unmet_households": 263,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {
+          "medical_staff": 263,
+          "medication": 188
+        },
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 0,
+        "max_utilization": 0.5,
+        "min_utilization": 0.45,
+        "essential_supply_shortfall_person_labels": 506,
+        "people_with_limited_clothes_label": 788,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 6.92,
+            "p50_km": 6.212,
+            "p95_km": 14.408,
+            "max_km": 19.948,
+            "total_km": 6919.554
+          },
+          "car": {
+            "count": 743,
+            "mean_km": 8.393,
+            "p50_km": 8.031,
+            "p95_km": 14.782,
+            "max_km": 19.948,
+            "total_km": 6236.265
+          },
+          "no_car": {
+            "count": 257,
+            "mean_km": 2.659,
+            "p50_km": 2.607,
+            "p95_km": 4.824,
+            "max_km": 5.817,
+            "total_km": 683.29
+          },
+          "clinical": {
+            "count": 666,
+            "mean_km": 6.992,
+            "p50_km": 6.212,
+            "p95_km": 14.599,
+            "max_km": 19.948,
+            "total_km": 4656.599
+          },
+          "pets": {
+            "count": 381,
+            "mean_km": 6.88,
+            "p50_km": 6.004,
+            "p95_km": 14.407,
+            "max_km": 19.948,
+            "total_km": 2621.305
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "open",
+            "people": 871,
+            "total_people": 1800,
+            "usable_capacity": 1800,
+            "utilization": 0.4839,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 543,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.4525,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 250,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.5,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 124,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.496,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 235,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.47,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 225,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.45,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 113,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.452,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "FEASIBLE",
+        "elapsed_seconds": 5.093839082983322,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "utilization",
+            "status": "OPTIMAL",
+            "value": 235980,
+            "bound": 235980,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 2306.0,
+            "bound": 2306.0,
+            "seconds": 1.633887
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 683292.0,
+            "bound": 683292.0,
+            "seconds": 1.596958
+          },
+          {
+            "objective": "distance",
+            "status": "FEASIBLE",
+            "value": 6919549.0,
+            "bound": 3459591.0,
+            "seconds": 1.721994
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 235980,
+          "supplies": 2308,
+          "no_car_distance": 1427090,
+          "distance": 5589767,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 235980,
+          "supplies": 2306,
+          "no_car_distance": 683292,
+          "distance": 6919549,
+          "moves": 0
+        }
+      },
+      "input_sha256": "e4c10d103212a2192261884fba184995865e2961d9d538a63aef6e556a916bce",
+      "source_run": "iteration-08-final-balanced"
+    },
+    {
+      "seed": 97,
+      "scenario": "shelter_closed",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2811,
+        "unassigned_households": 0,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 0,
+        "max_utilization": 0.7,
+        "min_utilization": 0.65,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 1138,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 1000,
+            "mean_km": 3.684,
+            "p50_km": 3.392,
+            "p95_km": 7.901,
+            "max_km": 12.353,
+            "total_km": 3684.456
+          },
+          "car": {
+            "count": 743,
+            "mean_km": 3.916,
+            "p50_km": 3.614,
+            "p95_km": 8.215,
+            "max_km": 12.353,
+            "total_km": 2909.608
+          },
+          "no_car": {
+            "count": 257,
+            "mean_km": 3.015,
+            "p50_km": 2.854,
+            "p95_km": 6.037,
+            "max_km": 8.04,
+            "total_km": 774.848
+          },
+          "clinical": {
+            "count": 666,
+            "mean_km": 3.696,
+            "p50_km": 3.333,
+            "p95_km": 7.993,
+            "max_km": 12.353,
+            "total_km": 2461.672
+          },
+          "pets": {
+            "count": 381,
+            "mean_km": 3.968,
+            "p50_km": 3.717,
+            "p95_km": 8.463,
+            "max_km": 10.333,
+            "total_km": 1511.79
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "closed",
+            "people": 0,
+            "total_people": 1800,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "open",
+            "people": 798,
+            "total_people": 1200,
+            "usable_capacity": 1200,
+            "utilization": 0.665,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "open",
+            "people": 350,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.7,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "open",
+            "people": 325,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.65,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "open",
+            "people": 325,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.65,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "open",
+            "people": 175,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.7,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "open",
+            "people": 350,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.7,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "open",
+            "people": 325,
+            "total_people": 500,
+            "usable_capacity": 500,
+            "utilization": 0.65,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "open",
+            "people": 163,
+            "total_people": 250,
+            "usable_capacity": 250,
+            "utilization": 0.652,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "OPTIMAL",
+        "elapsed_seconds": 3.2978870840743184,
+        "stages": [
+          {
+            "objective": "physical_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "budget_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "peak_overflow",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          },
+          {
+            "objective": "utilization",
+            "status": "OPTIMAL",
+            "value": 348660,
+            "bound": 348660,
+            "seconds": 0.0
+          },
+          {
+            "objective": "supplies",
+            "status": "OPTIMAL",
+            "value": 1138.0,
+            "bound": 1138.0,
+            "seconds": 0.769745
+          },
+          {
+            "objective": "no_car_distance",
+            "status": "OPTIMAL",
+            "value": 774852.0,
+            "bound": 774852.0,
+            "seconds": 0.980872
+          },
+          {
+            "objective": "distance",
+            "status": "OPTIMAL",
+            "value": 3684459.0,
+            "bound": 3684459.0,
+            "seconds": 1.432325
+          },
+          {
+            "objective": "moves",
+            "status": "OPTIMAL",
+            "value": 0,
+            "bound": 0,
+            "seconds": 0.0
+          }
+        ],
+        "initial_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 348660,
+          "supplies": 1140,
+          "no_car_distance": 1845665,
+          "distance": 6397595,
+          "moves": 0
+        },
+        "final_score": {
+          "physical_overflow": 0,
+          "budget_overflow": 0,
+          "peak_overflow": 0,
+          "utilization": 348660,
+          "supplies": 1138,
+          "no_car_distance": 774852,
+          "distance": 3684459,
+          "moves": 0
+        }
+      },
+      "input_sha256": "14d88c7164f2a9a9a8ba2ca5529177465161f8b70fa0926bd924404ae2838d76",
+      "source_run": "iteration-08-final-balanced"
+    },
+    {
+      "seed": 97,
+      "scenario": "no_open",
+      "profile": "balanced",
+      "metrics": {
+        "households": 1000,
+        "people": 2811,
+        "unassigned_households": 1000,
+        "unmet_households": 0,
+        "unavoidable_unmet_households": 0,
+        "invalid_destination_households": 0,
+        "unmet_requirements": {},
+        "unsupported_despite_compatible_shelter": 0,
+        "physical_overflow_people": 0,
+        "budget_overflow_people": 0,
+        "empty_open_shelters": 0,
+        "full_open_shelters": 0,
+        "max_utilization": null,
+        "min_utilization": null,
+        "essential_supply_shortfall_person_labels": 0,
+        "people_with_limited_clothes_label": 0,
+        "moved_households": 0,
+        "travel": {
+          "all": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          },
+          "car": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          },
+          "no_car": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          },
+          "clinical": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          },
+          "pets": {
+            "count": 0,
+            "mean_km": null,
+            "p50_km": null,
+            "p95_km": null,
+            "max_km": null,
+            "total_km": 0
+          }
+        },
+        "shelters": [
+          {
+            "id": "demo_shelter_01",
+            "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
+            "status": "closed",
+            "people": 0,
+            "total_people": 1800,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_04",
+            "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
+            "status": "closed",
+            "people": 0,
+            "total_people": 1200,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_05",
+            "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_06",
+            "name": "Demo \u2014 Estates Elementary School",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_08",
+            "name": "Demo \u2014 Big Corkscrew Island Regional Park",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_09",
+            "name": "Demo \u2014 Estates Branch Library",
+            "status": "closed",
+            "people": 0,
+            "total_people": 250,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_10",
+            "name": "Demo \u2014 Palmetto Elementary School",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_11",
+            "name": "Demo \u2014 Bear Creek Elementary School",
+            "status": "closed",
+            "people": 0,
+            "total_people": 500,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          },
+          {
+            "id": "demo_shelter_12",
+            "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
+            "status": "closed",
+            "people": 0,
+            "total_people": 250,
+            "usable_capacity": 0,
+            "utilization": null,
+            "physical_overflow": 0,
+            "budget_overflow": 0
+          }
+        ]
+      },
+      "search": {
+        "profile": "balanced",
+        "status": "NO_DESTINATION",
+        "elapsed_seconds": 3.1670788303017616e-06,
+        "stages": [],
+        "initial_score": {},
+        "final_score": {}
+      },
+      "input_sha256": "b12a25871805968e37752c806ec2c86da08f03961751a3b9fb13fa51997a9383",
+      "source_run": "iteration-08-final-balanced"
+    }
+  ],
+  "recommendation": {
+    "profile": "balanced",
+    "scope": "Measured base scenarios only; not a universal optimum or clinical validation.",
+    "criteria": "All households assigned, no unmet listed needs/overflow/empty or full open sites; then lower no-car mean travel and all-household mean travel.",
+    "eligible_profiles": [
+      "balanced"
+    ]
+  },
+  "validation": "45 profile/scenario/seed cases compared, then 15 balanced cases rerun after solver bound improvements. All 3 final base runs proven OPTIMAL with zero repeat moves. Shortage/outage scenarios remain explicitly infeasible for capacity/medical requirements.",
+  "measured_tradeoff": "Equal utilization increases overall travel versus packing the nearest fully supplied sites; in the nine-hub base sample it also reduces travel for households without cars.",
+  "comparison_note": "Historical comparison profiles retain diagnostics from their source runs; only iteration-08 records use the final allocator fingerprint."
+}

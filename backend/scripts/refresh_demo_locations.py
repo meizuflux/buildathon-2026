@@ -17,14 +17,89 @@ ADDRESSES = ROOT + "Site_Address_Points_b/FeatureServer/3"
 BUILDINGS = ROOT + "Buildings/FeatureServer/1"
 BOUNDS = [-81.68, 26.17, -81.48, 26.34]  # west, south, east, north
 OUTPUT = Path(__file__).resolve().parents[1] / "src/haven/data/golden_gate_estates.json"
-SCHOOLS = (
-    ("Palmetto Ridge High School", "1655 Victory LN, Naples"),
-    ("Corkscrew Middle School", "1165 Oil Well RD, Naples"),
-    ("Cypress Palm Middle School", "4255 18th AVE NE, Naples"),
-    ("Sabal Palm Elementary School", "4095 18th AVE NE, Naples"),
-    ("Big Cypress Elementary School", "3250 Golden Gate BLVD W, Naples"),
-    ("Estates Elementary School", "5945 Everglades BLVD N, Naples"),
-    ("Corkscrew Elementary School", "1065 Oil Well RD, Naples"),
+# Curated public locations are intentionally grouped by walkable campus/site.
+# Keep IDs stable because demo records may refer to a shelter after a refresh.
+# Coordinates are resolved from the public County address layer each refresh.
+SHELTER_HUBS = (
+    {
+        "id": "demo_shelter_01",
+        "name": "Palmetto Ridge / Corkscrew School Hub",
+        "addresses": (
+            ("Palmetto Ridge High School", "1655 Victory LN, Naples"),
+            ("Corkscrew Middle School", "1165 Oil Well RD, Naples"),
+            ("Corkscrew Elementary School", "1065 Oil Well RD, Naples"),
+        ),
+        "replaces": ["demo_shelter_02", "demo_shelter_07"],
+        "sources": ["https://www.collierschools.com/schools"],
+    },
+    {
+        "id": "demo_shelter_04",
+        "name": "Cypress Palm / Sabal Palm School Hub",
+        "addresses": (
+            ("Cypress Palm Middle School", "4255 18th AVE NE, Naples"),
+            ("Sabal Palm Elementary School", "4095 18th AVE NE, Naples"),
+        ),
+        "replaces": ["demo_shelter_03"],
+        "sources": ["https://www.collierschools.com/schools"],
+    },
+    {
+        "id": "demo_shelter_05",
+        "name": "Big Cypress / Max Hasse Community Hub",
+        "addresses": (
+            ("Big Cypress Elementary School", "3250 Golden Gate BLVD W, Naples"),
+            ("Max A. Hasse Jr. Community Park", "3390 Golden Gate BLVD W, Naples"),
+        ),
+        "replaces": [],
+        "sources": [
+            "https://www.collierschools.com/schools",
+            "https://www.collierparks.com/Parks-and-Beaches/Community-Parks/Max-A-Hasse-Jr-Community-Park",
+        ],
+    },
+    {
+        "id": "demo_shelter_06",
+        "name": "Estates Elementary School",
+        "addresses": (("Estates Elementary School", "5945 Everglades BLVD N, Naples"),),
+        "replaces": [],
+        "sources": ["https://www.collierschools.com/schools"],
+    },
+    {
+        "id": "demo_shelter_08",
+        "name": "Big Corkscrew Island Regional Park",
+        "addresses": (("Big Corkscrew Island Regional Park", "810 39th AVE NE, Naples"),),
+        "replaces": [],
+        "sources": [
+            "https://www.collierparks.com/Parks-and-Beaches/Regional-Parks/Big-Corkscrew-Island-Regional-Park",
+            "https://apps.sfwmd.gov/entsb/docdownload?object_id=0900eeea8a9341dc",
+        ],
+    },
+    {
+        "id": "demo_shelter_09",
+        "name": "Estates Branch Library",
+        "addresses": (("Estates Branch Library", "1266 Golden Gate BLVD W, Naples"),),
+        "replaces": [],
+        "sources": ["https://library.collier.gov/About-Us/Locations/Estates-Branch"],
+    },
+    {
+        "id": "demo_shelter_10",
+        "name": "Palmetto Elementary School",
+        "addresses": (("Palmetto Elementary School", "3000 10th AVE SE, Naples"),),
+        "replaces": [],
+        "sources": ["https://www.collierschools.com/schools"],
+    },
+    {
+        "id": "demo_shelter_11",
+        "name": "Bear Creek Elementary School",
+        "addresses": (("Bear Creek Elementary School", "2400 Cub CT, Naples"),),
+        "replaces": [],
+        "sources": ["https://www.collierschools.com/schools"],
+    },
+    {
+        "id": "demo_shelter_12",
+        "name": "Greater Naples Fire Rescue Station 74",
+        "addresses": (("Greater Naples Fire Rescue Station 74", "99 Desoto BLVD S, Naples"),),
+        "replaces": [],
+        "sources": ["https://greaternaplesfire.org/locations/"],
+    },
 )
 
 
@@ -105,6 +180,51 @@ def match_homes(candidates, buildings):
     raise RuntimeError(f"Only {len(homes)} distinct homes intersect building footprints")
 
 
+def match_shelter_address(address):
+    """Resolve a named public site through the County's public address layer."""
+    matches = features(
+        ADDRESSES,
+        where=f"UPPER(FULLADDR) LIKE '%{address.upper()}%'",
+        outSR=4326,
+        outFields="OBJECTID,FULLADDR",
+    )
+    # The 810 39th Ave NE park address has several address points across its
+    # facility; averaging those points gives a stable site-level map marker.
+    street = address.split(",")[0].upper()
+    matches = [
+        match
+        for match in matches
+        if match["attributes"]["FULLADDR"].upper().startswith(street + ",")
+    ]
+    if not matches:
+        raise RuntimeError(f"No County GIS address point found for {address}")
+    return matches
+
+
+def shelter_sites():
+    shelters = []
+    for hub in SHELTER_HUBS:
+        points = [
+            point for _, address in hub["addresses"] for point in match_shelter_address(address)
+        ]
+        shelters.append(
+            {
+                "id": hub["id"],
+                "name": hub["name"],
+                "address": hub["addresses"][0][1] + ", FL",
+                "latitude": round(sum(point["geometry"]["y"] for point in points) / len(points), 8),
+                "longitude": round(
+                    sum(point["geometry"]["x"] for point in points) / len(points), 8
+                ),
+                "address_point_ids": [point["attributes"]["OBJECTID"] for point in points],
+                "members": [name for name, _ in hub["addresses"]],
+                "replaces": hub["replaces"],
+                "sources": hub["sources"],
+            }
+        )
+    return shelters
+
+
 def main():
     numbered_roads = " OR ".join(
         f"FULLNAME LIKE '% {kind} {quadrant}'"
@@ -151,30 +271,18 @@ def main():
         orderByFields="OBJECTID",
     )
     homes = match_homes(candidates, buildings)
-    shelters = []
-    for name, address in SCHOOLS:
-        matches = features(
-            ADDRESSES,
-            where=f"FULLADDR = '{address}' AND POINTTYPE <> 'Utility Asset'",
-            outSR=4326,
-            outFields="OBJECTID,FULLADDR",
-        )
-        if len(matches) != 1:
-            raise RuntimeError(f"Expected exactly one school address for {name}")
-        point = matches[0]
-        shelters.append(
-            {
-                "name": name,
-                "address": address + ", FL 34120",
-                "latitude": round(point["geometry"]["y"], 8),
-                "longitude": round(point["geometry"]["x"], 8),
-                "address_point_id": point["attributes"]["OBJECTID"],
-            }
-        )
+    shelters = shelter_sites()
     data = {
         "area": "Golden Gate Estates, Naples, Florida",
         "retrieved_at": datetime.now(UTC).isoformat(),
-        "sources": {"addresses": ADDRESSES, "building_footprints_2025": BUILDINGS},
+        "sources": {
+            "addresses": ADDRESSES,
+            "building_footprints_2025": BUILDINGS,
+            "official_school_directory": "https://www.collierschools.com/schools",
+            "collier_county_parks": "https://www.collierparks.com/",
+            "collier_county_public_library": "https://library.collier.gov/About-Us/Locations",
+            "greater_naples_fire_rescue": "https://greaternaplesfire.org/locations/",
+        },
         "bounds": BOUNDS,
         "selection": "Current Single Family address points on Estates roads, sampled with "
         "seed 42; each point intersects a distinct 2025 building footprint.",

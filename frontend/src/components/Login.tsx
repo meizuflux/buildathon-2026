@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '../auth'
+import { errorMessage } from '../lib/ops'
 
 export default function Login() {
   const { login } = useAuth()
@@ -15,31 +16,23 @@ export default function Login() {
     try {
       await login(email, password)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to sign in.')
+      setError(errorMessage(err))
       setBusy(false)
     }
   }
 
   return (
-    <div className="login-wrap">
-      <form className="login-card" onSubmit={submit}>
-        <div className="brand brand-lg">
-          <span className="brand-mark" aria-hidden="true" />
-          Haven <span className="brand-sub">Operations</span>
+    <div className="hx hx-login">
+      <form className="hx-panel" onSubmit={submit}>
+        <div className="hx-brand">
+          <img src="/haven-mark.svg" alt="" />
+          <div><b>Haven</b><span>Operations</span></div>
         </div>
-        <p className="muted">Sign in with your operator account to manage shelters, families and emergency communications.</p>
-        <label className="field">
-          <span>Email</span>
-          <input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        </label>
-        <label className="field">
-          <span>Password</span>
-          <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </label>
-        {error && <p className="error" role="alert">{error}</p>}
-        <button className="btn btn-primary btn-block" disabled={busy}>
-          {busy ? 'Signing in…' : 'Sign in'}
-        </button>
+        <p className="muted">Sign in with your operator account to manage shelters, families and emergency broadcasts.</p>
+        <label className="hx-field"><span>Email</span><input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
+        <label className="hx-field"><span>Password</span><input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
+        {error && <p className="notice notice-error" role="alert">{error}</p>}
+        <button className="btn btn-primary btn-block" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
       </form>
     </div>
   )

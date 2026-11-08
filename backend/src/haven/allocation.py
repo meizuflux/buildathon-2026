@@ -7,6 +7,7 @@ transaction. ``current_assignments`` is the active reservation ledger;
 ``shelter_capacity_budgets`` retains the operator-set allocation budget.
 """
 
+import asyncio
 import hashlib
 import json
 from collections.abc import Iterable
@@ -256,12 +257,13 @@ async def recompute_disasters(
     """Rebuild active assignments and material plan versions for given pools.
 
     The caller owns an immediate write transaction. All prior reservations in
-    the supplied disasters are read before allocation. Reservations at open or
-    full shelters remain protected while new placements are made. Reservations
-    are released when their shelter closes or moves to another disaster.
+    the supplied disasters are read before allocation. All households are
+    reconsidered together; retaining a reservation is a final tie-breaker after
+    needs, capacity, supplies, and travel. Reservations are released when their
+    shelter closes or moves to another disaster.
     Capacity limits may be exceeded to give every household a destination;
     affected plans carry alerts. If no compatible shelter is available, the
-    least-mismatched open or full shelter is selected with a critical alert.
+    best clinical/other-needs match is selected with a critical alert.
     A family moved between disasters or shelters cannot consume capacity twice.
     The returned map contains each affected family's current persisted plan.
     """
@@ -329,8 +331,8 @@ async def recompute_disasters(
             latest[family["id"]] = (int(row[0]), _loads(row[1]))
 
     # Remove the old reservation set for every requested pool before assigning
-    # any of them. Compatible incumbents are restored below, before new
-    # placements; this makes multi-disaster moves atomic and avoids stale use.
+    # any of them. Reoptimize each complete pool; this makes multi-disaster
+    # moves atomic and avoids stale use or double reservations.
     await connection.execute(f"DELETE FROM current_assignments WHERE disaster_id IN ({marks})", ids)
 
     result: dict[str, Plan] = {}
@@ -340,7 +342,9 @@ async def recompute_disasters(
     for disaster_id in ids:
         families = families_by_disaster[disaster_id]
         shelters = shelters_by_disaster[disaster_id]
-        assigned, remaining = allocate_disaster(families, shelters, prior_shelter)
+        assigned, remaining = await asyncio.to_thread(
+            allocate_disaster, families, shelters, prior_shelter
+        )
         remaining_by_shelter.update(remaining)
         chosen_by_family.update(assigned)
 
