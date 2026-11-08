@@ -39,43 +39,43 @@ Measured base scenarios only; not a universal optimum or clinical validation.
 
 | Shelter | Assigned people | Usable capacity | Utilization |
 | --- | ---: | ---: | ---: |
-| Demo — Palmetto Ridge / Corkscrew School Hub | 879 | 1800 | 48.8% |
-| Demo — Cypress Palm / Sabal Palm School Hub | 620 | 1200 | 51.7% |
-| Demo — Big Cypress / Max Hasse Community Hub | 498 | 500 | 99.6% |
-| Demo — Estates Elementary School | 0 | 500 | 0.0% |
-| Demo — Big Corkscrew Island Regional Park | 0 | 500 | 0.0% |
-| Demo — Estates Branch Library | 250 | 250 | 100.0% |
-| Demo — Palmetto Elementary School | 500 | 500 | 100.0% |
-| Demo — Bear Creek Elementary School | 0 | 500 | 0.0% |
-| Demo — Greater Naples Fire Rescue Station 74 | 0 | 250 | 0.0% |
+| Palmetto Ridge / Corkscrew School Hub | 879 | 1800 | 48.8% |
+| Cypress Palm / Sabal Palm School Hub | 620 | 1200 | 51.7% |
+| Big Cypress / Max Hasse Community Hub | 498 | 500 | 99.6% |
+| Estates Elementary School | 0 | 500 | 0.0% |
+| Big Corkscrew Island Regional Park | 0 | 500 | 0.0% |
+| Estates Branch Library | 250 | 250 | 100.0% |
+| Palmetto Elementary School | 500 | 500 | 100.0% |
+| Bear Creek Elementary School | 0 | 500 | 0.0% |
+| Greater Naples Fire Rescue Station 74 | 0 | 250 | 0.0% |
 
 ### headroom (seed 42)
 
 | Shelter | Assigned people | Usable capacity | Utilization |
 | --- | ---: | ---: | ---: |
-| Demo — Palmetto Ridge / Corkscrew School Hub | 987 | 1800 | 54.8% |
-| Demo — Cypress Palm / Sabal Palm School Hub | 698 | 1200 | 58.2% |
-| Demo — Big Cypress / Max Hasse Community Hub | 425 | 500 | 85.0% |
-| Demo — Estates Elementary School | 0 | 500 | 0.0% |
-| Demo — Big Corkscrew Island Regional Park | 0 | 500 | 0.0% |
-| Demo — Estates Branch Library | 212 | 250 | 84.8% |
-| Demo — Palmetto Elementary School | 425 | 500 | 85.0% |
-| Demo — Bear Creek Elementary School | 0 | 500 | 0.0% |
-| Demo — Greater Naples Fire Rescue Station 74 | 0 | 250 | 0.0% |
+| Palmetto Ridge / Corkscrew School Hub | 987 | 1800 | 54.8% |
+| Cypress Palm / Sabal Palm School Hub | 698 | 1200 | 58.2% |
+| Big Cypress / Max Hasse Community Hub | 425 | 500 | 85.0% |
+| Estates Elementary School | 0 | 500 | 0.0% |
+| Big Corkscrew Island Regional Park | 0 | 500 | 0.0% |
+| Estates Branch Library | 212 | 250 | 84.8% |
+| Palmetto Elementary School | 425 | 500 | 85.0% |
+| Bear Creek Elementary School | 0 | 500 | 0.0% |
+| Greater Naples Fire Rescue Station 74 | 0 | 250 | 0.0% |
 
 ### balanced (seed 42)
 
 | Shelter | Assigned people | Usable capacity | Utilization |
 | --- | ---: | ---: | ---: |
-| Demo — Palmetto Ridge / Corkscrew School Hub | 810 | 1800 | 45.0% |
-| Demo — Cypress Palm / Sabal Palm School Hub | 540 | 1200 | 45.0% |
-| Demo — Big Cypress / Max Hasse Community Hub | 250 | 500 | 50.0% |
-| Demo — Estates Elementary School | 225 | 500 | 45.0% |
-| Demo — Big Corkscrew Island Regional Park | 225 | 500 | 45.0% |
-| Demo — Estates Branch Library | 125 | 250 | 50.0% |
-| Demo — Palmetto Elementary School | 234 | 500 | 46.8% |
-| Demo — Bear Creek Elementary School | 225 | 500 | 45.0% |
-| Demo — Greater Naples Fire Rescue Station 74 | 113 | 250 | 45.2% |
+| Palmetto Ridge / Corkscrew School Hub | 810 | 1800 | 45.0% |
+| Cypress Palm / Sabal Palm School Hub | 540 | 1200 | 45.0% |
+| Big Cypress / Max Hasse Community Hub | 250 | 500 | 50.0% |
+| Estates Elementary School | 225 | 500 | 45.0% |
+| Big Corkscrew Island Regional Park | 225 | 500 | 45.0% |
+| Estates Branch Library | 125 | 250 | 50.0% |
+| Palmetto Elementary School | 234 | 500 | 46.8% |
+| Bear Creek Elementary School | 225 | 500 | 45.0% |
+| Greater Naples Fire Rescue Station 74 | 113 | 250 | 45.2% |
 
 
 ## Interpretation

@@ -27,7 +27,7 @@ async def replace_demo_shelters(connection: apsw.AsyncConnection) -> dict[str, i
     row = await (
         await connection.execute("SELECT name FROM disasters WHERE id=?", (DEMO_DISASTER_ID,))
     ).fetchone()
-    if row is None or not str(row[0]).startswith("Demo"):
+    if row is None or ("Golden Gate" not in str(row[0]) and not str(row[0]).startswith("Demo")):
         raise ValueError(
             "The selected database does not contain the expected fictional demo disaster."
         )
@@ -96,13 +96,13 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--database", type=Path, default=database_path())
     parser.add_argument("--apply", action="store_true")
-    parser.add_argument("--backup-dir", type=Path, default=Path(".runtime/demo-shelter-backups"))
+    parser.add_argument("--backup-dir", type=Path, default=Path(".runtime/shelter-backups"))
     args = parser.parse_args(argv)
     if not args.database.exists():
         parser.error("Database does not exist. This command never creates or reseeds a database.")
     with sqlite3.connect(args.database.resolve().as_uri() + "?mode=ro", uri=True) as db:
         row = db.execute("SELECT name FROM disasters WHERE id=?", (DEMO_DISASTER_ID,)).fetchone()
-        if row is None or not str(row[0]).startswith("Demo"):
+        if row is None or ("Golden Gate" not in str(row[0]) and not str(row[0]).startswith("Demo")):
             parser.error("Expected fictional demo disaster was not found.")
         before = db.execute(
             "SELECT COUNT(*) FROM shelters WHERE disaster_id=?", (DEMO_DISASTER_ID,)

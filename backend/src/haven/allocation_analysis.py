@@ -50,7 +50,7 @@ def demo_inputs(seed: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     families = [
         {
             **profile,
-            "id": f"demo_family_{i + 1:04d}",
+            "id": f"family_{i + 1:04d}",
             "created_at": "2026-11-07T00:00:00Z",
             "location": {"latitude": home["latitude"], "longitude": home["longitude"]},
         }

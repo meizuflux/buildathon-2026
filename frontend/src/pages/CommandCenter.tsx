@@ -191,7 +191,7 @@ function ShelterLoad({ metrics }: { metrics: EvacuationMetrics }) {
         const text = `${n(s.people)} / ${n(s.total_people)}${s.people_over_capacity ? ` · ${n(s.people_over_capacity)} over` : ` · ${pct(s.people, s.total_people)}%`}`
         return (
           <li key={s.shelter_id} title={`${s.name}: ${n(s.people)} people assigned, capacity ${n(s.total_people)}`}>
-            <span className="lbl">{s.name.replace(/^Demo — /, '')}</span>
+            <span className="lbl">{s.name}</span>
             <span className="plot">
               <i className="track" style={{ width: `${(s.total_people / max) * 100}%` }} />
               <i className={`fill lvl-${level}`} style={{ width: `${(s.people / max) * 100}%` }} />

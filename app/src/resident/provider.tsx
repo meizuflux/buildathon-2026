@@ -202,9 +202,13 @@ export function ResidentProvider({ children }: { children: React.ReactNode }) {
     const disaster = (await listDisasters())[0];
     if (!disaster) throw new Error('No active emergency is listed by the service');
     const shelters = await listShelters(disaster.id);
-    // Accounts have no address yet; place the household at the centre of the listed shelters.
-    const lat = shelters.reduce((t, s) => t + s.location.latitude, 0) / Math.max(1, shelters.length);
-    const lng = shelters.reduce((t, s) => t + s.location.longitude, 0) / Math.max(1, shelters.length);
+    // Golden Gate Estates resident demo household location (or centre of shelters).
+    const lat = disaster.id === 'golden_gate_hurricane'
+      ? 26.31402411
+      : shelters.reduce((t, s) => t + s.location.latitude, 0) / Math.max(1, shelters.length);
+    const lng = disaster.id === 'golden_gate_hurricane'
+      ? -81.58765271
+      : shelters.reduce((t, s) => t + s.location.longitude, 0) / Math.max(1, shelters.length);
     const patch = familyPatch(h, null);
     await http('/api/families', familySchema, {
       method: 'POST',

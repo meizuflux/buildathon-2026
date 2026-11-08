@@ -22,28 +22,28 @@ OUTPUT = Path(__file__).resolve().parents[1] / "src/haven/data/golden_gate_estat
 # Coordinates are resolved from the public County address layer each refresh.
 SHELTER_HUBS = (
     {
-        "id": "demo_shelter_01",
+        "id": "shelter_01",
         "name": "Palmetto Ridge / Corkscrew School Hub",
         "addresses": (
             ("Palmetto Ridge High School", "1655 Victory LN, Naples"),
             ("Corkscrew Middle School", "1165 Oil Well RD, Naples"),
             ("Corkscrew Elementary School", "1065 Oil Well RD, Naples"),
         ),
-        "replaces": ["demo_shelter_02", "demo_shelter_07"],
+        "replaces": ["shelter_02", "shelter_07"],
         "sources": ["https://www.collierschools.com/schools"],
     },
     {
-        "id": "demo_shelter_04",
+        "id": "shelter_04",
         "name": "Cypress Palm / Sabal Palm School Hub",
         "addresses": (
             ("Cypress Palm Middle School", "4255 18th AVE NE, Naples"),
             ("Sabal Palm Elementary School", "4095 18th AVE NE, Naples"),
         ),
-        "replaces": ["demo_shelter_03"],
+        "replaces": ["shelter_03"],
         "sources": ["https://www.collierschools.com/schools"],
     },
     {
-        "id": "demo_shelter_05",
+        "id": "shelter_05",
         "name": "Big Cypress / Max Hasse Community Hub",
         "addresses": (
             ("Big Cypress Elementary School", "3250 Golden Gate BLVD W, Naples"),
@@ -56,14 +56,14 @@ SHELTER_HUBS = (
         ],
     },
     {
-        "id": "demo_shelter_06",
+        "id": "shelter_06",
         "name": "Estates Elementary School",
         "addresses": (("Estates Elementary School", "5945 Everglades BLVD N, Naples"),),
         "replaces": [],
         "sources": ["https://www.collierschools.com/schools"],
     },
     {
-        "id": "demo_shelter_08",
+        "id": "shelter_08",
         "name": "Big Corkscrew Island Regional Park",
         "addresses": (("Big Corkscrew Island Regional Park", "810 39th AVE NE, Naples"),),
         "replaces": [],
@@ -73,28 +73,28 @@ SHELTER_HUBS = (
         ],
     },
     {
-        "id": "demo_shelter_09",
+        "id": "shelter_09",
         "name": "Estates Branch Library",
         "addresses": (("Estates Branch Library", "1266 Golden Gate BLVD W, Naples"),),
         "replaces": [],
         "sources": ["https://library.collier.gov/About-Us/Locations/Estates-Branch"],
     },
     {
-        "id": "demo_shelter_10",
+        "id": "shelter_10",
         "name": "Palmetto Elementary School",
         "addresses": (("Palmetto Elementary School", "3000 10th AVE SE, Naples"),),
         "replaces": [],
         "sources": ["https://www.collierschools.com/schools"],
     },
     {
-        "id": "demo_shelter_11",
+        "id": "shelter_11",
         "name": "Bear Creek Elementary School",
         "addresses": (("Bear Creek Elementary School", "2400 Cub CT, Naples"),),
         "replaces": [],
         "sources": ["https://www.collierschools.com/schools"],
     },
     {
-        "id": "demo_shelter_12",
+        "id": "shelter_12",
         "name": "Greater Naples Fire Rescue Station 74",
         "addresses": (("Greater Naples Fire Rescue Station 74", "99 Desoto BLVD S, Naples"),),
         "replaces": [],
