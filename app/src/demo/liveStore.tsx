@@ -13,7 +13,7 @@ import { cache } from '../storage/cache';
 import { preparationSteps } from './checklist';
 import {
   broadcastsFromUpdates, familyPatch, householdFromFamily, instructionFromUpdates, liveDisasterSchema, liveFamilySchema,
-  livePlanSchema, liveShelterSchema, liveUpdateSchema, localMinute, recommendationFromPlan, shelterFromApi,
+  livePlanSchema, liveShelterSchema, liveUpdateSchema, localMinute, PETS_UNSPECIFIED, recommendationFromPlan, shelterFromApi,
   type LiveDisaster, type LiveFamily, type LivePlan, type LiveShelter, type LiveUpdate,
 } from './live';
 import { assess, describeChange } from './recommend';
@@ -131,6 +131,17 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     if (data.current) setState((prev) => build(data.current!, local.current, prev, 'You marked that you have left'));
   }, []);
 
+  const saveHousehold = useCallback(async (household: DemoHousehold) => {
+    const family = data.current?.family;
+    if (!family) throw new Error('Household not loaded yet');
+    setUpdating(true);
+    try {
+      await http('/api/families/' + enc(family.id), liveFamilySchema, { method: 'PATCH', body: familyPatch(household, family) });
+      await http('/api/families/' + enc(family.id) + '/plan/generate', livePlanSchema, { method: 'POST' });
+      await sync('Household needs updated');
+    } finally { setUpdating(false); }
+  }, [sync]);
+
   const dispatch = useCallback((action: DemoAction) => {
     const family = data.current?.family;
     if (!family) return;
@@ -144,19 +155,10 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
       persist();
       rebuild();
     } else if (action.type === 'setHousehold') {
-      setUpdating(true);
-      void (async () => {
-        try {
-          await http('/api/families/' + enc(family.id), liveFamilySchema, { method: 'PATCH', body: familyPatch(action.household, family) });
-          await http('/api/families/' + enc(family.id) + '/plan/generate', livePlanSchema, { method: 'POST' });
-          await sync('Household needs updated');
-        } catch (e) {
-          setState((prev) => (prev ? { ...prev, lastChange: [`Your household needs were not saved: ${message(e)}`] } : prev));
-        } finally { setUpdating(false); }
-      })();
+      void saveHousehold(action.household).catch(() => {});
     }
     // Simulation-only actions (closures, scripted broadcasts, presenter controls) do nothing here.
-  }, [persist, rebuild, sync]);
+  }, [persist, rebuild, saveHousehold]);
 
   const sendMessage = useCallback((body: string, retryId?: string) => {
     const family = data.current?.family;
@@ -200,8 +202,9 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     updating,
     dispatch,
     sendMessage,
+    saveHousehold,
     live: { disasterName: data.current?.disaster.name ?? '', lastSync, error, refresh: () => { void sync(); }, signOut: () => { void auth.signOut(); } },
-  }, [state, updating, dispatch, sendMessage, lastSync, error, sync, auth]);
+  }, [state, updating, dispatch, sendMessage, saveHousehold, lastSync, error, sync, auth]);
 
   if (phase === 'setup') return <SetupHousehold onCreate={createProfile} onSignOut={() => void auth.signOut()} />;
   if (phase === 'ready' && value) return <Context.Provider value={value}>{children}</Context.Provider>;
@@ -227,7 +230,7 @@ function Status({ error, onRetry, onSignOut }: { error: string | null; onRetry: 
 }
 
 const NEW_HOUSEHOLD: DemoHousehold = {
-  id: 'new', name: 'Your household', adults: 1, children: 0, childAges: [], dogs: 0, petNote: '',
+  id: 'new', name: 'Your household', adults: 1, children: 0, childAges: [], dogs: 0, petNote: PETS_UNSPECIFIED,
   wheelchairEntrance: 'no', poweredEquipment: 'no', vehicle: 'yes', transportHelp: 'no', location: { label: '', lat: 0, lng: 0 },
 };
 

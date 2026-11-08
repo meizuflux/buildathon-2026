@@ -9,7 +9,7 @@ import { Action, Heading, InlineNotice, LinkButton, useDash } from './parts';
 import { Glyph, type GlyphName } from './visuals';
 import { PETS_UNSPECIFIED } from '../../demo/live';
 
-export function HouseholdFit({ household, rec, onEdit }: { household: DemoHousehold; rec: Recommendation; onEdit: () => void }) {
+export function HouseholdFit({ household, rec, onEdit, heading = 'Your household' }: { household: DemoHousehold; rec: Recommendation; onEdit: () => void; heading?: string }) {
   const { c, s } = useDash();
   const [details, setDetails] = useState(false);
   const checks = rec.destination?.checks ?? [];
@@ -28,8 +28,8 @@ export function HouseholdFit({ household, rec, onEdit }: { household: DemoHouseh
   return (
     <View style={s.section}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <Heading>Your household</Heading>
-        <LinkButton title="Edit needs" icon="edit-2" onPress={onEdit} />
+        <Heading>{heading}</Heading>
+        <LinkButton title="Edit" icon="edit-2" onPress={onEdit} />
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="list">
         {tiles.map((tile) => {
@@ -120,7 +120,27 @@ function Count({ label, value, min = 0, max = 9, onChange }: { label: string; va
   );
 }
 
-/** Household needs editor. Answers are kept in a draft until saved, and kept if saving fails. */
+/** The household questions. The caller owns the draft, so answers survive a failed save. */
+export function NeedsFields({ draft, setDraft }: { draft: DemoHousehold; setDraft: React.Dispatch<React.SetStateAction<DemoHousehold>> }) {
+  const { s } = useDash();
+  const set = <K extends keyof DemoHousehold>(key: K, value: DemoHousehold[K]) => setDraft((d) => ({ ...d, [key]: value }));
+  return (
+    <>
+      <Text style={s.secondary}>Not sure? That’s fine. We’ll show what’s still unknown.</Text>
+      <View style={{ gap: 12 }}>
+        <Count label="Adults" value={draft.adults} min={1} onChange={(n) => set('adults', n)} />
+        <Count label="Children" value={draft.children} onChange={(n) => setDraft((d) => ({ ...d, children: n, childAges: d.childAges.slice(0, n) }))} />
+        <Count label={draft.petNote === PETS_UNSPECIFIED ? 'Pets' : 'Dogs'} value={draft.dogs} onChange={(n) => set('dogs', n)} />
+      </View>
+      <Choice label="Does anyone need a wheelchair-accessible entrance?" value={draft.wheelchairEntrance} onChange={(v) => set('wheelchairEntrance', v)} />
+      <Choice label="Does anyone rely on powered essential equipment?" value={draft.poweredEquipment} onChange={(v) => set('poweredEquipment', v)} />
+      <Choice label="Do you have a vehicle you can use?" value={draft.vehicle} onChange={(v) => set('vehicle', v)} />
+      <Choice label="Do you need help with transport?" value={draft.transportHelp} onChange={(v) => set('transportHelp', v)} />
+    </>
+  );
+}
+
+/** Household needs editor in a sheet (used for first-time setup). Answers are kept if saving fails. */
 export function EditNeedsSheet({ visible, household, online, onSave, onClose, title = 'Edit household needs', saveTitle = 'Save and update recommendation', dismissable = true, saveError = null }: {
   visible: boolean; household: DemoHousehold; online: boolean; onSave: (h: DemoHousehold) => void; onClose: () => void;
   title?: string; saveTitle?: string; dismissable?: boolean; saveError?: string | null;
@@ -131,7 +151,6 @@ export function EditNeedsSheet({ visible, household, online, onSave, onClose, ti
   // Start from the saved household each time the sheet opens; keep the draft while it stays open.
   useEffect(() => { if (visible) { setDraft(household); setError(null); } }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const set = <K extends keyof DemoHousehold>(key: K, value: DemoHousehold[K]) => setDraft((d) => ({ ...d, [key]: value }));
   const save = () => {
     if (!online) { setError('Not saved: you are offline. Your answers are kept here. Try again when connected.'); return; }
     onSave({ ...draft, childAges: draft.childAges.slice(0, draft.children) });
@@ -150,16 +169,7 @@ export function EditNeedsSheet({ visible, household, online, onSave, onClose, ti
             </Pressable>}
           </View>
           <ScrollView contentContainerStyle={{ padding: 20, gap: 20 }}>
-            <Text style={s.secondary}>Not sure? That’s fine. We’ll show what’s still unknown.</Text>
-            <Choice label="Does anyone need a wheelchair-accessible entrance?" value={draft.wheelchairEntrance} onChange={(v) => set('wheelchairEntrance', v)} />
-            <Choice label="Does anyone rely on powered essential equipment?" value={draft.poweredEquipment} onChange={(v) => set('poweredEquipment', v)} />
-            <View style={{ gap: 12 }}>
-              <Count label="Adults" value={draft.adults} min={1} onChange={(n) => set('adults', n)} />
-              <Count label="Children" value={draft.children} onChange={(n) => setDraft((d) => ({ ...d, children: n, childAges: d.childAges.slice(0, n) }))} />
-              <Count label={draft.petNote === PETS_UNSPECIFIED ? 'Pets' : 'Dogs'} value={draft.dogs} onChange={(n) => set('dogs', n)} />
-            </View>
-            <Choice label="Do you have a vehicle you can use?" value={draft.vehicle} onChange={(v) => set('vehicle', v)} />
-            <Choice label="Do you need help with transport?" value={draft.transportHelp} onChange={(v) => set('transportHelp', v)} />
+            <NeedsFields draft={draft} setDraft={setDraft} />
             {(error ?? saveError) && <InlineNotice tone="critical" icon="alert-circle" title="Not saved">{error ?? saveError}</InlineNotice>}
           </ScrollView>
           <View style={{ padding: 20, paddingTop: 12, gap: 8, borderTopWidth: 1, borderTopColor: c.border }}>

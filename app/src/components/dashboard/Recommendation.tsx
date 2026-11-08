@@ -1,7 +1,7 @@
 // The dominant panel: where to go, why it fits, availability, unresolved items, and one next action.
 // "Recommended", "availability reported", and "placement confirmed" stay separate statements.
 import React from 'react';
-import { ActivityIndicator, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { type } from '../../constants/theme';
 import { STALE_AFTER_MINUTES } from '../../demo/scenario';
 import { ago, clock } from '../../demo/time';
@@ -20,7 +20,6 @@ export function Recommendation({ rec, household, now, updating, lastChange, onRe
   onReviewJourney: () => void; onEditNeeds: () => void; onMessage: () => void;
 }) {
   const { c, s } = useDash();
-  const narrow = useWindowDimensions().width < 480;
 
   if (updating) {
     return (
@@ -53,16 +52,16 @@ export function Recommendation({ rec, household, now, updating, lastChange, onRe
       {changed}
       {rec.advisory && <InlineNotice tone="critical" icon="alert-triangle" title="Changed after you left">{rec.advisory}</InlineNotice>}
       <View style={[s.panel, { padding: 0, gap: 0, overflow: 'hidden' }]}>
-        <View style={{ backgroundColor: c.greenLight, paddingHorizontal: 20, paddingTop: 16, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
-          <View style={{ paddingBottom: 16, gap: 8, flexShrink: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: c.surface, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
+        <View style={{ backgroundColor: c.greenLight, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 16, gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center', backgroundColor: c.surface, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
               <Icon name={rec.keptBecauseTravelling ? 'navigation' : 'compass'} size={14} color={c.green} />
               <Text style={{ fontFamily: type.semibold, fontSize: 13, color: c.green }}>{rec.keptBecauseTravelling ? 'On your way' : 'Recommended for you'}</Text>
             </View>
-            <Text accessibilityRole="header" aria-level={2} style={s.destination}>{d.shelter.name}</Text>
-            <Text style={[s.secondary, { color: c.text }]}>{d.shelter.address}</Text>
+            <ShelterArt width={92} />
           </View>
-          {!narrow && <ShelterArt width={120} />}
+          <Text accessibilityRole="header" aria-level={2} style={[s.destination, { fontSize: 26, lineHeight: 32 }]}>{d.shelter.name}</Text>
+          <Text style={[s.secondary, { color: c.text }]}>{d.shelter.address}</Text>
         </View>
 
         <View style={{ padding: 20, gap: 20 }}>

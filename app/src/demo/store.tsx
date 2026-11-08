@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { cache } from '../storage/cache';
 import { initialState, reducer, steps, view, type Action, type DemoState, type View } from './state';
+import type { DemoHousehold } from './types';
 
 const KEY = 'resident-demo-state';
 const RECALC_MS = 650;
@@ -29,6 +30,8 @@ export interface DemoContext {
   updating: boolean;
   dispatch: (action: Action) => void;
   sendMessage: (body: string, retryId?: string) => void;
+  /** Saves household needs; resolves once saved, rejects with a readable message if not. */
+  saveHousehold: (household: DemoHousehold) => Promise<void>;
 }
 
 export const Context = createContext<DemoContext | null>(null);
@@ -82,9 +85,14 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     }, SEND_MS);
   }, [later]);
 
+  const saveHousehold = useCallback(async (household: DemoHousehold) => {
+    if (!latest.current.online) throw new Error('You are offline');
+    dispatch({ type: 'setHousehold', household });
+  }, [dispatch]);
+
   const value = useMemo<DemoContext>(
-    () => ({ mode: 'demo', state, view: view(state), steps: steps(state), updating, dispatch, sendMessage }),
-    [state, updating, dispatch, sendMessage],
+    () => ({ mode: 'demo', state, view: view(state), steps: steps(state), updating, dispatch, sendMessage, saveHousehold }),
+    [state, updating, dispatch, sendMessage, saveHousehold],
   );
 
   if (!loaded) return null;

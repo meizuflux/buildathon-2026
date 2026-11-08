@@ -12,6 +12,14 @@ npm run demo -- export  # static build in dist-demo/
 ```
 
 - **Scenario:** the fictional Alvarez household (2 adults, 2 children, 1 dog, a wheelchair-accessible entrance need, a vehicle) and three fictional shelters near Seminole Heights, Tampa Bay. Lakeview Recreation Center is recommended at the start.
+- **Layout:** a mobile app with five bottom tabs:
+  - **Plan:** official instruction, recommendation, journey and other options.
+  - **Prepare:** the checklist.
+  - **Updates:** official broadcasts and plan changes.
+  - **Messages:** the coordinator chat.
+  - **Household:** members and needs, edited in place, plus the account.
+
+  On a wide browser window the app renders inside a phone frame.
 - **Presenter controls:** open them from the dark "Demo — simulated conditions" button. They let you:
   - change the wheelchair requirement
   - trigger road closures, broadcasts and availability updates

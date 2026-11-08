@@ -7,14 +7,14 @@ import { Icon } from '../common/ui';
 import { Heading, useDash } from './parts';
 import { ProgressRing } from './visuals';
 
-export function NextSteps({ steps, checked, onToggle }: { steps: Step[]; checked: string[]; onToggle: (id: string) => void }) {
+export function NextSteps({ steps, checked, onToggle, heading = 'Get ready' }: { steps: Step[]; checked: string[]; onToggle: (id: string) => void; heading?: string }) {
   const { c, s } = useDash();
   const done = steps.filter((x) => checked.includes(x.id)).length;
   return (
     <View style={s.section}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <View style={{ gap: 2 }}>
-          <Heading>Get ready</Heading>
+          <Heading>{heading}</Heading>
           <Text style={s.secondary} aria-live="polite">{done === steps.length ? 'All done' : `${steps.length - done} to go`}</Text>
         </View>
         <ProgressRing done={done} total={steps.length} />
