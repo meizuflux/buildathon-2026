@@ -39,6 +39,6 @@ check: lint format-check typecheck test
 create-operator:
     uv run --locked python -m haven.create_operator
 
-# Create demo accounts and the fictional Tampa scenario; existing data is preserved.
+# Recreate the disposable SQLite database with fresh demo accounts and the Estates scenario.
 demo-data:
     uv run --locked python -m haven.demo_data

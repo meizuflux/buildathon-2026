@@ -57,14 +57,14 @@ Open http://localhost:5174. Its development server forwards `/api` to http://127
 
 ## Demo data
 
-With the API stopped or running, initialize a fictional scenario and demo accounts:
+With the API stopped, recreate the disposable demo database and accounts:
 
 ```sh
 cd backend
 just demo-data
 ```
 
-The command prints generated passwords when it first creates the accounts; save them to sign in. Existing accounts and passwords are left unchanged on subsequent runs. The scenario contains synthetic households and shelters and must not be used for real emergency response. See the [backend README](backend/README.md#demo-data) for details.
+Every run deletes and rebuilds the configured SQLite database and prints fresh demo passwords. Restart the API and sign in with those credentials. The scenario places 1,000 synthetic households at actual houses in Golden Gate Estates, Naples, and seven simulated shelters at local school sites. Household profiles and shelter operations are fictional and must not be used for real emergency response. See the [backend README](backend/README.md#demo-data) for details.
 
 ## Development and checks
 

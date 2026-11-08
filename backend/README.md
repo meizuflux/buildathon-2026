@@ -31,9 +31,13 @@ Existing accounts created with the earlier scrypt implementation cannot sign in;
 
 ## Demo data
 
-Run `just demo-data` to create a family account (`family@demo.example`) and a government operator (`government@demo.example`) in the configured database. The script generates a separate password for each account and prints it once when the account is created. Save those passwords for the demo. Re-running the script leaves existing accounts and passwords unchanged. These accounts are intended for demo databases.
+With the API stopped, run `just demo-data` to delete and recreate the configured SQLite database (`DATABASE_PATH`, default `disaster_response.sqlite3`). Every run starts fresh, discarding all existing records, edits, accounts, and sessions. The command creates a family account (`family@demo.example`) and a government operator (`government@demo.example`) and prints fresh generated passwords. Restart the API and sign in with those credentials.
 
-The script also creates a fictional active Tampa hurricane, 20 fictional shelters and 1,000 synthetic family profiles with allocated plans, plus an official demo update. Synthetic family accounts cannot sign in; use the demo family account to exercise registration/profile creation independently. Locations and addresses are fictional and must not be used for emergency response. The scenario is inserted only when its disaster ID is absent, so reruns preserve edits. Use a separate `DATABASE_PATH` for a fresh demo. Disaster creation is otherwise outside the REST contract.
+The script creates a fictional active hurricane in **Golden Gate Estates, Naples**, 1,000 synthetic households at distinct real houses, seven simulated shelters at local school sites, allocated plans, and an official demo update. Synthetic family accounts cannot sign in; use the demo family account to exercise registration/profile creation independently. The household characteristics, shelter operations, capacities, capabilities, and supplies are fictional; these records do not describe actual residents or current shelter availability.
+
+House locations come from Collier County's current single-family address points on Estates roads. Every selected point was checked to intersect a distinct 2025 building footprint. Shelters use county address coordinates for Palmetto Ridge High, Corkscrew Middle, Cypress Palm Middle, Sabal Palm Elementary, Big Cypress Elementary, Estates Elementary, and Corkscrew Elementary. The fixture and its source links are in [`src/haven/data/golden_gate_estates.json`](src/haven/data/golden_gate_estates.json). Seeding works offline. To deliberately refresh the source snapshot, run `python scripts/refresh_demo_locations.py` with network access; review the resulting fixture before committing it.
+
+Demo data is disposable: there are no data migrations, version markers, or compatibility IDs. Change the seed or fixture and rerun `just demo-data` to rebuild the scenario and its allocations. The simulated shelter capacity totals 4,000. Disaster creation is otherwise outside the REST contract.
 
 ## Disaster response API
 

@@ -1,13 +1,14 @@
-"""Create demo accounts for functionality currently available in the API."""
+"""Recreate the disposable demo database with accounts and a complete scenario."""
 
 import asyncio
 import json
 import secrets
+from pathlib import Path
 from uuid import uuid4
 
 from haven.allocation import recompute_disasters
 from haven.auth import hash_password, now, timestamp
-from haven.db import connect
+from haven.db import connect, database_path
 from haven.startup import initialize_database
 
 DEMO_ACCOUNTS = (
@@ -16,51 +17,42 @@ DEMO_ACCOUNTS = (
 )
 
 
-async def seed_demo_data() -> dict[str, str | None]:
-    """Create missing accounts and return generated passwords only for new accounts."""
+async def seed_demo_data() -> dict[str, str]:
+    """Discard the configured SQLite database and return fresh demo credentials."""
+    locations = json.loads(DEMO_LOCATIONS.read_text(encoding="utf-8"))
+    path = database_path()
+    for suffix in ("", "-wal", "-shm", "-journal"):
+        Path(str(path) + suffix).unlink(missing_ok=True)
     await initialize_database()
     created = {}
-    pending = []
     async with connect() as connection:
-        for email, role in DEMO_ACCOUNTS:
-            if await (
-                await connection.execute("SELECT 1 FROM users WHERE email = ?", (email,))
-            ).fetchone():
-                created[email] = None
-                continue
-            password = secrets.token_urlsafe(18)
-            password_hash = await asyncio.to_thread(hash_password, password)
-            pending.append((email, role, password, password_hash))
         async with connection:
-            for email, role, password, password_hash in pending:
+            for email, role in DEMO_ACCOUNTS:
+                password = secrets.token_urlsafe(18)
+                password_hash = await asyncio.to_thread(hash_password, password)
                 await connection.execute(
-                    "INSERT INTO users (id, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?) "
-                    "ON CONFLICT(email) DO NOTHING",
+                    "INSERT INTO users (id, email, password_hash, role, created_at) "
+                    "VALUES (?, ?, ?, ?, ?)",
                     ("user_" + uuid4().hex, email, password_hash, role, timestamp(now())),
                 )
-                created[email] = password if await connection.changes() else None
+                created[email] = password
+    await _seed_golden_gate_scenario(locations)
     return created
 
 
-DEMO_DISASTER_ID = "demo_tampa_hurricane"
+DEMO_DISASTER_ID = "demo_golden_gate_hurricane"
+DEMO_LOCATIONS = Path(__file__).with_name("data") / "golden_gate_estates.json"
+DEMO_NAME = "Demo Hurricane — Golden Gate Estates"
+DEMO_AREA = "Golden Gate Estates, Naples, Florida (fictional demo)"
+# Simulated shelter capacities for this exercise.
+SHELTER_CAPACITIES = (800, 600, 600, 600, 500, 500, 400)
 
 
-async def seed_tampa_scenario() -> None:
-    """Insert a fictional scenario once, without overwriting subsequent edits."""
-    await initialize_database()
+async def _seed_golden_gate_scenario(locations: dict) -> None:
+    """Populate an empty database using the offline geography fixture."""
     async with connect() as connection:
         await connection.execute("BEGIN IMMEDIATE")
         try:
-            # A marker prevents reruns from undoing operator edits or resurrecting records.
-            existing = await (
-                await connection.execute(
-                    "SELECT 1 FROM disasters WHERE id = ?",
-                    (DEMO_DISASTER_ID,),
-                )
-            ).fetchone()
-            if existing:
-                await connection.execute("COMMIT")
-                return
             stamp = timestamp(now())
             await connection.execute(
                 "INSERT INTO disasters (id, type, name, status, affected_area, updated_at) "
@@ -68,14 +60,15 @@ async def seed_tampa_scenario() -> None:
                 (
                     DEMO_DISASTER_ID,
                     "hurricane",
-                    "Demo Hurricane Tampa",
+                    DEMO_NAME,
                     "active",
-                    "Tampa, Florida (fictional demo)",
+                    DEMO_AREA,
                     stamp,
                 ),
             )
-            for i in range(20):
-                capacity = {"total_people": 200, "available_people": 200}
+            for i, site in enumerate(locations["shelters"]):
+                total = SHELTER_CAPACITIES[i]
+                capacity = {"total_people": total, "available_people": total}
                 capabilities = {
                     "pets_allowed": i % 3 != 0,
                     "child_friendly": True,
@@ -94,12 +87,12 @@ async def seed_tampa_scenario() -> None:
                     "capacity_json, capabilities_json, resources_json, updated_at) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
-                        f"demo_tampa_shelter_{i + 1:02d}",
+                        f"demo_shelter_{i + 1:02d}",
                         DEMO_DISASTER_ID,
-                        f"Demo Shelter {i + 1:02d}",
-                        f"Fictional location {i + 1}, Tampa, FL",
-                        27.87 + (i // 5) * 0.05,
-                        -82.55 + (i % 5) * 0.05,
+                        f"Demo — {site['name']}",
+                        site["address"],
+                        site["latitude"],
+                        site["longitude"],
                         "open",
                         json.dumps(capacity),
                         json.dumps(capabilities),
@@ -107,8 +100,9 @@ async def seed_tampa_scenario() -> None:
                         stamp,
                     ),
                 )
-            for i in range(1000):
-                user_id = f"demo_tampa_user_{i + 1:04d}"
+            for i, home in enumerate(locations["households"]):
+                family_id = f"demo_family_{i + 1:04d}"
+                user_id = f"demo_user_{i + 1:04d}"
                 await connection.execute(
                     "INSERT INTO users (id, email, password_hash, role, created_at) "
                     "VALUES (?, ?, ?, ?, ?)",
@@ -125,13 +119,13 @@ async def seed_tampa_scenario() -> None:
                     "INSERT INTO families (id, owner_user_id, disaster_id, adults, children, latitude, longitude, "
                     "needs_json, resources_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
-                        f"demo_tampa_family_{i + 1:04d}",
+                        family_id,
                         user_id,
                         DEMO_DISASTER_ID,
                         1 + i % 2,
                         i % 3,
-                        27.86 + (i % 20) * 0.01,
-                        -82.57 + (i % 23) * 0.01,
+                        home["latitude"],
+                        home["longitude"],
                         json.dumps(needs),
                         json.dumps({"has_car": i % 4 != 0}),
                         stamp,
@@ -142,7 +136,7 @@ async def seed_tampa_scenario() -> None:
                 "INSERT INTO disaster_updates (id, disaster_id, title, message, severity, published_at) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
                 (
-                    "demo_tampa_update",
+                    "demo_update",
                     DEMO_DISASTER_ID,
                     "Demo hurricane update",
                     "Fictional exercise only. Follow instructions from local officials.",
@@ -158,14 +152,10 @@ async def seed_tampa_scenario() -> None:
 
 
 async def main() -> None:
+    print(f"Recreating disposable demo database: {database_path()}")
     for email, password in (await seed_demo_data()).items():
-        if password is None:
-            print(f"{email}: already exists; left unchanged")
-        else:
-            print(f"{email}: created; password: {password}")
-    await seed_tampa_scenario()
-    print("Tampa scenario ready: 20 fictional shelters and 1,000 synthetic families.")
-    print("Passwords are shown only when accounts are created.")
+        print(f"{email}: password: {password}")
+    print("Golden Gate Estates ready: 7 simulated shelters and 1,000 synthetic households.")
 
 
 if __name__ == "__main__":

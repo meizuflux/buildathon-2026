@@ -1,0 +1,7068 @@
+{
+  "area": "Golden Gate Estates, Naples, Florida",
+  "retrieved_at": "2026-11-08T02:45:41.468231+00:00",
+  "sources": {
+    "addresses": "https://services2.arcgis.com/SlIq32SqARUHIhSx/arcgis/rest/services/Site_Address_Points_b/FeatureServer/3",
+    "building_footprints_2025": "https://services2.arcgis.com/SlIq32SqARUHIhSx/arcgis/rest/services/Buildings/FeatureServer/1"
+  },
+  "bounds": [
+    -81.68,
+    26.17,
+    -81.48,
+    26.34
+  ],
+  "selection": "Current Single Family address points on Estates roads, sampled with seed 42; each point intersects a distinct 2025 building footprint.",
+  "households": [
+    {
+      "address": "3260 29th AVE NE, Naples, FL",
+      "latitude": 26.28490551,
+      "longitude": -81.54218268,
+      "address_point_id": 78892,
+      "building_id": 109522
+    },
+    {
+      "address": "441 20th AVE NE, Naples, FL",
+      "latitude": 26.26704119,
+      "longitude": -81.59839005,
+      "address_point_id": 176553,
+      "building_id": 99361
+    },
+    {
+      "address": "3191 56th AVE NE, Naples, FL",
+      "latitude": 26.33498717,
+      "longitude": -81.54425761,
+      "address_point_id": 275647,
+      "building_id": 136953
+    },
+    {
+      "address": "1475 Everglades BLVD N, Naples, FL",
+      "latitude": 26.25755629,
+      "longitude": -81.54585846,
+      "address_point_id": 172278,
+      "building_id": 91863
+    },
+    {
+      "address": "4185 2nd AVE NE, Naples, FL",
+      "latitude": 26.23496676,
+      "longitude": -81.52254452,
+      "address_point_id": 128665,
+      "building_id": 79845
+    },
+    {
+      "address": "2565 4th AVE NE, Naples, FL",
+      "latitude": 26.23830185,
+      "longitude": -81.55567388,
+      "address_point_id": 275239,
+      "building_id": 81433
+    },
+    {
+      "address": "4160 14th AVE NE, Naples, FL",
+      "latitude": 26.25599272,
+      "longitude": -81.52331206,
+      "address_point_id": 81323,
+      "building_id": 90640
+    },
+    {
+      "address": "836 7th ST SW, Naples, FL",
+      "latitude": 26.21390557,
+      "longitude": -81.61903342,
+      "address_point_id": 87274,
+      "building_id": 71705
+    },
+    {
+      "address": "2860 6th AVE SE, Naples, FL",
+      "latitude": 26.21877341,
+      "longitude": -81.54932184,
+      "address_point_id": 169879,
+      "building_id": 73182
+    },
+    {
+      "address": "2685 29th AVE NE, Naples, FL",
+      "latitude": 26.28573888,
+      "longitude": -81.55376119,
+      "address_point_id": 69455,
+      "building_id": 110012
+    },
+    {
+      "address": "2998 Wilson BLVD N, Naples, FL",
+      "latitude": 26.28818264,
+      "longitude": -81.60657122,
+      "address_point_id": 108678,
+      "building_id": 111584
+    },
+    {
+      "address": "3234 10th AVE NE, Naples, FL",
+      "latitude": 26.24830624,
+      "longitude": -81.5420625,
+      "address_point_id": 276933,
+      "building_id": 86346
+    },
+    {
+      "address": "2240 23rd ST SW, Naples, FL",
+      "latitude": 26.18850112,
+      "longitude": -81.65104557,
+      "address_point_id": 145566,
+      "building_id": 60300
+    },
+    {
+      "address": "2741 4th ST NW, Naples, FL",
+      "latitude": 26.28352973,
+      "longitude": -81.61612765,
+      "address_point_id": 120435,
+      "building_id": 108968
+    },
+    {
+      "address": "4808 20th AVE SE, Naples, FL",
+      "latitude": 26.19421379,
+      "longitude": -81.50931509,
+      "address_point_id": 266666,
+      "building_id": 62984
+    },
+    {
+      "address": "4210 33rd AVE NE, Naples, FL",
+      "latitude": 26.29206791,
+      "longitude": -81.52183638,
+      "address_point_id": 70199,
+      "building_id": 113791
+    },
+    {
+      "address": "3460 17th AVE SW, Naples, FL",
+      "latitude": 26.19717493,
+      "longitude": -81.67590134,
+      "address_point_id": 163609,
+      "building_id": 65032
+    },
+    {
+      "address": "211 19th ST NW, Naples, FL",
+      "latitude": 26.23353371,
+      "longitude": -81.64583622,
+      "address_point_id": 136786,
+      "building_id": 79472
+    },
+    {
+      "address": "2820 14th AVE SE, Naples, FL",
+      "latitude": 26.2039865,
+      "longitude": -81.55014926,
+      "address_point_id": 147535,
+      "building_id": 67652
+    },
+    {
+      "address": "1231 21st ST SW, Naples, FL",
+      "latitude": 26.20668581,
+      "longitude": -81.64941811,
+      "address_point_id": 17994,
+      "building_id": 69145
+    },
+    {
+      "address": "1510 22nd AVE NE, Naples, FL",
+      "latitude": 26.27000704,
+      "longitude": -81.575836,
+      "address_point_id": 184427,
+      "building_id": 101862
+    },
+    {
+      "address": "4250 40th ST NE, Naples, FL",
+      "latitude": 26.31050704,
+      "longitude": -81.52772102,
+      "address_point_id": 98048,
+      "building_id": 123080
+    },
+    {
+      "address": "3255 29th AVE SW, Naples, FL",
+      "latitude": 26.17726333,
+      "longitude": -81.67312083,
+      "address_point_id": 181642,
+      "building_id": 55386
+    },
+    {
+      "address": "535 33rd AVE NE, Naples, FL",
+      "latitude": 26.29433036,
+      "longitude": -81.59681818,
+      "address_point_id": 253622,
+      "building_id": 115250
+    },
+    {
+      "address": "410 31st ST SW, Naples, FL",
+      "latitude": 26.22163849,
+      "longitude": -81.66837356,
+      "address_point_id": 196927,
+      "building_id": 74544
+    },
+    {
+      "address": "3828 47th AVE NE, Naples, FL",
+      "latitude": 26.31766789,
+      "longitude": -81.53119491,
+      "address_point_id": 268586,
+      "building_id": 126123
+    },
+    {
+      "address": "1020 9th ST SW, Naples, FL",
+      "latitude": 26.21081614,
+      "longitude": -81.62271396,
+      "address_point_id": 121858,
+      "building_id": 70798
+    },
+    {
+      "address": "431 22nd AVE NE, Naples, FL",
+      "latitude": 26.27065914,
+      "longitude": -81.59840989,
+      "address_point_id": 91208,
+      "building_id": 102391
+    },
+    {
+      "address": "4940 40th ST NE, Naples, FL",
+      "latitude": 26.32260342,
+      "longitude": -81.52705815,
+      "address_point_id": 5980,
+      "building_id": 129392
+    },
+    {
+      "address": "3468 58th AVE NE, Naples, FL",
+      "latitude": 26.33763699,
+      "longitude": -81.53861281,
+      "address_point_id": 24557,
+      "building_id": 137539
+    },
+    {
+      "address": "3723 8th AVE NE, Naples, FL",
+      "latitude": 26.24583874,
+      "longitude": -81.53238673,
+      "address_point_id": 264882,
+      "building_id": 85111
+    },
+    {
+      "address": "1440 11th ST SW, Naples, FL",
+      "latitude": 26.20318792,
+      "longitude": -81.62812646,
+      "address_point_id": 57892,
+      "building_id": 67453
+    },
+    {
+      "address": "291 31st ST SW, Naples, FL",
+      "latitude": 26.22381997,
+      "longitude": -81.67010631,
+      "address_point_id": 163537,
+      "building_id": 75415
+    },
+    {
+      "address": "1419 13th ST SW, Naples, FL",
+      "latitude": 26.20354131,
+      "longitude": -81.63316029,
+      "address_point_id": 281816,
+      "building_id": 67590
+    },
+    {
+      "address": "490 4th ST SE, Naples, FL",
+      "latitude": 26.2210482,
+      "longitude": -81.59790663,
+      "address_point_id": 188373,
+      "building_id": 74268
+    },
+    {
+      "address": "3660 Everglades BLVD N, Naples, FL",
+      "latitude": 26.29912358,
+      "longitude": -81.54465141,
+      "address_point_id": 172941,
+      "building_id": 118112
+    },
+    {
+      "address": "2062 Everglades BLVD N, Naples, FL",
+      "latitude": 26.26805173,
+      "longitude": -81.54464466,
+      "address_point_id": 268166,
+      "building_id": 100188
+    },
+    {
+      "address": "3531 22nd AVE NE, Naples, FL",
+      "latitude": 26.27127757,
+      "longitude": -81.53637634,
+      "address_point_id": 72771,
+      "building_id": 102704
+    },
+    {
+      "address": "160 27th ST NW, Naples, FL",
+      "latitude": 26.23216251,
+      "longitude": -81.66033384,
+      "address_point_id": 130796,
+      "building_id": 78943
+    },
+    {
+      "address": "1010 27th ST SW, Naples, FL",
+      "latitude": 26.21067553,
+      "longitude": -81.66009345,
+      "address_point_id": 65748,
+      "building_id": 70809
+    },
+    {
+      "address": "2365 31st AVE NE, Naples, FL",
+      "latitude": 26.28932673,
+      "longitude": -81.56037023,
+      "address_point_id": 46436,
+      "building_id": 112225
+    },
+    {
+      "address": "3230 20th AVE SE, Naples, FL",
+      "latitude": 26.19362503,
+      "longitude": -81.54135156,
+      "address_point_id": 144919,
+      "building_id": 62725
+    },
+    {
+      "address": "180 33rd AVE NE, Naples, FL",
+      "latitude": 26.29329862,
+      "longitude": -81.60375391,
+      "address_point_id": 59631,
+      "building_id": 114623
+    },
+    {
+      "address": "361 Everglades BLVD N, Naples, FL",
+      "latitude": 26.23718082,
+      "longitude": -81.545458,
+      "address_point_id": 49269,
+      "building_id": 80833
+    },
+    {
+      "address": "2660 2nd ST NE, Naples, FL",
+      "latitude": 26.28220108,
+      "longitude": -81.60258739,
+      "address_point_id": 102604,
+      "building_id": 108319
+    },
+    {
+      "address": "770 12th ST SE, Naples, FL",
+      "latitude": 26.21615521,
+      "longitude": -81.58161009,
+      "address_point_id": 97685,
+      "building_id": 72405
+    },
+    {
+      "address": "4120 8th AVE SE, Naples, FL",
+      "latitude": 26.2156978,
+      "longitude": -81.52358243,
+      "address_point_id": 97784,
+      "building_id": 72165
+    },
+    {
+      "address": "3343 5th AVE SW, Naples, FL",
+      "latitude": 26.22046221,
+      "longitude": -81.67384215,
+      "address_point_id": 287132,
+      "building_id": 74139
+    },
+    {
+      "address": "4785 2nd AVE NE, Naples, FL",
+      "latitude": 26.23521348,
+      "longitude": -81.51049796,
+      "address_point_id": 117798,
+      "building_id": 79924
+    },
+    {
+      "address": "2221 Golden Gate BLVD W, Naples, FL",
+      "latitude": 26.23005302,
+      "longitude": -81.65129096,
+      "address_point_id": 20898,
+      "building_id": 77995
+    },
+    {
+      "address": "463 4th ST SE, Naples, FL",
+      "latitude": 26.22148584,
+      "longitude": -81.59946181,
+      "address_point_id": 279805,
+      "building_id": 74414
+    },
+    {
+      "address": "1941 12th AVE NE, Naples, FL",
+      "latitude": 26.25328332,
+      "longitude": -81.56796026,
+      "address_point_id": 114431,
+      "building_id": 89020
+    },
+    {
+      "address": "363 45th AVE NE, Naples, FL",
+      "latitude": 26.31669654,
+      "longitude": -81.60077197,
+      "address_point_id": 18821,
+      "building_id": 125718
+    },
+    {
+      "address": "2920 14th AVE NE, Naples, FL",
+      "latitude": 26.255683,
+      "longitude": -81.54839877,
+      "address_point_id": 46233,
+      "building_id": 90386
+    },
+    {
+      "address": "3833 8th AVE SE, Naples, FL",
+      "latitude": 26.2165393,
+      "longitude": -81.52948885,
+      "address_point_id": 280963,
+      "building_id": 72455
+    },
+    {
+      "address": "2421 16th ST NE, Naples, FL",
+      "latitude": 26.27429346,
+      "longitude": -81.57574378,
+      "address_point_id": 107500,
+      "building_id": 104012
+    },
+    {
+      "address": "5206 40th ST NE, Naples, FL",
+      "latitude": 26.3273636,
+      "longitude": -81.52792747,
+      "address_point_id": 267497,
+      "building_id": 133335
+    },
+    {
+      "address": "821 7th ST SW, Naples, FL",
+      "latitude": 26.21490475,
+      "longitude": -81.62146142,
+      "address_point_id": 164367,
+      "building_id": 71966
+    },
+    {
+      "address": "330 21st ST SW, Naples, FL",
+      "latitude": 26.22342668,
+      "longitude": -81.6483492,
+      "address_point_id": 126115,
+      "building_id": 75186
+    },
+    {
+      "address": "3860 2nd AVE NE, Naples, FL",
+      "latitude": 26.23365607,
+      "longitude": -81.52905918,
+      "address_point_id": 122745,
+      "building_id": 79349
+    },
+    {
+      "address": "1181 22nd AVE NE, Naples, FL",
+      "latitude": 26.27072712,
+      "longitude": -81.58338861,
+      "address_point_id": 174180,
+      "building_id": 102384
+    },
+    {
+      "address": "4514 10th ST NE, Naples, FL",
+      "latitude": 26.31402411,
+      "longitude": -81.58765271,
+      "address_point_id": 277054,
+      "building_id": 124666
+    },
+    {
+      "address": "3740 56th AVE NE, Naples, FL",
+      "latitude": 26.33392931,
+      "longitude": -81.53308861,
+      "address_point_id": 114541,
+      "building_id": 136559
+    },
+    {
+      "address": "341 14th ST SE, Naples, FL",
+      "latitude": 26.22396634,
+      "longitude": -81.57884205,
+      "address_point_id": 78739,
+      "building_id": 75291
+    },
+    {
+      "address": "3820 8th AVE NE, Naples, FL",
+      "latitude": 26.24484917,
+      "longitude": -81.53040507,
+      "address_point_id": 69731,
+      "building_id": 84751
+    },
+    {
+      "address": "420 9th ST NW, Naples, FL",
+      "latitude": 26.2371887,
+      "longitude": -81.62439574,
+      "address_point_id": 55463,
+      "building_id": 81012
+    },
+    {
+      "address": "631 16th ST SE, Naples, FL",
+      "latitude": 26.21866855,
+      "longitude": -81.57479088,
+      "address_point_id": 104513,
+      "building_id": 73177
+    },
+    {
+      "address": "121 22nd ST NE, Naples, FL",
+      "latitude": 26.23243752,
+      "longitude": -81.56255967,
+      "address_point_id": 18335,
+      "building_id": 78876
+    },
+    {
+      "address": "3601 11th AVE SW, Naples, FL",
+      "latitude": 26.20939061,
+      "longitude": -81.67912002,
+      "address_point_id": 109794,
+      "building_id": 70376
+    },
+    {
+      "address": "3013 10th AVE SE, Naples, FL",
+      "latitude": 26.21275512,
+      "longitude": -81.54591794,
+      "address_point_id": 263759,
+      "building_id": 71295
+    },
+    {
+      "address": "2992 20th AVE NE, Naples, FL",
+      "latitude": 26.26652854,
+      "longitude": -81.5457415,
+      "address_point_id": 58152,
+      "building_id": 98708
+    },
+    {
+      "address": "3766 39th AVE NE, Naples, FL",
+      "latitude": 26.30309546,
+      "longitude": -81.53209312,
+      "address_point_id": 26446,
+      "building_id": 120336
+    },
+    {
+      "address": "1990 19th ST SW, Naples, FL",
+      "latitude": 26.19315831,
+      "longitude": -81.64367282,
+      "address_point_id": 130983,
+      "building_id": 62699
+    },
+    {
+      "address": "161 20th ST SE, Naples, FL",
+      "latitude": 26.22743678,
+      "longitude": -81.56649411,
+      "address_point_id": 90715,
+      "building_id": 76809
+    },
+    {
+      "address": "1781 20th AVE NE, Naples, FL",
+      "latitude": 26.26729898,
+      "longitude": -81.57096205,
+      "address_point_id": 81332,
+      "building_id": 99481
+    },
+    {
+      "address": "5067 Everglades BLVD N, Naples, FL",
+      "latitude": 26.32463337,
+      "longitude": -81.5463679,
+      "address_point_id": 288471,
+      "building_id": 131082
+    },
+    {
+      "address": "3430 16th AVE NE, Naples, FL",
+      "latitude": 26.25931961,
+      "longitude": -81.53812451,
+      "address_point_id": 170934,
+      "building_id": 93160
+    },
+    {
+      "address": "461 10th ST SE, Naples, FL",
+      "latitude": 26.22160606,
+      "longitude": -81.58688934,
+      "address_point_id": 94285,
+      "building_id": 74436
+    },
+    {
+      "address": "1960 19th ST SW, Naples, FL",
+      "latitude": 26.19372776,
+      "longitude": -81.64394445,
+      "address_point_id": 74082,
+      "building_id": 63000
+    },
+    {
+      "address": "4420 33rd AVE NE, Naples, FL",
+      "latitude": 26.2924059,
+      "longitude": -81.51882032,
+      "address_point_id": 128978,
+      "building_id": 113947
+    },
+    {
+      "address": "588 33rd AVE NW, Naples, FL",
+      "latitude": 26.29293955,
+      "longitude": -81.6195523,
+      "address_point_id": 23241,
+      "building_id": 114481
+    },
+    {
+      "address": "481 7th ST NW, Naples, FL",
+      "latitude": 26.23855008,
+      "longitude": -81.62183914,
+      "address_point_id": 136543,
+      "building_id": 81739
+    },
+    {
+      "address": "330 17th ST SW, Naples, FL",
+      "latitude": 26.22323508,
+      "longitude": -81.64028735,
+      "address_point_id": 48492,
+      "building_id": 75096
+    },
+    {
+      "address": "3682 47th AVE NE, Naples, FL",
+      "latitude": 26.31755869,
+      "longitude": -81.53408307,
+      "address_point_id": 291051,
+      "building_id": 126060
+    },
+    {
+      "address": "190 27th ST SW, Naples, FL",
+      "latitude": 26.22566598,
+      "longitude": -81.66026966,
+      "address_point_id": 141947,
+      "building_id": 76125
+    },
+    {
+      "address": "830 12th ST NE, Naples, FL",
+      "latitude": 26.24540962,
+      "longitude": -81.58192183,
+      "address_point_id": 135664,
+      "building_id": 85004
+    },
+    {
+      "address": "3270 47th AVE NE, Naples, FL",
+      "latitude": 26.31759131,
+      "longitude": -81.54214048,
+      "address_point_id": 269354,
+      "building_id": 126108
+    },
+    {
+      "address": "4462 14th ST NE, Naples, FL",
+      "latitude": 26.31329779,
+      "longitude": -81.57974859,
+      "address_point_id": 83077,
+      "building_id": 124347
+    },
+    {
+      "address": "2895 27th AVE NE, Naples, FL",
+      "latitude": 26.28210894,
+      "longitude": -81.54958275,
+      "address_point_id": 131217,
+      "building_id": 108110
+    },
+    {
+      "address": "1580 47th AVE NE, Naples, FL",
+      "latitude": 26.31727224,
+      "longitude": -81.57685423,
+      "address_point_id": 174861,
+      "building_id": 125941
+    },
+    {
+      "address": "556 6th ST SE, Naples, FL",
+      "latitude": 26.21878168,
+      "longitude": -81.59349617,
+      "address_point_id": 262137,
+      "building_id": 73283
+    },
+    {
+      "address": "321 22nd AVE NW, Naples, FL",
+      "latitude": 26.27023164,
+      "longitude": -81.61384539,
+      "address_point_id": 178351,
+      "building_id": 102100
+    },
+    {
+      "address": "3630 16th AVE SE, Naples, FL",
+      "latitude": 26.20118181,
+      "longitude": -81.53342611,
+      "address_point_id": 150776,
+      "building_id": 66306
+    },
+    {
+      "address": "4420 40th ST NE, Naples, FL",
+      "latitude": 26.31306328,
+      "longitude": -81.52742149,
+      "address_point_id": 2360,
+      "building_id": 124176
+    },
+    {
+      "address": "4395 18th ST NE, Naples, FL",
+      "latitude": 26.3120992,
+      "longitude": -81.57317291,
+      "address_point_id": 176284,
+      "building_id": 123854
+    },
+    {
+      "address": "260 12th ST NE, Naples, FL",
+      "latitude": 26.23482375,
+      "longitude": -81.58200334,
+      "address_point_id": 92695,
+      "building_id": 79876
+    },
+    {
+      "address": "3381 20th AVE NE, Naples, FL",
+      "latitude": 26.26761086,
+      "longitude": -81.53957223,
+      "address_point_id": 111746,
+      "building_id": 99690
+    },
+    {
+      "address": "4361 43rd AVE NE, Naples, FL",
+      "latitude": 26.31132396,
+      "longitude": -81.52100804,
+      "address_point_id": 183842,
+      "building_id": 123429
+    },
+    {
+      "address": "640 Wilson BLVD N, Naples, FL",
+      "latitude": 26.24147448,
+      "longitude": -81.60620596,
+      "address_point_id": 87336,
+      "building_id": 83401
+    },
+    {
+      "address": "2130 19th ST SW, Naples, FL",
+      "latitude": 26.19050888,
+      "longitude": -81.64361861,
+      "address_point_id": 111408,
+      "building_id": 61414
+    },
+    {
+      "address": "290 20th ST NE, Naples, FL",
+      "latitude": 26.23560967,
+      "longitude": -81.56571124,
+      "address_point_id": 53893,
+      "building_id": 80190
+    },
+    {
+      "address": "481 10th AVE NW, Naples, FL",
+      "latitude": 26.24843154,
+      "longitude": -81.6168391,
+      "address_point_id": 159725,
+      "building_id": 86532
+    },
+    {
+      "address": "1380 15th ST SW, Naples, FL",
+      "latitude": 26.20411533,
+      "longitude": -81.63545794,
+      "address_point_id": 124514,
+      "building_id": 67896
+    },
+    {
+      "address": "5050 46th ST NE, Naples, FL",
+      "latitude": 26.32489726,
+      "longitude": -81.51539393,
+      "address_point_id": 275573,
+      "building_id": 131210
+    },
+    {
+      "address": "3297 52nd AVE NE, Naples, FL",
+      "latitude": 26.32747369,
+      "longitude": -81.54201168,
+      "address_point_id": 264886,
+      "building_id": 133496
+    },
+    {
+      "address": "93 20th ST SE, Naples, FL",
+      "latitude": 26.2293018,
+      "longitude": -81.56632219,
+      "address_point_id": 269909,
+      "building_id": 77562
+    },
+    {
+      "address": "2661 56th AVE NE, Naples, FL",
+      "latitude": 26.33490306,
+      "longitude": -81.55490327,
+      "address_point_id": 263805,
+      "building_id": 136939
+    },
+    {
+      "address": "570 20th ST NE, Naples, FL",
+      "latitude": 26.24065898,
+      "longitude": -81.56591956,
+      "address_point_id": 88366,
+      "building_id": 82857
+    },
+    {
+      "address": "2190 21st ST SW, Naples, FL",
+      "latitude": 26.18939313,
+      "longitude": -81.64787748,
+      "address_point_id": 176388,
+      "building_id": 60796
+    },
+    {
+      "address": "389 14th AVE NE, Naples, FL",
+      "latitude": 26.25586188,
+      "longitude": -81.59929337,
+      "address_point_id": 283395,
+      "building_id": 90704
+    },
+    {
+      "address": "4275 24th AVE NE, Naples, FL",
+      "latitude": 26.27517668,
+      "longitude": -81.52233955,
+      "address_point_id": 110490,
+      "building_id": 104348
+    },
+    {
+      "address": "110 21st ST SW, Naples, FL",
+      "latitude": 26.22675206,
+      "longitude": -81.64732956,
+      "address_point_id": 151718,
+      "building_id": 76624
+    },
+    {
+      "address": "3575 31st AVE SW, Naples, FL",
+      "latitude": 26.17313899,
+      "longitude": -81.67801787,
+      "address_point_id": 66235,
+      "building_id": 53941
+    },
+    {
+      "address": "2860 41st AVE NE, Naples, FL",
+      "latitude": 26.30660446,
+      "longitude": -81.55062324,
+      "address_point_id": 272306,
+      "building_id": 121697
+    },
+    {
+      "address": "3760 14th AVE SE, Naples, FL",
+      "latitude": 26.20458762,
+      "longitude": -81.53085222,
+      "address_point_id": 84600,
+      "building_id": 67920
+    },
+    {
+      "address": "3312 48th AVE NE, Naples, FL",
+      "latitude": 26.31940836,
+      "longitude": -81.54186352,
+      "address_point_id": 261929,
+      "building_id": 127170
+    },
+    {
+      "address": "2734 47th AVE NE, Naples, FL",
+      "latitude": 26.31750275,
+      "longitude": -81.55312983,
+      "address_point_id": 278473,
+      "building_id": 126057
+    },
+    {
+      "address": "2662 2nd ST NW, Naples, FL",
+      "latitude": 26.28211339,
+      "longitude": -81.61090399,
+      "address_point_id": 260339,
+      "building_id": 108283
+    },
+    {
+      "address": "3461 2nd AVE SE, Naples, FL",
+      "latitude": 26.22741826,
+      "longitude": -81.53730031,
+      "address_point_id": 149886,
+      "building_id": 76726
+    },
+    {
+      "address": "3010 4th ST NE, Naples, FL",
+      "latitude": 26.28863642,
+      "longitude": -81.59834907,
+      "address_point_id": 71468,
+      "building_id": 111844
+    },
+    {
+      "address": "812 18th ST SE, Naples, FL",
+      "latitude": 26.21546994,
+      "longitude": -81.56917743,
+      "address_point_id": 269884,
+      "building_id": 72127
+    },
+    {
+      "address": "617 10th AVE NE, Naples, FL",
+      "latitude": 26.24900664,
+      "longitude": -81.59506804,
+      "address_point_id": 253619,
+      "building_id": 86849
+    },
+    {
+      "address": "1380 23rd ST SW, Naples, FL",
+      "latitude": 26.20409008,
+      "longitude": -81.65212065,
+      "address_point_id": 120940,
+      "building_id": 67912
+    },
+    {
+      "address": "2383 4th AVE NE, Naples, FL",
+      "latitude": 26.23819971,
+      "longitude": -81.55911329,
+      "address_point_id": 276909,
+      "building_id": 81382
+    },
+    {
+      "address": "481 7th ST SW, Naples, FL",
+      "latitude": 26.22072789,
+      "longitude": -81.62181551,
+      "address_point_id": 191449,
+      "building_id": 74184
+    },
+    {
+      "address": "3231 5th AVE NW, Naples, FL",
+      "latitude": 26.23945053,
+      "longitude": -81.67256013,
+      "address_point_id": 132113,
+      "building_id": 82496
+    },
+    {
+      "address": "2545 29th AVE NE, Naples, FL",
+      "latitude": 26.28565877,
+      "longitude": -81.55672768,
+      "address_point_id": 162923,
+      "building_id": 109978
+    },
+    {
+      "address": "420 25th ST SW, Naples, FL",
+      "latitude": 26.22170979,
+      "longitude": -81.65633499,
+      "address_point_id": 126274,
+      "building_id": 74551
+    },
+    {
+      "address": "3640 4th AVE SE, Naples, FL",
+      "latitude": 26.22281423,
+      "longitude": -81.53348404,
+      "address_point_id": 52604,
+      "building_id": 74787
+    },
+    {
+      "address": "3460 54th AVE NE, Naples, FL",
+      "latitude": 26.33024434,
+      "longitude": -81.53860954,
+      "address_point_id": 191056,
+      "building_id": 135532
+    },
+    {
+      "address": "135 45th AVE NE, Naples, FL",
+      "latitude": 26.31609961,
+      "longitude": -81.60522029,
+      "address_point_id": 50304,
+      "building_id": 125528
+    },
+    {
+      "address": "2742 58th AVE NE, Naples, FL",
+      "latitude": 26.33761203,
+      "longitude": -81.55341261,
+      "address_point_id": 277602,
+      "building_id": 137535
+    },
+    {
+      "address": "4745 12th AVE SE, Naples, FL",
+      "latitude": 26.20984921,
+      "longitude": -81.51091614,
+      "address_point_id": 183139,
+      "building_id": 70259
+    },
+    {
+      "address": "2811 54th AVE NE, Naples, FL",
+      "latitude": 26.33147637,
+      "longitude": -81.55180634,
+      "address_point_id": 168058,
+      "building_id": 136001
+    },
+    {
+      "address": "2846 8th AVE SE, Naples, FL",
+      "latitude": 26.21543203,
+      "longitude": -81.54962194,
+      "address_point_id": 18340,
+      "building_id": 72046
+    },
+    {
+      "address": "125 8th ST NE, Naples, FL",
+      "latitude": 26.23205566,
+      "longitude": -81.59113455,
+      "address_point_id": 262043,
+      "building_id": 78756
+    },
+    {
+      "address": "70 33rd AVE NE, Naples, FL",
+      "latitude": 26.29307601,
+      "longitude": -81.60573689,
+      "address_point_id": 65030,
+      "building_id": 114487
+    },
+    {
+      "address": "3279 43rd AVE NE, Naples, FL",
+      "latitude": 26.31129971,
+      "longitude": -81.54231854,
+      "address_point_id": 18342,
+      "building_id": 123458
+    },
+    {
+      "address": "2887 2nd ST NE, Naples, FL",
+      "latitude": 26.28626235,
+      "longitude": -81.60390492,
+      "address_point_id": 269979,
+      "building_id": 110473
+    },
+    {
+      "address": "2813 16th AVE NE, Naples, FL",
+      "latitude": 26.26024565,
+      "longitude": -81.5508316,
+      "address_point_id": 286792,
+      "building_id": 93955
+    },
+    {
+      "address": "2361 22nd AVE NE, Naples, FL",
+      "latitude": 26.27136981,
+      "longitude": -81.5601446,
+      "address_point_id": 190750,
+      "building_id": 102832
+    },
+    {
+      "address": "2795 2nd AVE NE, Naples, FL",
+      "latitude": 26.23468059,
+      "longitude": -81.55056058,
+      "address_point_id": 286141,
+      "building_id": 79773
+    },
+    {
+      "address": "3471 19th AVE SW, Naples, FL",
+      "latitude": 26.19526528,
+      "longitude": -81.67596225,
+      "address_point_id": 111377,
+      "building_id": 63920
+    },
+    {
+      "address": "2920 27th AVE NE, Naples, FL",
+      "latitude": 26.2811966,
+      "longitude": -81.5489119,
+      "address_point_id": 259481,
+      "building_id": 107589
+    },
+    {
+      "address": "1959 Wilson BLVD N, Naples, FL",
+      "latitude": 26.26550705,
+      "longitude": -81.60825562,
+      "address_point_id": 277092,
+      "building_id": 98040
+    },
+    {
+      "address": "2967 22nd AVE SE, Naples, FL",
+      "latitude": 26.19093597,
+      "longitude": -81.54655083,
+      "address_point_id": 286143,
+      "building_id": 61418
+    },
+    {
+      "address": "3331 7th AVE SW, Naples, FL",
+      "latitude": 26.21675644,
+      "longitude": -81.67382808,
+      "address_point_id": 154592,
+      "building_id": 72742
+    },
+    {
+      "address": "1210 25th ST SW, Naples, FL",
+      "latitude": 26.20698798,
+      "longitude": -81.65614884,
+      "address_point_id": 78757,
+      "building_id": 69276
+    },
+    {
+      "address": "3360 29th AVE SW, Naples, FL",
+      "latitude": 26.17492391,
+      "longitude": -81.67544367,
+      "address_point_id": 128795,
+      "building_id": 54428
+    },
+    {
+      "address": "2031 10th AVE NE, Naples, FL",
+      "latitude": 26.24899527,
+      "longitude": -81.56573341,
+      "address_point_id": 72690,
+      "building_id": 86756
+    },
+    {
+      "address": "4730 16th AVE SE, Naples, FL",
+      "latitude": 26.20113829,
+      "longitude": -81.51133053,
+      "address_point_id": 24305,
+      "building_id": 66240
+    },
+    {
+      "address": "4325 Wilson BLVD N, Naples, FL",
+      "latitude": 26.31214296,
+      "longitude": -81.60847946,
+      "address_point_id": 32129,
+      "building_id": 123936
+    },
+    {
+      "address": "361 8th ST SE, Naples, FL",
+      "latitude": 26.22336875,
+      "longitude": -81.59113848,
+      "address_point_id": 44341,
+      "building_id": 75064
+    },
+    {
+      "address": "2361 37th AVE NE, Naples, FL",
+      "latitude": 26.30006842,
+      "longitude": -81.56050662,
+      "address_point_id": 272259,
+      "building_id": 118607
+    },
+    {
+      "address": "210 31st ST NW, Naples, FL",
+      "latitude": 26.23304076,
+      "longitude": -81.66849935,
+      "address_point_id": 175001,
+      "building_id": 79323
+    },
+    {
+      "address": "2929 10th AVE SE, Naples, FL",
+      "latitude": 26.21287327,
+      "longitude": -81.54766761,
+      "address_point_id": 265046,
+      "building_id": 71315
+    },
+    {
+      "address": "2985 31st AVE NE, Naples, FL",
+      "latitude": 26.28938725,
+      "longitude": -81.54791112,
+      "address_point_id": 266320,
+      "building_id": 112234
+    },
+    {
+      "address": "3431 27th AVE SW, Naples, FL",
+      "latitude": 26.18023598,
+      "longitude": -81.67565887,
+      "address_point_id": 135942,
+      "building_id": 56644
+    },
+    {
+      "address": "2406 37th AVE NE, Naples, FL",
+      "latitude": 26.29907507,
+      "longitude": -81.55952206,
+      "address_point_id": 286934,
+      "building_id": 118110
+    },
+    {
+      "address": "3465 10th AVE SE, Naples, FL",
+      "latitude": 26.21300304,
+      "longitude": -81.53700916,
+      "address_point_id": 45862,
+      "building_id": 71367
+    },
+    {
+      "address": "1771 14th AVE NE, Naples, FL",
+      "latitude": 26.25692193,
+      "longitude": -81.5710497,
+      "address_point_id": 74394,
+      "building_id": 91498
+    },
+    {
+      "address": "2115 47th AVE NE, Naples, FL",
+      "latitude": 26.31833361,
+      "longitude": -81.5660634,
+      "address_point_id": 285067,
+      "building_id": 126447
+    },
+    {
+      "address": "4315 47th AVE NE, Naples, FL",
+      "latitude": 26.31869123,
+      "longitude": -81.52205418,
+      "address_point_id": 161437,
+      "building_id": 126594
+    },
+    {
+      "address": "2960 2nd ST NW, Naples, FL",
+      "latitude": 26.28754261,
+      "longitude": -81.61100864,
+      "address_point_id": 193351,
+      "building_id": 111256
+    },
+    {
+      "address": "2740 35th AVE NE, Naples, FL",
+      "latitude": 26.29561423,
+      "longitude": -81.55294123,
+      "address_point_id": 284345,
+      "building_id": 115884
+    },
+    {
+      "address": "3630 17th AVE SW, Naples, FL",
+      "latitude": 26.19707395,
+      "longitude": -81.6793518,
+      "address_point_id": 47824,
+      "building_id": 65005
+    },
+    {
+      "address": "240 14th ST NE, Naples, FL",
+      "latitude": 26.23467679,
+      "longitude": -81.57796209,
+      "address_point_id": 149153,
+      "building_id": 79807
+    },
+    {
+      "address": "3345 56th AVE NE, Naples, FL",
+      "latitude": 26.33515607,
+      "longitude": -81.54115026,
+      "address_point_id": 107174,
+      "building_id": 137040
+    },
+    {
+      "address": "2321 8th AVE SE, Naples, FL",
+      "latitude": 26.21617265,
+      "longitude": -81.55922026,
+      "address_point_id": 78249,
+      "building_id": 72374
+    },
+    {
+      "address": "4220 14th AVE NE, Naples, FL",
+      "latitude": 26.25578207,
+      "longitude": -81.52226875,
+      "address_point_id": 111737,
+      "building_id": 90412
+    },
+    {
+      "address": "3340 2nd AVE NE, Naples, FL",
+      "latitude": 26.23374036,
+      "longitude": -81.53967969,
+      "address_point_id": 211838,
+      "building_id": 79373
+    },
+    {
+      "address": "3611 15th AVE SW, Naples, FL",
+      "latitude": 26.20205721,
+      "longitude": -81.67886492,
+      "address_point_id": 65709,
+      "building_id": 66994
+    },
+    {
+      "address": "4545 18th ST NE, Naples, FL",
+      "latitude": 26.31474102,
+      "longitude": -81.5729027,
+      "address_point_id": 157453,
+      "building_id": 124935
+    },
+    {
+      "address": "561 31st ST SW, Naples, FL",
+      "latitude": 26.21881751,
+      "longitude": -81.66982898,
+      "address_point_id": 78609,
+      "building_id": 73448
+    },
+    {
+      "address": "970 18th AVE NE, Naples, FL",
+      "latitude": 26.26230071,
+      "longitude": -81.58763305,
+      "address_point_id": 62900,
+      "building_id": 95691
+    },
+    {
+      "address": "2308 6th AVE SE, Naples, FL",
+      "latitude": 26.21890523,
+      "longitude": -81.56042633,
+      "address_point_id": 282902,
+      "building_id": 73262
+    },
+    {
+      "address": "590 6th ST NE, Naples, FL",
+      "latitude": 26.24072423,
+      "longitude": -81.5942183,
+      "address_point_id": 94881,
+      "building_id": 82980
+    },
+    {
+      "address": "5120 40th ST NE, Naples, FL",
+      "latitude": 26.32565822,
+      "longitude": -81.52762106,
+      "address_point_id": 121243,
+      "building_id": 131772
+    },
+    {
+      "address": "3525 35th AVE NE, Naples, FL",
+      "latitude": 26.29677996,
+      "longitude": -81.53724403,
+      "address_point_id": 108452,
+      "building_id": 116634
+    },
+    {
+      "address": "4885 14th ST NE, Naples, FL",
+      "latitude": 26.32083116,
+      "longitude": -81.58099574,
+      "address_point_id": 79509,
+      "building_id": 128231
+    },
+    {
+      "address": "581 5th ST SW, Naples, FL",
+      "latitude": 26.21904066,
+      "longitude": -81.61721426,
+      "address_point_id": 193354,
+      "building_id": 73444
+    },
+    {
+      "address": "4470 10th ST NE, Naples, FL",
+      "latitude": 26.31326168,
+      "longitude": -81.58789689,
+      "address_point_id": 85928,
+      "building_id": 124353
+    },
+    {
+      "address": "3460 8th AVE NE, Naples, FL",
+      "latitude": 26.24461584,
+      "longitude": -81.5374309,
+      "address_point_id": 155639,
+      "building_id": 84707
+    },
+    {
+      "address": "4265 2nd AVE NE, Naples, FL",
+      "latitude": 26.23550338,
+      "longitude": -81.52093345,
+      "address_point_id": 51952,
+      "building_id": 80050
+    },
+    {
+      "address": "2625 22nd AVE SE, Naples, FL",
+      "latitude": 26.19097958,
+      "longitude": -81.55391882,
+      "address_point_id": 24567,
+      "building_id": 61441
+    },
+    {
+      "address": "2840 14th AVE SE, Naples, FL",
+      "latitude": 26.2040119,
+      "longitude": -81.54958885,
+      "address_point_id": 105739,
+      "building_id": 67669
+    },
+    {
+      "address": "110 3rd ST NW, Naples, FL",
+      "latitude": 26.23194838,
+      "longitude": -81.612225,
+      "address_point_id": 163970,
+      "building_id": 78749
+    },
+    {
+      "address": "653 23rd ST SW, Naples, FL",
+      "latitude": 26.21716509,
+      "longitude": -81.65356061,
+      "address_point_id": 277661,
+      "building_id": 72880
+    },
+    {
+      "address": "501 21st ST SW, Naples, FL",
+      "latitude": 26.21988278,
+      "longitude": -81.64930016,
+      "address_point_id": 49134,
+      "building_id": 73879
+    },
+    {
+      "address": "183 15th ST NW, Naples, FL",
+      "latitude": 26.23247177,
+      "longitude": -81.63841885,
+      "address_point_id": 263144,
+      "building_id": 79015
+    },
+    {
+      "address": "180 31st ST NW, Naples, FL",
+      "latitude": 26.23255614,
+      "longitude": -81.66848503,
+      "address_point_id": 173926,
+      "building_id": 79122
+    },
+    {
+      "address": "2495 31st AVE NE, Naples, FL",
+      "latitude": 26.28930953,
+      "longitude": -81.55774201,
+      "address_point_id": 165369,
+      "building_id": 112196
+    },
+    {
+      "address": "3662 24th AVE NE, Naples, FL",
+      "latitude": 26.27393343,
+      "longitude": -81.53392858,
+      "address_point_id": 261948,
+      "building_id": 103939
+    },
+    {
+      "address": "2580 18th AVE NE, Naples, FL",
+      "latitude": 26.26172219,
+      "longitude": -81.55539754,
+      "address_point_id": 122086,
+      "building_id": 95196
+    },
+    {
+      "address": "471 14th AVE NE, Naples, FL",
+      "latitude": 26.25622698,
+      "longitude": -81.59779843,
+      "address_point_id": 83718,
+      "building_id": 91009
+    },
+    {
+      "address": "1240 24th AVE NE, Naples, FL",
+      "latitude": 26.27328443,
+      "longitude": -81.58221481,
+      "address_point_id": 127573,
+      "building_id": 103822
+    },
+    {
+      "address": "4180 29th AVE NE, Naples, FL",
+      "latitude": 26.28442804,
+      "longitude": -81.52230568,
+      "address_point_id": 90109,
+      "building_id": 109199
+    },
+    {
+      "address": "660 29th ST SW, Naples, FL",
+      "latitude": 26.2166265,
+      "longitude": -81.66342293,
+      "address_point_id": 163304,
+      "building_id": 72680
+    },
+    {
+      "address": "1030 13th ST SW, Naples, FL",
+      "latitude": 26.21059309,
+      "longitude": -81.63136819,
+      "address_point_id": 101891,
+      "building_id": 70744
+    },
+    {
+      "address": "3782 33rd AVE NE, Naples, FL",
+      "latitude": 26.29227797,
+      "longitude": -81.53174509,
+      "address_point_id": 21038,
+      "building_id": 113919
+    },
+    {
+      "address": "2390 21st ST SW, Naples, FL",
+      "latitude": 26.18572455,
+      "longitude": -81.64774933,
+      "address_point_id": 82352,
+      "building_id": 58718
+    },
+    {
+      "address": "1687 Everglades BLVD S, Naples, FL",
+      "latitude": 26.19985806,
+      "longitude": -81.54539652,
+      "address_point_id": 14566,
+      "building_id": 65814
+    },
+    {
+      "address": "381 Wilson BLVD N, Naples, FL",
+      "latitude": 26.23700658,
+      "longitude": -81.60735973,
+      "address_point_id": 50379,
+      "building_id": 80868
+    },
+    {
+      "address": "3667 22nd AVE SE, Naples, FL",
+      "latitude": 26.19118421,
+      "longitude": -81.53246813,
+      "address_point_id": 279699,
+      "building_id": 61530
+    },
+    {
+      "address": "602 16th AVE NW, Naples, FL",
+      "latitude": 26.25805122,
+      "longitude": -81.61945019,
+      "address_point_id": 263589,
+      "building_id": 92502
+    },
+    {
+      "address": "1431 13th ST SW, Naples, FL",
+      "latitude": 26.20328993,
+      "longitude": -81.63376111,
+      "address_point_id": 164113,
+      "building_id": 67494
+    },
+    {
+      "address": "840 Wilson BLVD S, Naples, FL",
+      "latitude": 26.21455843,
+      "longitude": -81.60576789,
+      "address_point_id": 172725,
+      "building_id": 71835
+    },
+    {
+      "address": "931 13th ST SW, Naples, FL",
+      "latitude": 26.21241098,
+      "longitude": -81.63325492,
+      "address_point_id": 52147,
+      "building_id": 71278
+    },
+    {
+      "address": "2611 50th AVE NE, Naples, FL",
+      "latitude": 26.32397615,
+      "longitude": -81.55575121,
+      "address_point_id": 147496,
+      "building_id": 130646
+    },
+    {
+      "address": "730 14th AVE NE, Naples, FL",
+      "latitude": 26.25515983,
+      "longitude": -81.59145274,
+      "address_point_id": 191632,
+      "building_id": 90170
+    },
+    {
+      "address": "3840 35th AVE NE, Naples, FL",
+      "latitude": 26.29573819,
+      "longitude": -81.53044908,
+      "address_point_id": 55718,
+      "building_id": 115873
+    },
+    {
+      "address": "3210 45th AVE NE, Naples, FL",
+      "latitude": 26.31389474,
+      "longitude": -81.54350772,
+      "address_point_id": 129669,
+      "building_id": 124533
+    },
+    {
+      "address": "181 13th ST NW, Naples, FL",
+      "latitude": 26.23306558,
+      "longitude": -81.63357797,
+      "address_point_id": 56986,
+      "building_id": 79235
+    },
+    {
+      "address": "740 15th ST NW, Naples, FL",
+      "latitude": 26.24290205,
+      "longitude": -81.63604407,
+      "address_point_id": 74219,
+      "building_id": 198172
+    },
+    {
+      "address": "4380 18th ST NE, Naples, FL",
+      "latitude": 26.31209353,
+      "longitude": -81.57168201,
+      "address_point_id": 190149,
+      "building_id": 123866
+    },
+    {
+      "address": "270 1st ST NW, Naples, FL",
+      "latitude": 26.23473714,
+      "longitude": -81.60802191,
+      "address_point_id": 190991,
+      "building_id": 79880
+    },
+    {
+      "address": "3221 8th AVE SE, Naples, FL",
+      "latitude": 26.21643699,
+      "longitude": -81.54189005,
+      "address_point_id": 123886,
+      "building_id": 72441
+    },
+    {
+      "address": "3847 2nd AVE SE, Naples, FL",
+      "latitude": 26.22754479,
+      "longitude": -81.52972565,
+      "address_point_id": 182986,
+      "building_id": 76778
+    },
+    {
+      "address": "961 9th ST SW, Naples, FL",
+      "latitude": 26.21210016,
+      "longitude": -81.62511814,
+      "address_point_id": 140953,
+      "building_id": 71205
+    },
+    {
+      "address": "2780 26th AVE SE, Naples, FL",
+      "latitude": 26.1825148,
+      "longitude": -81.55041391,
+      "address_point_id": 153395,
+      "building_id": 57217
+    },
+    {
+      "address": "261 13th ST SW, Naples, FL",
+      "latitude": 26.22465474,
+      "longitude": -81.63379719,
+      "address_point_id": 117322,
+      "building_id": 75682
+    },
+    {
+      "address": "519 2nd ST NE, Naples, FL",
+      "latitude": 26.23919947,
+      "longitude": -81.60383821,
+      "address_point_id": 281111,
+      "building_id": 82142
+    },
+    {
+      "address": "3580 10th AVE NE, Naples, FL",
+      "latitude": 26.2484041,
+      "longitude": -81.5351513,
+      "address_point_id": 268585,
+      "building_id": 86365
+    },
+    {
+      "address": "4444 2nd AVE NE, Naples, FL",
+      "latitude": 26.23410775,
+      "longitude": -81.51728719,
+      "address_point_id": 268584,
+      "building_id": 79464
+    },
+    {
+      "address": "2894 22nd AVE SE, Naples, FL",
+      "latitude": 26.19020001,
+      "longitude": -81.54721934,
+      "address_point_id": 289452,
+      "building_id": 60976
+    },
+    {
+      "address": "391 10th AVE NE, Naples, FL",
+      "latitude": 26.2490296,
+      "longitude": -81.59915222,
+      "address_point_id": 74007,
+      "building_id": 86830
+    },
+    {
+      "address": "3430 50th AVE NE, Naples, FL",
+      "latitude": 26.32314972,
+      "longitude": -81.53908864,
+      "address_point_id": 108185,
+      "building_id": 129866
+    },
+    {
+      "address": "731 Golden Gate BLVD E, Naples, FL",
+      "latitude": 26.23058522,
+      "longitude": -81.59191774,
+      "address_point_id": 174989,
+      "building_id": 78113
+    },
+    {
+      "address": "2961 2nd AVE SE, Naples, FL",
+      "latitude": 26.22733911,
+      "longitude": -81.54752915,
+      "address_point_id": 44752,
+      "building_id": 76719
+    },
+    {
+      "address": "731 18th ST SE, Naples, FL",
+      "latitude": 26.21690135,
+      "longitude": -81.57038792,
+      "address_point_id": 175696,
+      "building_id": 72635
+    },
+    {
+      "address": "2696 29th AVE NE, Naples, FL",
+      "latitude": 26.28476519,
+      "longitude": -81.5536285,
+      "address_point_id": 275990,
+      "building_id": 109456
+    },
+    {
+      "address": "3740 14th AVE SE, Naples, FL",
+      "latitude": 26.20471313,
+      "longitude": -81.53121624,
+      "address_point_id": 211861,
+      "building_id": 67989
+    },
+    {
+      "address": "340 16th ST SE, Naples, FL",
+      "latitude": 26.22391939,
+      "longitude": -81.5737329,
+      "address_point_id": 183190,
+      "building_id": 75266
+    },
+    {
+      "address": "4280 10th ST NE, Naples, FL",
+      "latitude": 26.30986722,
+      "longitude": -81.58774402,
+      "address_point_id": 188123,
+      "building_id": 122921
+    },
+    {
+      "address": "3272 16th AVE NE, Naples, FL",
+      "latitude": 26.25856841,
+      "longitude": -81.54168985,
+      "address_point_id": 275521,
+      "building_id": 92677
+    },
+    {
+      "address": "3641 17th AVE SW, Naples, FL",
+      "latitude": 26.19859121,
+      "longitude": -81.67945241,
+      "address_point_id": 54568,
+      "building_id": 65568
+    },
+    {
+      "address": "2740 12th AVE NE, Naples, FL",
+      "latitude": 26.2518737,
+      "longitude": -81.5523155,
+      "address_point_id": 192468,
+      "building_id": 88159
+    },
+    {
+      "address": "431 31st ST NW, Naples, FL",
+      "latitude": 26.23710032,
+      "longitude": -81.66999558,
+      "address_point_id": 120779,
+      "building_id": 81060
+    },
+    {
+      "address": "2430 16th AVE NE, Naples, FL",
+      "latitude": 26.25920947,
+      "longitude": -81.55838865,
+      "address_point_id": 271700,
+      "building_id": 93168
+    },
+    {
+      "address": "130 14th ST SE, Naples, FL",
+      "latitude": 26.22771387,
+      "longitude": -81.57790714,
+      "address_point_id": 69826,
+      "building_id": 76968
+    },
+    {
+      "address": "4282 27th AVE NE, Naples, FL",
+      "latitude": 26.28162614,
+      "longitude": -81.52025578,
+      "address_point_id": 252476,
+      "building_id": 107772
+    },
+    {
+      "address": "2790 18th AVE NE, Naples, FL",
+      "latitude": 26.26211574,
+      "longitude": -81.55136873,
+      "address_point_id": 152420,
+      "building_id": 95420
+    },
+    {
+      "address": "270 11th ST NW, Naples, FL",
+      "latitude": 26.23486719,
+      "longitude": -81.62826567,
+      "address_point_id": 166385,
+      "building_id": 79975
+    },
+    {
+      "address": "3600 19th AVE SW, Naples, FL",
+      "latitude": 26.19376313,
+      "longitude": -81.67892375,
+      "address_point_id": 107847,
+      "building_id": 63126
+    },
+    {
+      "address": "2033 24th AVE NE, Naples, FL",
+      "latitude": 26.27465658,
+      "longitude": -81.56608671,
+      "address_point_id": 275480,
+      "building_id": 104172
+    },
+    {
+      "address": "790 22nd AVE NW, Naples, FL",
+      "latitude": 26.26926621,
+      "longitude": -81.62330672,
+      "address_point_id": 136920,
+      "building_id": 101339
+    },
+    {
+      "address": "3520 18th AVE SE, Naples, FL",
+      "latitude": 26.19736059,
+      "longitude": -81.53575716,
+      "address_point_id": 191422,
+      "building_id": 64799
+    },
+    {
+      "address": "3505 4th AVE SE, Naples, FL",
+      "latitude": 26.22387038,
+      "longitude": -81.53613277,
+      "address_point_id": 259752,
+      "building_id": 75184
+    },
+    {
+      "address": "2059 17th ST SW, Naples, FL",
+      "latitude": 26.19224147,
+      "longitude": -81.64129375,
+      "address_point_id": 185065,
+      "building_id": 62287
+    },
+    {
+      "address": "491 18th ST NE, Naples, FL",
+      "latitude": 26.23919662,
+      "longitude": -81.57140055,
+      "address_point_id": 168833,
+      "building_id": 82017
+    },
+    {
+      "address": "139 12th ST SE, Naples, FL",
+      "latitude": 26.22753625,
+      "longitude": -81.58316568,
+      "address_point_id": 265757,
+      "building_id": 76902
+    },
+    {
+      "address": "4065 6th AVE NE, Naples, FL",
+      "latitude": 26.24225828,
+      "longitude": -81.52506866,
+      "address_point_id": 130477,
+      "building_id": 83687
+    },
+    {
+      "address": "128 5th ST SW, Naples, FL",
+      "latitude": 26.2276017,
+      "longitude": -81.6162085,
+      "address_point_id": 278020,
+      "building_id": 77006
+    },
+    {
+      "address": "500 3rd ST NW, Naples, FL",
+      "latitude": 26.23936863,
+      "longitude": -81.61226749,
+      "address_point_id": 72108,
+      "building_id": 82285
+    },
+    {
+      "address": "3380 3rd AVE NW, Naples, FL",
+      "latitude": 26.23358317,
+      "longitude": -81.67502373,
+      "address_point_id": 129964,
+      "building_id": 79541
+    },
+    {
+      "address": "2530 50th AVE NE, Naples, FL",
+      "latitude": 26.32274703,
+      "longitude": -81.55735007,
+      "address_point_id": 88035,
+      "building_id": 129642
+    },
+    {
+      "address": "1072 47th AVE NE, Naples, FL",
+      "latitude": 26.31711647,
+      "longitude": -81.58712613,
+      "address_point_id": 264859,
+      "building_id": 125882
+    },
+    {
+      "address": "2715 18th AVE SE, Naples, FL",
+      "latitude": 26.19844685,
+      "longitude": -81.55118472,
+      "address_point_id": 63356,
+      "building_id": 65294
+    },
+    {
+      "address": "1031 25th ST SW, Naples, FL",
+      "latitude": 26.21020492,
+      "longitude": -81.65752206,
+      "address_point_id": 178121,
+      "building_id": 70665
+    },
+    {
+      "address": "3724 41st AVE NE, Naples, FL",
+      "latitude": 26.30663033,
+      "longitude": -81.53307146,
+      "address_point_id": 180328,
+      "building_id": 121667
+    },
+    {
+      "address": "270 22nd AVE NW, Naples, FL",
+      "latitude": 26.26929727,
+      "longitude": -81.6126479,
+      "address_point_id": 193893,
+      "building_id": 101353
+    },
+    {
+      "address": "3291 5th AVE SW, Naples, FL",
+      "latitude": 26.2206062,
+      "longitude": -81.67296072,
+      "address_point_id": 66364,
+      "building_id": 74211
+    },
+    {
+      "address": "1411 27th ST SW, Naples, FL",
+      "latitude": 26.20335513,
+      "longitude": -81.66118159,
+      "address_point_id": 52775,
+      "building_id": 67576
+    },
+    {
+      "address": "471 33rd AVE NW, Naples, FL",
+      "latitude": 26.29407444,
+      "longitude": -81.61734249,
+      "address_point_id": 94271,
+      "building_id": 115066
+    },
+    {
+      "address": "545 Golden Gate BLVD W, Naples, FL",
+      "latitude": 26.23010768,
+      "longitude": -81.61570798,
+      "address_point_id": 33061,
+      "building_id": 77960
+    },
+    {
+      "address": "2760 28th AVE SE, Naples, FL",
+      "latitude": 26.17907475,
+      "longitude": -81.55088623,
+      "address_point_id": 7015,
+      "building_id": 55883
+    },
+    {
+      "address": "4205 40th ST NE, Naples, FL",
+      "latitude": 26.30868782,
+      "longitude": -81.52883752,
+      "address_point_id": 271094,
+      "building_id": 122471
+    },
+    {
+      "address": "2790 4th AVE SE, Naples, FL",
+      "latitude": 26.22234694,
+      "longitude": -81.55075731,
+      "address_point_id": 192699,
+      "building_id": 74616
+    },
+    {
+      "address": "4863 Everglades BLVD N, Naples, FL",
+      "latitude": 26.32074935,
+      "longitude": -81.54666045,
+      "address_point_id": 281538,
+      "building_id": 128084
+    },
+    {
+      "address": "3570 10th AVE NE, Naples, FL",
+      "latitude": 26.24768129,
+      "longitude": -81.53538336,
+      "address_point_id": 85914,
+      "building_id": 85964
+    },
+    {
+      "address": "121 21st ST NW, Naples, FL",
+      "latitude": 26.23142062,
+      "longitude": -81.64961847,
+      "address_point_id": 124634,
+      "building_id": 78585
+    },
+    {
+      "address": "4251 6th AVE NE, Naples, FL",
+      "latitude": 26.24251219,
+      "longitude": -81.52108085,
+      "address_point_id": 45833,
+      "building_id": 83813
+    },
+    {
+      "address": "1430 11th ST SW, Naples, FL",
+      "latitude": 26.20341383,
+      "longitude": -81.62799826,
+      "address_point_id": 188246,
+      "building_id": 67533
+    },
+    {
+      "address": "791 11th ST NW, Naples, FL",
+      "latitude": 26.24390877,
+      "longitude": -81.62965172,
+      "address_point_id": 211754,
+      "building_id": 84626
+    },
+    {
+      "address": "1881 8th ST NE, Naples, FL",
+      "latitude": 26.26449227,
+      "longitude": -81.59172009,
+      "address_point_id": 109533,
+      "building_id": 97389
+    },
+    {
+      "address": "561 8th ST NE, Naples, FL",
+      "latitude": 26.24027362,
+      "longitude": -81.59131639,
+      "address_point_id": 183495,
+      "building_id": 82721
+    },
+    {
+      "address": "1122 47th AVE NE, Naples, FL",
+      "latitude": 26.31695029,
+      "longitude": -81.58605065,
+      "address_point_id": 84288,
+      "building_id": 125819
+    },
+    {
+      "address": "870 24th AVE NW, Naples, FL",
+      "latitude": 26.27266339,
+      "longitude": -81.62476718,
+      "address_point_id": 161594,
+      "building_id": 103581
+    },
+    {
+      "address": "940 10th ST SE, Naples, FL",
+      "latitude": 26.21274892,
+      "longitude": -81.58508966,
+      "address_point_id": 95934,
+      "building_id": 71322
+    },
+    {
+      "address": "1411 22nd AVE NE, Naples, FL",
+      "latitude": 26.27089277,
+      "longitude": -81.57866272,
+      "address_point_id": 54539,
+      "building_id": 102484
+    },
+    {
+      "address": "95 27th ST NW, Naples, FL",
+      "latitude": 26.23084299,
+      "longitude": -81.66163151,
+      "address_point_id": 56106,
+      "building_id": 78409
+    },
+    {
+      "address": "3280 23rd AVE SW, Naples, FL",
+      "latitude": 26.18675087,
+      "longitude": -81.67212317,
+      "address_point_id": 66860,
+      "building_id": 59344
+    },
+    {
+      "address": "2975 39th AVE NE, Naples, FL",
+      "latitude": 26.30406406,
+      "longitude": -81.54833794,
+      "address_point_id": 139918,
+      "building_id": 120758
+    },
+    {
+      "address": "510 20th ST SE, Naples, FL",
+      "latitude": 26.22099321,
+      "longitude": -81.56510533,
+      "address_point_id": 101531,
+      "building_id": 74175
+    },
+    {
+      "address": "4421 10th AVE SE, Naples, FL",
+      "latitude": 26.21303407,
+      "longitude": -81.51753343,
+      "address_point_id": 6543,
+      "building_id": 71330
+    },
+    {
+      "address": "3540 22nd AVE NE, Naples, FL",
+      "latitude": 26.27030938,
+      "longitude": -81.53615917,
+      "address_point_id": 53321,
+      "building_id": 101932
+    },
+    {
+      "address": "3285 16th AVE SE, Naples, FL",
+      "latitude": 26.20219069,
+      "longitude": -81.54041366,
+      "address_point_id": 159931,
+      "building_id": 66772
+    },
+    {
+      "address": "421 22nd AVE NE, Naples, FL",
+      "latitude": 26.27045959,
+      "longitude": -81.59873105,
+      "address_point_id": 112260,
+      "building_id": 102210
+    },
+    {
+      "address": "1831 21st ST SW, Naples, FL",
+      "latitude": 26.19574297,
+      "longitude": -81.64922012,
+      "address_point_id": 77265,
+      "building_id": 64116
+    },
+    {
+      "address": "2878 8th AVE SE, Naples, FL",
+      "latitude": 26.21545892,
+      "longitude": -81.54912429,
+      "address_point_id": 262184,
+      "building_id": 72095
+    },
+    {
+      "address": "2080 21st ST SW, Naples, FL",
+      "latitude": 26.19144008,
+      "longitude": -81.6473043,
+      "address_point_id": 51189,
+      "building_id": 61904
+    },
+    {
+      "address": "3032 41st AVE NE, Naples, FL",
+      "latitude": 26.30687035,
+      "longitude": -81.54714519,
+      "address_point_id": 279649,
+      "building_id": 121797
+    },
+    {
+      "address": "3411 20th AVE NE, Naples, FL",
+      "latitude": 26.26773953,
+      "longitude": -81.53885657,
+      "address_point_id": 173910,
+      "building_id": 99843
+    },
+    {
+      "address": "4185 29th AVE NE, Naples, FL",
+      "latitude": 26.2864519,
+      "longitude": -81.52208805,
+      "address_point_id": 46427,
+      "building_id": 110405
+    },
+    {
+      "address": "4370 40th ST NE, Naples, FL",
+      "latitude": 26.31232757,
+      "longitude": -81.52774724,
+      "address_point_id": 121802,
+      "building_id": 123879
+    },
+    {
+      "address": "3270 24th AVE NE, Naples, FL",
+      "latitude": 26.27387303,
+      "longitude": -81.54176122,
+      "address_point_id": 137492,
+      "building_id": 103904
+    },
+    {
+      "address": "371 27th ST NW, Naples, FL",
+      "latitude": 26.2358346,
+      "longitude": -81.66210247,
+      "address_point_id": 211749,
+      "building_id": 80449
+    },
+    {
+      "address": "537 41st AVE NE, Naples, FL",
+      "latitude": 26.30873724,
+      "longitude": -81.59701931,
+      "address_point_id": 18820,
+      "building_id": 122590
+    },
+    {
+      "address": "3240 12th AVE SE, Naples, FL",
+      "latitude": 26.20801923,
+      "longitude": -81.5414749,
+      "address_point_id": 54079,
+      "building_id": 69544
+    },
+    {
+      "address": "1390 19th ST SW, Naples, FL",
+      "latitude": 26.20396541,
+      "longitude": -81.64401471,
+      "address_point_id": 181640,
+      "building_id": 67831
+    },
+    {
+      "address": "1411 29th ST SW, Naples, FL",
+      "latitude": 26.2032691,
+      "longitude": -81.6658591,
+      "address_point_id": 100876,
+      "building_id": 67566
+    },
+    {
+      "address": "2131 16th AVE SW, Naples, FL",
+      "latitude": 26.20061367,
+      "longitude": -81.64928174,
+      "address_point_id": 127151,
+      "building_id": 66217
+    },
+    {
+      "address": "1030 16th AVE NE, Naples, FL",
+      "latitude": 26.258299,
+      "longitude": -81.58648468,
+      "address_point_id": 60979,
+      "building_id": 92528
+    },
+    {
+      "address": "2821 6th AVE SE, Naples, FL",
+      "latitude": 26.21989654,
+      "longitude": -81.55040312,
+      "address_point_id": 145610,
+      "building_id": 73682
+    },
+    {
+      "address": "4427 54th AVE NE, Naples, FL",
+      "latitude": 26.33139636,
+      "longitude": -81.51995663,
+      "address_point_id": 81129,
+      "building_id": 135967
+    },
+    {
+      "address": "339 39th AVE NW, Naples, FL",
+      "latitude": 26.30499216,
+      "longitude": -81.61463273,
+      "address_point_id": 277500,
+      "building_id": 121238
+    },
+    {
+      "address": "281 20th ST SE, Naples, FL",
+      "latitude": 26.22504924,
+      "longitude": -81.56705067,
+      "address_point_id": 58377,
+      "building_id": 75715
+    },
+    {
+      "address": "3650 1st AVE SW, Naples, FL",
+      "latitude": 26.22640699,
+      "longitude": -81.67997526,
+      "address_point_id": 191408,
+      "building_id": 76514
+    },
+    {
+      "address": "4435 14th ST NE, Naples, FL",
+      "latitude": 26.31253203,
+      "longitude": -81.58106174,
+      "address_point_id": 59301,
+      "building_id": 124062
+    },
+    {
+      "address": "5171 Everglades BLVD N, Naples, FL",
+      "latitude": 26.32643587,
+      "longitude": -81.5468194,
+      "address_point_id": 112530,
+      "building_id": 132460
+    },
+    {
+      "address": "1898 24th AVE NE, Naples, FL",
+      "latitude": 26.27352886,
+      "longitude": -81.56894835,
+      "address_point_id": 272171,
+      "building_id": 103859
+    },
+    {
+      "address": "3381 24th AVE NE, Naples, FL",
+      "latitude": 26.27488194,
+      "longitude": -81.53955487,
+      "address_point_id": 133821,
+      "building_id": 104248
+    },
+    {
+      "address": "4376 14th ST NE, Naples, FL",
+      "latitude": 26.31156138,
+      "longitude": -81.57978369,
+      "address_point_id": 113774,
+      "building_id": 123665
+    },
+    {
+      "address": "3560 45th AVE NE, Naples, FL",
+      "latitude": 26.31389366,
+      "longitude": -81.53652402,
+      "address_point_id": 269957,
+      "building_id": 124559
+    },
+    {
+      "address": "2526 35th AVE NE, Naples, FL",
+      "latitude": 26.29541196,
+      "longitude": -81.55733125,
+      "address_point_id": 288636,
+      "building_id": 115788
+    },
+    {
+      "address": "531 13th ST NW, Naples, FL",
+      "latitude": 26.2392581,
+      "longitude": -81.63371022,
+      "address_point_id": 76064,
+      "building_id": 82284
+    },
+    {
+      "address": "4360 Wilson BLVD N, Naples, FL",
+      "latitude": 26.31290457,
+      "longitude": -81.60741776,
+      "address_point_id": 268645,
+      "building_id": 124235
+    },
+    {
+      "address": "410 14th AVE NW, Naples, FL",
+      "latitude": 26.25484175,
+      "longitude": -81.61545688,
+      "address_point_id": 183412,
+      "building_id": 89953
+    },
+    {
+      "address": "3440 22nd AVE SE, Naples, FL",
+      "latitude": 26.19024531,
+      "longitude": -81.53717739,
+      "address_point_id": 121909,
+      "building_id": 61019
+    },
+    {
+      "address": "1510 8th ST NE, Naples, FL",
+      "latitude": 26.25759949,
+      "longitude": -81.59003742,
+      "address_point_id": 168628,
+      "building_id": 92075
+    },
+    {
+      "address": "2784 6th AVE NE, Naples, FL",
+      "latitude": 26.240663,
+      "longitude": -81.5510643,
+      "address_point_id": 271680,
+      "building_id": 82847
+    },
+    {
+      "address": "99 16th AVE NE, Naples, FL",
+      "latitude": 26.25965578,
+      "longitude": -81.60557071,
+      "address_point_id": 47257,
+      "building_id": 93673
+    },
+    {
+      "address": "1870 19th ST SW, Naples, FL",
+      "latitude": 26.19543825,
+      "longitude": -81.64372446,
+      "address_point_id": 166491,
+      "building_id": 63937
+    },
+    {
+      "address": "681 3rd ST NW, Naples, FL",
+      "latitude": 26.24230418,
+      "longitude": -81.61374728,
+      "address_point_id": 158037,
+      "building_id": 83885
+    },
+    {
+      "address": "551 16th ST SE, Naples, FL",
+      "latitude": 26.22047973,
+      "longitude": -81.57500641,
+      "address_point_id": 104207,
+      "building_id": 73978
+    },
+    {
+      "address": "130 Golden Gate BLVD E, Naples, FL",
+      "latitude": 26.22917229,
+      "longitude": -81.60385042,
+      "address_point_id": 136971,
+      "building_id": 77534
+    },
+    {
+      "address": "1180 Everglades BLVD S, Naples, FL",
+      "latitude": 26.2090835,
+      "longitude": -81.54358232,
+      "address_point_id": 26204,
+      "building_id": 70031
+    },
+    {
+      "address": "2362 52nd AVE NE, Naples, FL",
+      "latitude": 26.32644871,
+      "longitude": -81.56101216,
+      "address_point_id": 260768,
+      "building_id": 132491
+    },
+    {
+      "address": "4340 Golden Gate BLVD E, Naples, FL",
+      "latitude": 26.23012743,
+      "longitude": -81.51937598,
+      "address_point_id": 116272,
+      "building_id": 77835
+    },
+    {
+      "address": "2890 54th AVE NE, Naples, FL",
+      "latitude": 26.33025184,
+      "longitude": -81.55022673,
+      "address_point_id": 107940,
+      "building_id": 135554
+    },
+    {
+      "address": "805 18th ST NE, Naples, FL",
+      "latitude": 26.24498674,
+      "longitude": -81.57078721,
+      "address_point_id": 269489,
+      "building_id": 84844
+    },
+    {
+      "address": "621 20th AVE NW, Naples, FL",
+      "latitude": 26.26670594,
+      "longitude": -81.61959779,
+      "address_point_id": 134728,
+      "building_id": 99137
+    },
+    {
+      "address": "111 19th ST SW, Naples, FL",
+      "latitude": 26.22726483,
+      "longitude": -81.64609415,
+      "address_point_id": 93076,
+      "building_id": 76905
+    },
+    {
+      "address": "2960 6th ST NW, Naples, FL",
+      "latitude": 26.28750976,
+      "longitude": -81.61921899,
+      "address_point_id": 144645,
+      "building_id": 111226
+    },
+    {
+      "address": "3677 8th AVE NE, Naples, FL",
+      "latitude": 26.24577172,
+      "longitude": -81.5328686,
+      "address_point_id": 281083,
+      "building_id": 85132
+    },
+    {
+      "address": "3440 7th AVE NW, Naples, FL",
+      "latitude": 26.24123457,
+      "longitude": -81.67666346,
+      "address_point_id": 231857,
+      "building_id": 83487
+    },
+    {
+      "address": "110 16th AVE NE, Naples, FL",
+      "latitude": 26.2586225,
+      "longitude": -81.60486971,
+      "address_point_id": 211584,
+      "building_id": 92881
+    },
+    {
+      "address": "1589 Everglades BLVD N, Naples, FL",
+      "latitude": 26.2594096,
+      "longitude": -81.54561115,
+      "address_point_id": 272381,
+      "building_id": 93252
+    },
+    {
+      "address": "320 Everglades BLVD S, Naples, FL",
+      "latitude": 26.22466305,
+      "longitude": -81.54402189,
+      "address_point_id": 164825,
+      "building_id": 75515
+    },
+    {
+      "address": "3511 3rd AVE NW, Naples, FL",
+      "latitude": 26.23505542,
+      "longitude": -81.67758305,
+      "address_point_id": 158976,
+      "building_id": 80136
+    },
+    {
+      "address": "211 14th AVE NW, Naples, FL",
+      "latitude": 26.25633121,
+      "longitude": -81.61140333,
+      "address_point_id": 120477,
+      "building_id": 91132
+    },
+    {
+      "address": "561 11th ST NW, Naples, FL",
+      "latitude": 26.23983495,
+      "longitude": -81.63057029,
+      "address_point_id": 94361,
+      "building_id": 82598
+    },
+    {
+      "address": "543 27th ST SW, Naples, FL",
+      "latitude": 26.21938384,
+      "longitude": -81.66143228,
+      "address_point_id": 277268,
+      "building_id": 73675
+    },
+    {
+      "address": "2830 12th AVE SE, Naples, FL",
+      "latitude": 26.2082961,
+      "longitude": -81.54959764,
+      "address_point_id": 268735,
+      "building_id": 69684
+    },
+    {
+      "address": "191 Everglades BLVD S, Naples, FL",
+      "latitude": 26.22705448,
+      "longitude": -81.54516616,
+      "address_point_id": 80147,
+      "building_id": 76578
+    },
+    {
+      "address": "260 14th ST SE, Naples, FL",
+      "latitude": 26.22539566,
+      "longitude": -81.57755897,
+      "address_point_id": 60200,
+      "building_id": 75856
+    },
+    {
+      "address": "3661 12th AVE NE, Naples, FL",
+      "latitude": 26.25322477,
+      "longitude": -81.53367816,
+      "address_point_id": 138188,
+      "building_id": 88907
+    },
+    {
+      "address": "4498 22nd AVE SE, Naples, FL",
+      "latitude": 26.19069372,
+      "longitude": -81.51519556,
+      "address_point_id": 6572,
+      "building_id": 61227
+    },
+    {
+      "address": "1470 11th ST SW, Naples, FL",
+      "latitude": 26.20279931,
+      "longitude": -81.62732756,
+      "address_point_id": 145904,
+      "building_id": 67292
+    },
+    {
+      "address": "4321 12th AVE SE, Naples, FL",
+      "latitude": 26.20969363,
+      "longitude": -81.51962934,
+      "address_point_id": 188498,
+      "building_id": 70210
+    },
+    {
+      "address": "690 19th ST NW, Naples, FL",
+      "latitude": 26.24192082,
+      "longitude": -81.64440298,
+      "address_point_id": 118556,
+      "building_id": 83772
+    },
+    {
+      "address": "4920 32nd AVE SE, Naples, FL",
+      "latitude": 26.17229142,
+      "longitude": -81.50705359,
+      "address_point_id": 124419,
+      "building_id": 53406
+    },
+    {
+      "address": "226 16th ST NE, Naples, FL",
+      "latitude": 26.23472426,
+      "longitude": -81.57385668,
+      "address_point_id": 97614,
+      "building_id": 79820
+    },
+    {
+      "address": "230 29th ST NW, Naples, FL",
+      "latitude": 26.23306732,
+      "longitude": -81.66443811,
+      "address_point_id": 82058,
+      "building_id": 79318
+    },
+    {
+      "address": "2511 18th AVE NE, Naples, FL",
+      "latitude": 26.26382756,
+      "longitude": -81.55701265,
+      "address_point_id": 120669,
+      "building_id": 96749
+    },
+    {
+      "address": "940 17th ST SW, Naples, FL",
+      "latitude": 26.21213006,
+      "longitude": -81.63988709,
+      "address_point_id": 133249,
+      "building_id": 71227
+    },
+    {
+      "address": "1840 12th AVE NE, Naples, FL",
+      "latitude": 26.25176886,
+      "longitude": -81.56968754,
+      "address_point_id": 139536,
+      "building_id": 88132
+    },
+    {
+      "address": "211 10th AVE NW, Naples, FL",
+      "latitude": 26.24875848,
+      "longitude": -81.61132453,
+      "address_point_id": 32401,
+      "building_id": 86729
+    },
+    {
+      "address": "2981 8th AVE SE, Naples, FL",
+      "latitude": 26.21654759,
+      "longitude": -81.54691732,
+      "address_point_id": 130125,
+      "building_id": 72485
+    },
+    {
+      "address": "2781 24th AVE NE, Naples, FL",
+      "latitude": 26.27481491,
+      "longitude": -81.5515997,
+      "address_point_id": 79385,
+      "building_id": 104255
+    },
+    {
+      "address": "2410 2nd AVE SE, Naples, FL",
+      "latitude": 26.22622319,
+      "longitude": -81.55753237,
+      "address_point_id": 155115,
+      "building_id": 76182
+    },
+    {
+      "address": "3468 45th AVE NE, Naples, FL",
+      "latitude": 26.31394006,
+      "longitude": -81.53837898,
+      "address_point_id": 290993,
+      "building_id": 124555
+    },
+    {
+      "address": "483 1st ST NW, Naples, FL",
+      "latitude": 26.23854987,
+      "longitude": -81.6094894,
+      "address_point_id": 283642,
+      "building_id": 81700
+    },
+    {
+      "address": "3641 21st AVE SW, Naples, FL",
+      "latitude": 26.19129301,
+      "longitude": -81.67948097,
+      "address_point_id": 118312,
+      "building_id": 61922
+    },
+    {
+      "address": "710 9th ST NW, Naples, FL",
+      "latitude": 26.24260831,
+      "longitude": -81.62467761,
+      "address_point_id": 147269,
+      "building_id": 84053
+    },
+    {
+      "address": "3501 25th AVE SW, Naples, FL",
+      "latitude": 26.18408226,
+      "longitude": -81.67676736,
+      "address_point_id": 82246,
+      "building_id": 58085
+    },
+    {
+      "address": "461 17th ST SW, Naples, FL",
+      "latitude": 26.22096622,
+      "longitude": -81.64156417,
+      "address_point_id": 94162,
+      "building_id": 74310
+    },
+    {
+      "address": "2955 14th AVE SE, Naples, FL",
+      "latitude": 26.20554033,
+      "longitude": -81.54712412,
+      "address_point_id": 169935,
+      "building_id": 68371
+    },
+    {
+      "address": "2160 24th AVE NE, Naples, FL",
+      "latitude": 26.2731566,
+      "longitude": -81.56351418,
+      "address_point_id": 16788,
+      "building_id": 103720
+    },
+    {
+      "address": "2420 52nd AVE NE, Naples, FL",
+      "latitude": 26.32648683,
+      "longitude": -81.55965512,
+      "address_point_id": 3733,
+      "building_id": 132549
+    },
+    {
+      "address": "560 7th ST NW, Naples, FL",
+      "latitude": 26.23997028,
+      "longitude": -81.62038853,
+      "address_point_id": 143922,
+      "building_id": 82636
+    },
+    {
+      "address": "2472 27th AVE NE, Naples, FL",
+      "latitude": 26.28110666,
+      "longitude": -81.55811155,
+      "address_point_id": 275464,
+      "building_id": 107551
+    },
+    {
+      "address": "210 10th ST SE, Naples, FL",
+      "latitude": 26.22623663,
+      "longitude": -81.58580609,
+      "address_point_id": 50280,
+      "building_id": 76282
+    },
+    {
+      "address": "2911 Golden Gate BLVD E, Naples, FL",
+      "latitude": 26.2311138,
+      "longitude": -81.54846828,
+      "address_point_id": 93041,
+      "building_id": 78302
+    },
+    {
+      "address": "2995 10th AVE SE, Naples, FL",
+      "latitude": 26.21288341,
+      "longitude": -81.54660215,
+      "address_point_id": 127331,
+      "building_id": 71319
+    },
+    {
+      "address": "3540 24th AVE NE, Naples, FL",
+      "latitude": 26.27391132,
+      "longitude": -81.53630983,
+      "address_point_id": 26738,
+      "building_id": 103909
+    },
+    {
+      "address": "670 16th ST SE, Naples, FL",
+      "latitude": 26.2180613,
+      "longitude": -81.57349745,
+      "address_point_id": 129553,
+      "building_id": 73006
+    },
+    {
+      "address": "3461 14th AVE NE, Naples, FL",
+      "latitude": 26.25682571,
+      "longitude": -81.53765493,
+      "address_point_id": 46180,
+      "building_id": 91308
+    },
+    {
+      "address": "217 11th ST SW, Naples, FL",
+      "latitude": 26.22562144,
+      "longitude": -81.62937863,
+      "address_point_id": 280901,
+      "building_id": 76053
+    },
+    {
+      "address": "3580 22nd AVE NE, Naples, FL",
+      "latitude": 26.27037565,
+      "longitude": -81.53549093,
+      "address_point_id": 173820,
+      "building_id": 102041
+    },
+    {
+      "address": "2545 35th AVE NE, Naples, FL",
+      "latitude": 26.29656315,
+      "longitude": -81.55676405,
+      "address_point_id": 152259,
+      "building_id": 116512
+    },
+    {
+      "address": "145 16th ST NE, Naples, FL",
+      "latitude": 26.23278802,
+      "longitude": -81.5750152,
+      "address_point_id": 269927,
+      "building_id": 79021
+    },
+    {
+      "address": "402 18th AVE NW, Naples, FL",
+      "latitude": 26.26200699,
+      "longitude": -81.61557234,
+      "address_point_id": 259757,
+      "building_id": 95534
+    },
+    {
+      "address": "398 35th AVE NW, Naples, FL",
+      "latitude": 26.29683542,
+      "longitude": -81.61610664,
+      "address_point_id": 258520,
+      "building_id": 116968
+    },
+    {
+      "address": "2675 37th AVE NE, Naples, FL",
+      "latitude": 26.30032612,
+      "longitude": -81.55446473,
+      "address_point_id": 176247,
+      "building_id": 118786
+    },
+    {
+      "address": "1826 20th AVE NE, Naples, FL",
+      "latitude": 26.26621054,
+      "longitude": -81.5700117,
+      "address_point_id": 272764,
+      "building_id": 98582
+    },
+    {
+      "address": "3570 24th AVE SE, Naples, FL",
+      "latitude": 26.186282,
+      "longitude": -81.5346682,
+      "address_point_id": 19328,
+      "building_id": 58809
+    },
+    {
+      "address": "520 18th AVE NW, Naples, FL",
+      "latitude": 26.2620004,
+      "longitude": -81.61781262,
+      "address_point_id": 157443,
+      "building_id": 95535
+    },
+    {
+      "address": "230 10th ST SE, Naples, FL",
+      "latitude": 26.22573478,
+      "longitude": -81.58555337,
+      "address_point_id": 127366,
+      "building_id": 76003
+    },
+    {
+      "address": "566 2nd ST SE, Naples, FL",
+      "latitude": 26.21963363,
+      "longitude": -81.6018588,
+      "address_point_id": 279772,
+      "building_id": 73678
+    },
+    {
+      "address": "703 41st AVE NW, Naples, FL",
+      "latitude": 26.30849575,
+      "longitude": -81.62109094,
+      "address_point_id": 275487,
+      "building_id": 122553
+    },
+    {
+      "address": "2910 4th ST NW, Naples, FL",
+      "latitude": 26.28656873,
+      "longitude": -81.6149916,
+      "address_point_id": 108020,
+      "building_id": 110678
+    },
+    {
+      "address": "360 37th AVE NE, Naples, FL",
+      "latitude": 26.30059172,
+      "longitude": -81.60038508,
+      "address_point_id": 137826,
+      "building_id": 119091
+    },
+    {
+      "address": "3620 4th AVE SE, Naples, FL",
+      "latitude": 26.22272818,
+      "longitude": -81.53397023,
+      "address_point_id": 187880,
+      "building_id": 74740
+    },
+    {
+      "address": "2911 6th AVE SE, Naples, FL",
+      "latitude": 26.21999783,
+      "longitude": -81.54835924,
+      "address_point_id": 193071,
+      "building_id": 73731
+    },
+    {
+      "address": "981 22nd AVE NE, Naples, FL",
+      "latitude": 26.27108175,
+      "longitude": -81.587234,
+      "address_point_id": 102977,
+      "building_id": 102714
+    },
+    {
+      "address": "280 Everglades BLVD S, Naples, FL",
+      "latitude": 26.2254426,
+      "longitude": -81.54349264,
+      "address_point_id": 108616,
+      "building_id": 75825
+    },
+    {
+      "address": "151 25th AVE NW, Naples, FL",
+      "latitude": 26.2798187,
+      "longitude": -81.6101144,
+      "address_point_id": 157115,
+      "building_id": 106976
+    },
+    {
+      "address": "2415 45th AVE NE, Naples, FL",
+      "latitude": 26.31459247,
+      "longitude": -81.5597742,
+      "address_point_id": 128494,
+      "building_id": 124817
+    },
+    {
+      "address": "2730 8th AVE NE, Naples, FL",
+      "latitude": 26.24440262,
+      "longitude": -81.5522601,
+      "address_point_id": 89460,
+      "building_id": 84676
+    },
+    {
+      "address": "1425 47th AVE NE, Naples, FL",
+      "latitude": 26.31818736,
+      "longitude": -81.58012794,
+      "address_point_id": 166350,
+      "building_id": 126439
+    },
+    {
+      "address": "121 2nd ST SE, Naples, FL",
+      "latitude": 26.22760874,
+      "longitude": -81.60304386,
+      "address_point_id": 179467,
+      "building_id": 76972
+    },
+    {
+      "address": "3943 29th AVE NE, Naples, FL",
+      "latitude": 26.28610411,
+      "longitude": -81.52716062,
+      "address_point_id": 5817,
+      "building_id": 110210
+    },
+    {
+      "address": "3980 33rd AVE NE, Naples, FL",
+      "latitude": 26.29224812,
+      "longitude": -81.52678536,
+      "address_point_id": 151252,
+      "building_id": 113883
+    },
+    {
+      "address": "667 5th ST NW, Naples, FL",
+      "latitude": 26.2418282,
+      "longitude": -81.61809825,
+      "address_point_id": 269419,
+      "building_id": 83655
+    },
+    {
+      "address": "260 12th AVE NW, Naples, FL",
+      "latitude": 26.25110457,
+      "longitude": -81.61236965,
+      "address_point_id": 130256,
+      "building_id": 87921
+    },
+    {
+      "address": "265 31st ST NW, Naples, FL",
+      "latitude": 26.23392269,
+      "longitude": -81.67047547,
+      "address_point_id": 18772,
+      "building_id": 79676
+    },
+    {
+      "address": "320 12th ST NE, Naples, FL",
+      "latitude": 26.2358872,
+      "longitude": -81.58174573,
+      "address_point_id": 77292,
+      "building_id": 80318
+    },
+    {
+      "address": "931 18th AVE NE, Naples, FL",
+      "latitude": 26.26358185,
+      "longitude": -81.58807885,
+      "address_point_id": 104565,
+      "building_id": 96657
+    },
+    {
+      "address": "2894 31st AVE NE, Naples, FL",
+      "latitude": 26.28840034,
+      "longitude": -81.54964493,
+      "address_point_id": 79347,
+      "building_id": 111585
+    },
+    {
+      "address": "2730 35th AVE NE, Naples, FL",
+      "latitude": 26.29560082,
+      "longitude": -81.55318571,
+      "address_point_id": 181461,
+      "building_id": 115841
+    },
+    {
+      "address": "1721 Golden Gate BLVD W, Naples, FL",
+      "latitude": 26.23019906,
+      "longitude": -81.6414393,
+      "address_point_id": 94559,
+      "building_id": 78027
+    },
+    {
+      "address": "190 2nd ST SE, Naples, FL",
+      "latitude": 26.22643169,
+      "longitude": -81.60170242,
+      "address_point_id": 154755,
+      "building_id": 76396
+    },
+    {
+      "address": "1333 20th AVE NE, Naples, FL",
+      "latitude": 26.26728437,
+      "longitude": -81.58044413,
+      "address_point_id": 180228,
+      "building_id": 99550
+    },
+    {
+      "address": "210 16th ST NE, Naples, FL",
+      "latitude": 26.23414659,
+      "longitude": -81.57372023,
+      "address_point_id": 127660,
+      "building_id": 79603
+    },
+    {
+      "address": "1340 16th AVE NE, Naples, FL",
+      "latitude": 26.2588934,
+      "longitude": -81.57999375,
+      "address_point_id": 191215,
+      "building_id": 93030
+    },
+    {
+      "address": "111 Everglades BLVD N, Naples, FL",
+      "latitude": 26.23258838,
+      "longitude": -81.54550437,
+      "address_point_id": 32995,
+      "building_id": 78912
+    },
+    {
+      "address": "2040 21st ST SW, Naples, FL",
+      "latitude": 26.19205168,
+      "longitude": -81.64789752,
+      "address_point_id": 272165,
+      "building_id": 62205
+    },
+    {
+      "address": "3471 27th AVE SW, Naples, FL",
+      "latitude": 26.18055731,
+      "longitude": -81.676657,
+      "address_point_id": 72579,
+      "building_id": 56740
+    },
+    {
+      "address": "671 7th ST SW, Naples, FL",
+      "latitude": 26.21756095,
+      "longitude": -81.62142902,
+      "address_point_id": 116041,
+      "building_id": 72931
+    },
+    {
+      "address": "3515 47th AVE NE, Naples, FL",
+      "latitude": 26.31857443,
+      "longitude": -81.53753989,
+      "address_point_id": 283996,
+      "building_id": 126545
+    },
+    {
+      "address": "100 10th AVE NE, Naples, FL",
+      "latitude": 26.24790493,
+      "longitude": -81.60515809,
+      "address_point_id": 61160,
+      "building_id": 86235
+    },
+    {
+      "address": "4260 18th ST NE, Naples, FL",
+      "latitude": 26.30970831,
+      "longitude": -81.57161551,
+      "address_point_id": 22007,
+      "building_id": 122858
+    },
+    {
+      "address": "3580 4th AVE NE, Naples, FL",
+      "latitude": 26.23742085,
+      "longitude": -81.53480033,
+      "address_point_id": 55001,
+      "building_id": 80935
+    },
+    {
+      "address": "3672 41st AVE NE, Naples, FL",
+      "latitude": 26.30667436,
+      "longitude": -81.53416896,
+      "address_point_id": 270988,
+      "building_id": 121698
+    },
+    {
+      "address": "1964 12th AVE NE, Naples, FL",
+      "latitude": 26.25177062,
+      "longitude": -81.56717247,
+      "address_point_id": 288694,
+      "building_id": 88177
+    },
+    {
+      "address": "3691 10th AVE NE, Naples, FL",
+      "latitude": 26.2494611,
+      "longitude": -81.53283871,
+      "address_point_id": 65665,
+      "building_id": 86979
+    },
+    {
+      "address": "790 10th ST NE, Naples, FL",
+      "latitude": 26.24442441,
+      "longitude": -81.5861688,
+      "address_point_id": 104693,
+      "building_id": 84698
+    },
+    {
+      "address": "1530 27th ST SW, Naples, FL",
+      "latitude": 26.20109104,
+      "longitude": -81.65985983,
+      "address_point_id": 123162,
+      "building_id": 66511
+    },
+    {
+      "address": "4301 43rd AVE NE, Naples, FL",
+      "latitude": 26.31136176,
+      "longitude": -81.52197997,
+      "address_point_id": 278244,
+      "building_id": 123440
+    },
+    {
+      "address": "4261 20th AVE NE, Naples, FL",
+      "latitude": 26.26813906,
+      "longitude": -81.52241651,
+      "address_point_id": 25519,
+      "building_id": 100201
+    },
+    {
+      "address": "1991 16th AVE SW, Naples, FL",
+      "latitude": 26.20084823,
+      "longitude": -81.64642696,
+      "address_point_id": 190897,
+      "building_id": 66376
+    },
+    {
+      "address": "264 17th ST NW, Naples, FL",
+      "latitude": 26.23387765,
+      "longitude": -81.64031986,
+      "address_point_id": 48536,
+      "building_id": 79595
+    },
+    {
+      "address": "4289 8th ST NE, Naples, FL",
+      "latitude": 26.30988583,
+      "longitude": -81.59304715,
+      "address_point_id": 279230,
+      "building_id": 122930
+    },
+    {
+      "address": "2511 20th AVE NE, Naples, FL",
+      "latitude": 26.26791022,
+      "longitude": -81.55712291,
+      "address_point_id": 27322,
+      "building_id": 100090
+    },
+    {
+      "address": "3760 47th AVE NE, Naples, FL",
+      "latitude": 26.31762652,
+      "longitude": -81.5325186,
+      "address_point_id": 121516,
+      "building_id": 126063
+    },
+    {
+      "address": "3381 21st AVE SW, Naples, FL",
+      "latitude": 26.19141237,
+      "longitude": -81.67521522,
+      "address_point_id": 62576,
+      "building_id": 61993
+    },
+    {
+      "address": "1755 16th AVE SW, Naples, FL",
+      "latitude": 26.2008246,
+      "longitude": -81.64171008,
+      "address_point_id": 126551,
+      "building_id": 66380
+    },
+    {
+      "address": "2869 27th AVE NE, Naples, FL",
+      "latitude": 26.28215089,
+      "longitude": -81.55015,
+      "address_point_id": 288380,
+      "building_id": 108118
+    },
+    {
+      "address": "2781 52nd AVE NE, Naples, FL",
+      "latitude": 26.32837289,
+      "longitude": -81.55227631,
+      "address_point_id": 25277,
+      "building_id": 134515
+    },
+    {
+      "address": "2410 Golden Gate BLVD E, Naples, FL",
+      "latitude": 26.22984035,
+      "longitude": -81.55746482,
+      "address_point_id": 59308,
+      "building_id": 77760
+    },
+    {
+      "address": "3261 10th AVE NE, Naples, FL",
+      "latitude": 26.24941054,
+      "longitude": -81.54154864,
+      "address_point_id": 135433,
+      "building_id": 86962
+    },
+    {
+      "address": "971 13th ST SW, Naples, FL",
+      "latitude": 26.21180022,
+      "longitude": -81.63310544,
+      "address_point_id": 138655,
+      "building_id": 71143
+    },
+    {
+      "address": "3745 27th AVE NE, Naples, FL",
+      "latitude": 26.28234812,
+      "longitude": -81.53228654,
+      "address_point_id": 45561,
+      "building_id": 108203
+    },
+    {
+      "address": "3611 27th AVE SW, Naples, FL",
+      "latitude": 26.18041879,
+      "longitude": -81.67871824,
+      "address_point_id": 82667,
+      "building_id": 56732
+    },
+    {
+      "address": "2785 31st AVE NE, Naples, FL",
+      "latitude": 26.28942177,
+      "longitude": -81.55195411,
+      "address_point_id": 186957,
+      "building_id": 112249
+    },
+    {
+      "address": "2460 27th AVE NE, Naples, FL",
+      "latitude": 26.28106345,
+      "longitude": -81.55835909,
+      "address_point_id": 96788,
+      "building_id": 107521
+    },
+    {
+      "address": "1282 47th AVE NE, Naples, FL",
+      "latitude": 26.31686113,
+      "longitude": -81.58273653,
+      "address_point_id": 280345,
+      "building_id": 125770
+    },
+    {
+      "address": "1730 20th AVE NE, Naples, FL",
+      "latitude": 26.26616954,
+      "longitude": -81.57202609,
+      "address_point_id": 71699,
+      "building_id": 98512
+    },
+    {
+      "address": "3821 20th AVE NE, Naples, FL",
+      "latitude": 26.26760519,
+      "longitude": -81.53050269,
+      "address_point_id": 51192,
+      "building_id": 99666
+    },
+    {
+      "address": "990 17th ST SW, Naples, FL",
+      "latitude": 26.21125338,
+      "longitude": -81.64014264,
+      "address_point_id": 137664,
+      "building_id": 70938
+    },
+    {
+      "address": "1330 29th ST SW, Naples, FL",
+      "latitude": 26.20477204,
+      "longitude": -81.66394823,
+      "address_point_id": 162853,
+      "building_id": 68256
+    },
+    {
+      "address": "1985 47th AVE NE, Naples, FL",
+      "latitude": 26.31829937,
+      "longitude": -81.56878506,
+      "address_point_id": 140167,
+      "building_id": 126455
+    },
+    {
+      "address": "537 1st ST NW, Naples, FL",
+      "latitude": 26.2399625,
+      "longitude": -81.60954327,
+      "address_point_id": 288422,
+      "building_id": 82605
+    },
+    {
+      "address": "2741 12th AVE NE, Naples, FL",
+      "latitude": 26.25385976,
+      "longitude": -81.55282525,
+      "address_point_id": 257601,
+      "building_id": 89264
+    },
+    {
+      "address": "2522 24th AVE NE, Naples, FL",
+      "latitude": 26.27362634,
+      "longitude": -81.55692865,
+      "address_point_id": 279549,
+      "building_id": 103873
+    },
+    {
+      "address": "3735 43rd AVE NE, Naples, FL",
+      "latitude": 26.3114213,
+      "longitude": -81.53268391,
+      "address_point_id": 79092,
+      "building_id": 123512
+    },
+    {
+      "address": "3271 8th AVE SE, Naples, FL",
+      "latitude": 26.21660591,
+      "longitude": -81.54098532,
+      "address_point_id": 100185,
+      "building_id": 72491
+    },
+    {
+      "address": "261 7th ST NW, Naples, FL",
+      "latitude": 26.23443837,
+      "longitude": -81.62145735,
+      "address_point_id": 142320,
+      "building_id": 79791
+    },
+    {
+      "address": "580 27th ST SW, Naples, FL",
+      "latitude": 26.21849044,
+      "longitude": -81.66037174,
+      "address_point_id": 187918,
+      "building_id": 73258
+    },
+    {
+      "address": "3640 24th AVE SE, Naples, FL",
+      "latitude": 26.18570927,
+      "longitude": -81.53297706,
+      "address_point_id": 19949,
+      "building_id": 58485
+    },
+    {
+      "address": "717 29th ST SW, Naples, FL",
+      "latitude": 26.21611377,
+      "longitude": -81.66620464,
+      "address_point_id": 262303,
+      "building_id": 72507
+    },
+    {
+      "address": "417 1st ST SW, Naples, FL",
+      "latitude": 26.22220054,
+      "longitude": -81.6092436,
+      "address_point_id": 276528,
+      "building_id": 74642
+    },
+    {
+      "address": "2785 10th AVE SE, Naples, FL",
+      "latitude": 26.21292041,
+      "longitude": -81.5507475,
+      "address_point_id": 138940,
+      "building_id": 71332
+    },
+    {
+      "address": "3371 22nd AVE NE, Naples, FL",
+      "latitude": 26.27108249,
+      "longitude": -81.53949088,
+      "address_point_id": 156698,
+      "building_id": 102474
+    },
+    {
+      "address": "3490 18th AVE NE, Naples, FL",
+      "latitude": 26.26301106,
+      "longitude": -81.53709379,
+      "address_point_id": 142047,
+      "building_id": 96042
+    },
+    {
+      "address": "180 12th AVE NE, Naples, FL",
+      "latitude": 26.2511178,
+      "longitude": -81.60315978,
+      "address_point_id": 135521,
+      "building_id": 87909
+    },
+    {
+      "address": "820 20th AVE NW, Naples, FL",
+      "latitude": 26.2657092,
+      "longitude": -81.62436624,
+      "address_point_id": 24888,
+      "building_id": 98299
+    },
+    {
+      "address": "4860 20th AVE SE, Naples, FL",
+      "latitude": 26.19401933,
+      "longitude": -81.50824331,
+      "address_point_id": 139099,
+      "building_id": 62863
+    },
+    {
+      "address": "4182 22nd AVE NE, Naples, FL",
+      "latitude": 26.27038023,
+      "longitude": -81.52409039,
+      "address_point_id": 286848,
+      "building_id": 101975
+    },
+    {
+      "address": "3830 22nd AVE SE, Naples, FL",
+      "latitude": 26.19016035,
+      "longitude": -81.52921426,
+      "address_point_id": 273120,
+      "building_id": 60945
+    },
+    {
+      "address": "4030 27th AVE NE, Naples, FL",
+      "latitude": 26.28120484,
+      "longitude": -81.525189,
+      "address_point_id": 122901,
+      "building_id": 107550
+    },
+    {
+      "address": "740 31st ST NW, Naples, FL",
+      "latitude": 26.24257533,
+      "longitude": -81.66882513,
+      "address_point_id": 71054,
+      "building_id": 84133
+    },
+    {
+      "address": "4281 14th AVE SE, Naples, FL",
+      "latitude": 26.206066,
+      "longitude": -81.52005034,
+      "address_point_id": 32477,
+      "building_id": 68574
+    },
+    {
+      "address": "3795 47th AVE NE, Naples, FL",
+      "latitude": 26.31859939,
+      "longitude": -81.53184388,
+      "address_point_id": 2315,
+      "building_id": 126581
+    },
+    {
+      "address": "4165 24th AVE NE, Naples, FL",
+      "latitude": 26.27497673,
+      "longitude": -81.524534,
+      "address_point_id": 200524,
+      "building_id": 104293
+    },
+    {
+      "address": "1920 Everglades BLVD S, Naples, FL",
+      "latitude": 26.19577681,
+      "longitude": -81.54327415,
+      "address_point_id": 192635,
+      "building_id": 63915
+    },
+    {
+      "address": "310 4th ST NE, Naples, FL",
+      "latitude": 26.23559106,
+      "longitude": -81.59805204,
+      "address_point_id": 170051,
+      "building_id": 80230
+    },
+    {
+      "address": "3322 35th AVE NE, Naples, FL",
+      "latitude": 26.29581689,
+      "longitude": -81.54099343,
+      "address_point_id": 275039,
+      "building_id": 115992
+    },
+    {
+      "address": "2236 23rd ST SW, Naples, FL",
+      "latitude": 26.18881402,
+      "longitude": -81.65087155,
+      "address_point_id": 162926,
+      "building_id": 60436
+    },
+    {
+      "address": "3270 32nd AVE SE, Naples, FL",
+      "latitude": 26.17195423,
+      "longitude": -81.54041899,
+      "address_point_id": 211866,
+      "building_id": 53321
+    },
+    {
+      "address": "240 10th ST NE, Naples, FL",
+      "latitude": 26.23457955,
+      "longitude": -81.58583003,
+      "address_point_id": 164760,
+      "building_id": 79783
+    },
+    {
+      "address": "3951 2nd AVE SE, Naples, FL",
+      "latitude": 26.22838576,
+      "longitude": -81.52783627,
+      "address_point_id": 45388,
+      "building_id": 77171
+    },
+    {
+      "address": "79 41st AVE NE, Naples, FL",
+      "latitude": 26.30855111,
+      "longitude": -81.60629548,
+      "address_point_id": 275984,
+      "building_id": 122532
+    },
+    {
+      "address": "3671 18th AVE NE, Naples, FL",
+      "latitude": 26.26414295,
+      "longitude": -81.53359447,
+      "address_point_id": 62623,
+      "building_id": 96992
+    },
+    {
+      "address": "123 13th ST NW, Naples, FL",
+      "latitude": 26.2316214,
+      "longitude": -81.63413381,
+      "address_point_id": 171876,
+      "building_id": 78653
+    },
+    {
+      "address": "4859 22nd ST NE, Naples, FL",
+      "latitude": 26.32058065,
+      "longitude": -81.56493181,
+      "address_point_id": 6573,
+      "building_id": 128022
+    },
+    {
+      "address": "4538 18th ST NE, Naples, FL",
+      "latitude": 26.31466793,
+      "longitude": -81.57168785,
+      "address_point_id": 64903,
+      "building_id": 124882
+    },
+    {
+      "address": "2817 31st AVE NE, Naples, FL",
+      "latitude": 26.28947036,
+      "longitude": -81.55122662,
+      "address_point_id": 264868,
+      "building_id": 112321
+    },
+    {
+      "address": "3010 2nd ST NE, Naples, FL",
+      "latitude": 26.28861316,
+      "longitude": -81.60274365,
+      "address_point_id": 92070,
+      "building_id": 111878
+    },
+    {
+      "address": "3840 18th AVE NE, Naples, FL",
+      "latitude": 26.26309295,
+      "longitude": -81.53010391,
+      "address_point_id": 144271,
+      "building_id": 96100
+    },
+    {
+      "address": "2781 4th AVE NE, Naples, FL",
+      "latitude": 26.23835024,
+      "longitude": -81.55109291,
+      "address_point_id": 185565,
+      "building_id": 81441
+    },
+    {
+      "address": "4390 12th AVE SE, Naples, FL",
+      "latitude": 26.2085448,
+      "longitude": -81.51792631,
+      "address_point_id": 26988,
+      "building_id": 69764
+    },
+    {
+      "address": "555 19th ST SW, Naples, FL",
+      "latitude": 26.21952148,
+      "longitude": -81.64580123,
+      "address_point_id": 52017,
+      "building_id": 73708
+    },
+    {
+      "address": "3675 41st AVE NE, Naples, FL",
+      "latitude": 26.30758745,
+      "longitude": -81.53413822,
+      "address_point_id": 124687,
+      "building_id": 122099
+    },
+    {
+      "address": "170 16th ST SE, Naples, FL",
+      "latitude": 26.22726112,
+      "longitude": -81.57353773,
+      "address_point_id": 211731,
+      "building_id": 76720
+    },
+    {
+      "address": "3511 23rd AVE SW, Naples, FL",
+      "latitude": 26.18777644,
+      "longitude": -81.67679378,
+      "address_point_id": 62559,
+      "building_id": 59988
+    },
+    {
+      "address": "2461 4th AVE NE, Naples, FL",
+      "latitude": 26.23836728,
+      "longitude": -81.55761875,
+      "address_point_id": 86820,
+      "building_id": 81470
+    },
+    {
+      "address": "4270 47th AVE NE, Naples, FL",
+      "latitude": 26.31755373,
+      "longitude": -81.52285355,
+      "address_point_id": 61326,
+      "building_id": 126027
+    },
+    {
+      "address": "747 33rd AVE NW, Naples, FL",
+      "latitude": 26.29409944,
+      "longitude": -81.62255412,
+      "address_point_id": 263768,
+      "building_id": 115122
+    },
+    {
+      "address": "440 14th AVE NE, Naples, FL",
+      "latitude": 26.2549966,
+      "longitude": -81.59822396,
+      "address_point_id": 161436,
+      "building_id": 90023
+    },
+    {
+      "address": "1264 14th AVE NE, Naples, FL",
+      "latitude": 26.25504724,
+      "longitude": -81.58148976,
+      "address_point_id": 264796,
+      "building_id": 90034
+    },
+    {
+      "address": "1481 Wilson BLVD N, Naples, FL",
+      "latitude": 26.25683522,
+      "longitude": -81.60778754,
+      "address_point_id": 96714,
+      "building_id": 91495
+    },
+    {
+      "address": "521 24th AVE NE, Naples, FL",
+      "latitude": 26.27430635,
+      "longitude": -81.59696101,
+      "address_point_id": 155728,
+      "building_id": 104054
+    },
+    {
+      "address": "2747 43rd AVE NE, Naples, FL",
+      "latitude": 26.31110316,
+      "longitude": -81.55304729,
+      "address_point_id": 256707,
+      "building_id": 123354
+    },
+    {
+      "address": "560 Everglades BLVD S, Naples, FL",
+      "latitude": 26.22032268,
+      "longitude": -81.54362035,
+      "address_point_id": 79583,
+      "building_id": 73877
+    },
+    {
+      "address": "3411 15th AVE SW, Naples, FL",
+      "latitude": 26.20204445,
+      "longitude": -81.67549307,
+      "address_point_id": 73616,
+      "building_id": 66995
+    },
+    {
+      "address": "2112 16th ST NE, Naples, FL",
+      "latitude": 26.2687743,
+      "longitude": -81.5740502,
+      "address_point_id": 262738,
+      "building_id": 100844
+    },
+    {
+      "address": "2885 37th AVE NE, Naples, FL",
+      "latitude": 26.30084103,
+      "longitude": -81.54995427,
+      "address_point_id": 186895,
+      "building_id": 119079
+    },
+    {
+      "address": "180 10th AVE NW, Naples, FL",
+      "latitude": 26.24737722,
+      "longitude": -81.61082667,
+      "address_point_id": 142999,
+      "building_id": 85986
+    },
+    {
+      "address": "871 22nd ST SE, Naples, FL",
+      "latitude": 26.21455694,
+      "longitude": -81.56283692,
+      "address_point_id": 177559,
+      "building_id": 189608
+    },
+    {
+      "address": "183 14th AVE NE, Naples, FL",
+      "latitude": 26.25602335,
+      "longitude": -81.60329172,
+      "address_point_id": 276829,
+      "building_id": 90844
+    },
+    {
+      "address": "423 21st ST SW, Naples, FL",
+      "latitude": 26.22176968,
+      "longitude": -81.64959255,
+      "address_point_id": 254399,
+      "building_id": 74559
+    },
+    {
+      "address": "3691 4th AVE NE, Naples, FL",
+      "latitude": 26.23861778,
+      "longitude": -81.53273396,
+      "address_point_id": 188469,
+      "building_id": 81540
+    },
+    {
+      "address": "530 4th ST NE, Naples, FL",
+      "latitude": 26.23976784,
+      "longitude": -81.59771202,
+      "address_point_id": 77280,
+      "building_id": 82474
+    },
+    {
+      "address": "160 Everglades BLVD S, Naples, FL",
+      "latitude": 26.22766549,
+      "longitude": -81.54388149,
+      "address_point_id": 143961,
+      "building_id": 76879
+    },
+    {
+      "address": "4041 6th AVE SE, Naples, FL",
+      "latitude": 26.22041959,
+      "longitude": -81.5251224,
+      "address_point_id": 3678,
+      "building_id": 73894
+    },
+    {
+      "address": "3390 11th AVE SW, Naples, FL",
+      "latitude": 26.2077512,
+      "longitude": -81.6746103,
+      "address_point_id": 121242,
+      "building_id": 69689
+    },
+    {
+      "address": "4395 14th ST NE, Naples, FL",
+      "latitude": 26.31200657,
+      "longitude": -81.58124722,
+      "address_point_id": 174174,
+      "building_id": 123835
+    },
+    {
+      "address": "3746 33rd AVE NE, Naples, FL",
+      "latitude": 26.2922712,
+      "longitude": -81.53240604,
+      "address_point_id": 277522,
+      "building_id": 113923
+    },
+    {
+      "address": "650 25th ST SW, Naples, FL",
+      "latitude": 26.21763662,
+      "longitude": -81.65622554,
+      "address_point_id": 129832,
+      "building_id": 73004
+    },
+    {
+      "address": "2448 43rd AVE NE, Naples, FL",
+      "latitude": 26.31004363,
+      "longitude": -81.55894877,
+      "address_point_id": 139094,
+      "building_id": 122946
+    },
+    {
+      "address": "4445 2nd AVE NE, Naples, FL",
+      "latitude": 26.23523624,
+      "longitude": -81.51743451,
+      "address_point_id": 184291,
+      "building_id": 79946
+    },
+    {
+      "address": "1998 Everglades BLVD S, Naples, FL",
+      "latitude": 26.19458878,
+      "longitude": -81.54339202,
+      "address_point_id": 282624,
+      "building_id": 63215
+    },
+    {
+      "address": "3340 3rd AVE SW, Naples, FL",
+      "latitude": 26.22265641,
+      "longitude": -81.67389328,
+      "address_point_id": 109014,
+      "building_id": 74959
+    },
+    {
+      "address": "3341 6th AVE SE, Naples, FL",
+      "latitude": 26.22019509,
+      "longitude": -81.53960331,
+      "address_point_id": 18826,
+      "building_id": 73799
+    },
+    {
+      "address": "3765 18th AVE NE, Naples, FL",
+      "latitude": 26.2641623,
+      "longitude": -81.53158371,
+      "address_point_id": 118948,
+      "building_id": 96995
+    },
+    {
+      "address": "2160 18th AVE NE, Naples, FL",
+      "latitude": 26.26233916,
+      "longitude": -81.56336996,
+      "address_point_id": 124230,
+      "building_id": 95623
+    },
+    {
+      "address": "4965 46th ST NE, Naples, FL",
+      "latitude": 26.32292144,
+      "longitude": -81.51675884,
+      "address_point_id": 27440,
+      "building_id": 129617
+    },
+    {
+      "address": "1480 19th ST SW, Naples, FL",
+      "latitude": 26.2023884,
+      "longitude": -81.64418759,
+      "address_point_id": 166363,
+      "building_id": 67075
+    },
+    {
+      "address": "1159 16th AVE SW, Naples, FL",
+      "latitude": 26.20076963,
+      "longitude": -81.62961036,
+      "address_point_id": 277459,
+      "building_id": 66262
+    },
+    {
+      "address": "2646 39th AVE NE, Naples, FL",
+      "latitude": 26.30283378,
+      "longitude": -81.55493996,
+      "address_point_id": 281349,
+      "building_id": 120274
+    },
+    {
+      "address": "4719 6th AVE NE, Naples, FL",
+      "latitude": 26.24229731,
+      "longitude": -81.51193218,
+      "address_point_id": 278321,
+      "building_id": 83672
+    },
+    {
+      "address": "3971 8th AVE SE, Naples, FL",
+      "latitude": 26.21676856,
+      "longitude": -81.52632691,
+      "address_point_id": 107376,
+      "building_id": 72547
+    },
+    {
+      "address": "1340 8th ST NE, Naples, FL",
+      "latitude": 26.25461363,
+      "longitude": -81.59004776,
+      "address_point_id": 127783,
+      "building_id": 89744
+    },
+    {
+      "address": "3031 6th ST NW, Naples, FL",
+      "latitude": 26.28886286,
+      "longitude": -81.62133187,
+      "address_point_id": 72093,
+      "building_id": 112032
+    },
+    {
+      "address": "216 14th ST SE, Naples, FL",
+      "latitude": 26.22627503,
+      "longitude": -81.57765691,
+      "address_point_id": 263590,
+      "building_id": 76255
+    },
+    {
+      "address": "3241 22nd AVE SE, Naples, FL",
+      "latitude": 26.19146852,
+      "longitude": -81.54039226,
+      "address_point_id": 127062,
+      "building_id": 61719
+    },
+    {
+      "address": "5270 42nd ST NE, Naples, FL",
+      "latitude": 26.32850068,
+      "longitude": -81.52373839,
+      "address_point_id": 267084,
+      "building_id": 134518
+    },
+    {
+      "address": "2350 22nd AVE NE, Naples, FL",
+      "latitude": 26.27000741,
+      "longitude": -81.56057622,
+      "address_point_id": 258389,
+      "building_id": 101842
+    },
+    {
+      "address": "670 22nd ST NE, Naples, FL",
+      "latitude": 26.24273982,
+      "longitude": -81.5618671,
+      "address_point_id": 148812,
+      "building_id": 83998
+    },
+    {
+      "address": "1040 16th AVE NE, Naples, FL",
+      "latitude": 26.25813522,
+      "longitude": -81.58599301,
+      "address_point_id": 44435,
+      "building_id": 92422
+    },
+    {
+      "address": "1896 Everglades BLVD N, Naples, FL",
+      "latitude": 26.26511547,
+      "longitude": -81.54451577,
+      "address_point_id": 252485,
+      "building_id": 97651
+    },
+    {
+      "address": "2940 16th AVE SE, Naples, FL",
+      "latitude": 26.2008882,
+      "longitude": -81.54762756,
+      "address_point_id": 196917,
+      "building_id": 66179
+    },
+    {
+      "address": "4215 14th ST NE, Naples, FL",
+      "latitude": 26.30918814,
+      "longitude": -81.58102182,
+      "address_point_id": 128123,
+      "building_id": 122714
+    },
+    {
+      "address": "741 7th ST SW, Naples, FL",
+      "latitude": 26.21609105,
+      "longitude": -81.62109392,
+      "address_point_id": 78714,
+      "building_id": 72428
+    },
+    {
+      "address": "2840 29th AVE NE, Naples, FL",
+      "latitude": 26.28474035,
+      "longitude": -81.55056533,
+      "address_point_id": 130137,
+      "building_id": 109433
+    },
+    {
+      "address": "4465 27th AVE NE, Naples, FL",
+      "latitude": 26.28299336,
+      "longitude": -81.51825015,
+      "address_point_id": 118013,
+      "building_id": 108561
+    },
+    {
+      "address": "120 23rd ST SW, Naples, FL",
+      "latitude": 26.2272137,
+      "longitude": -81.65198729,
+      "address_point_id": 188997,
+      "building_id": 76884
+    },
+    {
+      "address": "3171 32nd AVE SE, Naples, FL",
+      "latitude": 26.17261613,
+      "longitude": -81.54311048,
+      "address_point_id": 143001,
+      "building_id": 53562
+    },
+    {
+      "address": "333 5th ST SW, Naples, FL",
+      "latitude": 26.22351281,
+      "longitude": -81.61756781,
+      "address_point_id": 211664,
+      "building_id": 75179
+    },
+    {
+      "address": "231 10th AVE NE, Naples, FL",
+      "latitude": 26.24873529,
+      "longitude": -81.60211001,
+      "address_point_id": 157697,
+      "building_id": 86735
+    },
+    {
+      "address": "2932 29th AVE NE, Naples, FL",
+      "latitude": 26.28475746,
+      "longitude": -81.54875268,
+      "address_point_id": 258008,
+      "building_id": 109448
+    },
+    {
+      "address": "881 3rd ST NW, Naples, FL",
+      "latitude": 26.24557593,
+      "longitude": -81.61358555,
+      "address_point_id": 127150,
+      "building_id": 85181
+    },
+    {
+      "address": "510 25th ST SW, Naples, FL",
+      "latitude": 26.21991289,
+      "longitude": -81.65642857,
+      "address_point_id": 68189,
+      "building_id": 73905
+    },
+    {
+      "address": "860 20th ST SE, Naples, FL",
+      "latitude": 26.21463524,
+      "longitude": -81.56510034,
+      "address_point_id": 106763,
+      "building_id": 71806
+    },
+    {
+      "address": "670 31st ST SW, Naples, FL",
+      "latitude": 26.21705404,
+      "longitude": -81.66781873,
+      "address_point_id": 62423,
+      "building_id": 72854
+    },
+    {
+      "address": "3321 5th AVE SW, Naples, FL",
+      "latitude": 26.22052388,
+      "longitude": -81.67335067,
+      "address_point_id": 78957,
+      "building_id": 74200
+    },
+    {
+      "address": "3760 20th AVE SE, Naples, FL",
+      "latitude": 26.19391375,
+      "longitude": -81.53070918,
+      "address_point_id": 82742,
+      "building_id": 62873
+    },
+    {
+      "address": "231 1st ST NW, Naples, FL",
+      "latitude": 26.23418649,
+      "longitude": -81.60964437,
+      "address_point_id": 129007,
+      "building_id": 79666
+    },
+    {
+      "address": "4345 24th AVE SE, Naples, FL",
+      "latitude": 26.18766313,
+      "longitude": -81.51875604,
+      "address_point_id": 258503,
+      "building_id": 59477
+    },
+    {
+      "address": "3305 17th AVE SW, Naples, FL",
+      "latitude": 26.19865398,
+      "longitude": -81.67293606,
+      "address_point_id": 180332,
+      "building_id": 65578
+    },
+    {
+      "address": "245 35th AVE NW, Naples, FL",
+      "latitude": 26.29804801,
+      "longitude": -81.61258318,
+      "address_point_id": 163739,
+      "building_id": 117692
+    },
+    {
+      "address": "2011 14th AVE NE, Naples, FL",
+      "latitude": 26.25653854,
+      "longitude": -81.56626871,
+      "address_point_id": 179473,
+      "building_id": 91158
+    },
+    {
+      "address": "3725 35th AVE NE, Naples, FL",
+      "latitude": 26.29679778,
+      "longitude": -81.53292203,
+      "address_point_id": 170836,
+      "building_id": 116655
+    },
+    {
+      "address": "981 Wilson BLVD N, Naples, FL",
+      "latitude": 26.24775345,
+      "longitude": -81.60756398,
+      "address_point_id": 176971,
+      "building_id": 86162
+    },
+    {
+      "address": "141 Golden Gate BLVD E, Naples, FL",
+      "latitude": 26.23065017,
+      "longitude": -81.60388747,
+      "address_point_id": 178843,
+      "building_id": 78187
+    },
+    {
+      "address": "2871 2nd ST NE, Naples, FL",
+      "latitude": 26.28589489,
+      "longitude": -81.6047726,
+      "address_point_id": 171839,
+      "building_id": 110271
+    },
+    {
+      "address": "4160 24th AVE NE, Naples, FL",
+      "latitude": 26.27406933,
+      "longitude": -81.5246256,
+      "address_point_id": 126049,
+      "building_id": 103934
+    },
+    {
+      "address": "880 20th ST SE, Naples, FL",
+      "latitude": 26.21415289,
+      "longitude": -81.56539715,
+      "address_point_id": 142342,
+      "building_id": 71714
+    },
+    {
+      "address": "4486 18th ST NE, Naples, FL",
+      "latitude": 26.31367705,
+      "longitude": -81.57136075,
+      "address_point_id": 278516,
+      "building_id": 124484
+    },
+    {
+      "address": "410 35th AVE NE, Naples, FL",
+      "latitude": 26.29686514,
+      "longitude": -81.59929364,
+      "address_point_id": 148735,
+      "building_id": 116902
+    },
+    {
+      "address": "4507 43rd AVE NE, Naples, FL",
+      "latitude": 26.31145673,
+      "longitude": -81.51830214,
+      "address_point_id": 263767,
+      "building_id": 123487
+    },
+    {
+      "address": "665 14th AVE NW, Naples, FL",
+      "latitude": 26.25593888,
+      "longitude": -81.62044568,
+      "address_point_id": 169545,
+      "building_id": 90849
+    },
+    {
+      "address": "3711 18th AVE NE, Naples, FL",
+      "latitude": 26.26409135,
+      "longitude": -81.53277064,
+      "address_point_id": 187386,
+      "building_id": 96882
+    },
+    {
+      "address": "500 15th ST NW, Naples, FL",
+      "latitude": 26.23885359,
+      "longitude": -81.63633143,
+      "address_point_id": 159810,
+      "building_id": 81967
+    },
+    {
+      "address": "410 37th AVE NW, Naples, FL",
+      "latitude": 26.30049692,
+      "longitude": -81.61601185,
+      "address_point_id": 180925,
+      "building_id": 119033
+    },
+    {
+      "address": "4435 12th AVE NE, Naples, FL",
+      "latitude": 26.2535797,
+      "longitude": -81.51785843,
+      "address_point_id": 72775,
+      "building_id": 89073
+    },
+    {
+      "address": "690 29th ST NW, Naples, FL",
+      "latitude": 26.24178199,
+      "longitude": -81.66467757,
+      "address_point_id": 100131,
+      "building_id": 83735
+    },
+    {
+      "address": "3467 12th AVE SE, Naples, FL",
+      "latitude": 26.20937449,
+      "longitude": -81.53695406,
+      "address_point_id": 289569,
+      "building_id": 70090
+    },
+    {
+      "address": "171 18th AVE NE, Naples, FL",
+      "latitude": 26.26338338,
+      "longitude": -81.60377625,
+      "address_point_id": 118603,
+      "building_id": 96554
+    },
+    {
+      "address": "2663 54th AVE NE, Naples, FL",
+      "latitude": 26.33111565,
+      "longitude": -81.55503759,
+      "address_point_id": 255663,
+      "building_id": 135915
+    },
+    {
+      "address": "4870 20th AVE SE, Naples, FL",
+      "latitude": 26.19407272,
+      "longitude": -81.50800389,
+      "address_point_id": 128469,
+      "building_id": 62874
+    },
+    {
+      "address": "3330 3rd AVE NW, Naples, FL",
+      "latitude": 26.23382381,
+      "longitude": -81.67378944,
+      "address_point_id": 133790,
+      "building_id": 79642
+    },
+    {
+      "address": "3685 16th AVE SE, Naples, FL",
+      "latitude": 26.20194531,
+      "longitude": -81.53236035,
+      "address_point_id": 154878,
+      "building_id": 66645
+    },
+    {
+      "address": "1980 23rd ST SW, Naples, FL",
+      "latitude": 26.19322956,
+      "longitude": -81.65144455,
+      "address_point_id": 124495,
+      "building_id": 62739
+    },
+    {
+      "address": "4057 58th AVE NE, Naples, FL",
+      "latitude": 26.33862798,
+      "longitude": -81.52636729,
+      "address_point_id": 281940,
+      "building_id": 137711
+    },
+    {
+      "address": "2638 18th AVE SE, Naples, FL",
+      "latitude": 26.19719595,
+      "longitude": -81.5528802,
+      "address_point_id": 144775,
+      "building_id": 64655
+    },
+    {
+      "address": "730 11th ST SW, Naples, FL",
+      "latitude": 26.21616987,
+      "longitude": -81.62808349,
+      "address_point_id": 179849,
+      "building_id": 72468
+    },
+    {
+      "address": "5375 40th ST NE, Naples, FL",
+      "latitude": 26.33026699,
+      "longitude": -81.52911015,
+      "address_point_id": 44452,
+      "building_id": 135484
+    },
+    {
+      "address": "3305 15th AVE SW, Naples, FL",
+      "latitude": 26.20224395,
+      "longitude": -81.6729716,
+      "address_point_id": 95373,
+      "building_id": 67090
+    },
+    {
+      "address": "790 14th ST SE, Naples, FL",
+      "latitude": 26.21574596,
+      "longitude": -81.57757413,
+      "address_point_id": 74958,
+      "building_id": 72248
+    },
+    {
+      "address": "2751 14th AVE NE, Naples, FL",
+      "latitude": 26.25654482,
+      "longitude": -81.55241802,
+      "address_point_id": 6005,
+      "building_id": 91128
+    },
+    {
+      "address": "3644 27th AVE NE, Naples, FL",
+      "latitude": 26.28134053,
+      "longitude": -81.53428291,
+      "address_point_id": 160016,
+      "building_id": 107593
+    },
+    {
+      "address": "4088 6th AVE SE, Naples, FL",
+      "latitude": 26.21933607,
+      "longitude": -81.52420119,
+      "address_point_id": 273876,
+      "building_id": 73409
+    },
+    {
+      "address": "3660 19th AVE SW, Naples, FL",
+      "latitude": 26.19352014,
+      "longitude": -81.67973945,
+      "address_point_id": 175570,
+      "building_id": 62989
+    },
+    {
+      "address": "1692 19th ST SW, Naples, FL",
+      "latitude": 26.19734774,
+      "longitude": -81.64393234,
+      "address_point_id": 170930,
+      "building_id": 65026
+    },
+    {
+      "address": "3365 27th AVE NE, Naples, FL",
+      "latitude": 26.28222334,
+      "longitude": -81.53996743,
+      "address_point_id": 180041,
+      "building_id": 108131
+    },
+    {
+      "address": "720 Everglades BLVD S, Naples, FL",
+      "latitude": 26.21758425,
+      "longitude": -81.54358174,
+      "address_point_id": 63813,
+      "building_id": 72858
+    },
+    {
+      "address": "2890 24th AVE NE, Naples, FL",
+      "latitude": 26.27384343,
+      "longitude": -81.54944629,
+      "address_point_id": 190543,
+      "building_id": 103900
+    },
+    {
+      "address": "661 Golden Gate BLVD E, Naples, FL",
+      "latitude": 26.23054282,
+      "longitude": -81.59328494,
+      "address_point_id": 139332,
+      "building_id": 78097
+    },
+    {
+      "address": "4147 12th AVE NE, Naples, FL",
+      "latitude": 26.25331428,
+      "longitude": -81.5237129,
+      "address_point_id": 275652,
+      "building_id": 88930
+    },
+    {
+      "address": "1361 22nd AVE NE, Naples, FL",
+      "latitude": 26.27092094,
+      "longitude": -81.57970684,
+      "address_point_id": 161525,
+      "building_id": 102475
+    },
+    {
+      "address": "2995 56th AVE NE, Naples, FL",
+      "latitude": 26.33482847,
+      "longitude": -81.54651698,
+      "address_point_id": 127729,
+      "building_id": 136903
+    },
+    {
+      "address": "2625 10th AVE SE, Naples, FL",
+      "latitude": 26.21292837,
+      "longitude": -81.55422223,
+      "address_point_id": 151942,
+      "building_id": 71339
+    },
+    {
+      "address": "4353 18th ST NE, Naples, FL",
+      "latitude": 26.31143138,
+      "longitude": -81.5727527,
+      "address_point_id": 285297,
+      "building_id": 123583
+    },
+    {
+      "address": "2037 23rd ST SW, Naples, FL",
+      "latitude": 26.19302704,
+      "longitude": -81.6530216,
+      "address_point_id": 157624,
+      "building_id": 62646
+    },
+    {
+      "address": "1149 12th AVE NE, Naples, FL",
+      "latitude": 26.25293362,
+      "longitude": -81.58394086,
+      "address_point_id": 250996,
+      "building_id": 88872
+    },
+    {
+      "address": "3630 22nd AVE NE, Naples, FL",
+      "latitude": 26.27009993,
+      "longitude": -81.5343498,
+      "address_point_id": 269358,
+      "building_id": 101840
+    },
+    {
+      "address": "292 24th AVE NW, Naples, FL",
+      "latitude": 26.27286631,
+      "longitude": -81.61314581,
+      "address_point_id": 270870,
+      "building_id": 103712
+    },
+    {
+      "address": "1130 11th ST SW, Naples, FL",
+      "latitude": 26.20885194,
+      "longitude": -81.62804979,
+      "address_point_id": 256054,
+      "building_id": 70063
+    },
+    {
+      "address": "221 15th ST SW, Naples, FL",
+      "latitude": 26.22557585,
+      "longitude": -81.63773715,
+      "address_point_id": 122153,
+      "building_id": 76049
+    },
+    {
+      "address": "3480 4th AVE SE, Naples, FL",
+      "latitude": 26.22272924,
+      "longitude": -81.53664794,
+      "address_point_id": 75395,
+      "building_id": 74752
+    },
+    {
+      "address": "522 17th ST SW, Naples, FL",
+      "latitude": 26.22007044,
+      "longitude": -81.64007194,
+      "address_point_id": 289041,
+      "building_id": 73942
+    },
+    {
+      "address": "4122 14th AVE SE, Naples, FL",
+      "latitude": 26.20472945,
+      "longitude": -81.52367107,
+      "address_point_id": 277663,
+      "building_id": 67984
+    },
+    {
+      "address": "836 14th ST SE, Naples, FL",
+      "latitude": 26.21489491,
+      "longitude": -81.57756144,
+      "address_point_id": 260384,
+      "building_id": 71897
+    },
+    {
+      "address": "4015 31st AVE NE, Naples, FL",
+      "latitude": 26.28965623,
+      "longitude": -81.52581694,
+      "address_point_id": 122827,
+      "building_id": 112377
+    },
+    {
+      "address": "2696 8th AVE SE, Naples, FL",
+      "latitude": 26.21513111,
+      "longitude": -81.55281822,
+      "address_point_id": 271980,
+      "building_id": 71960
+    },
+    {
+      "address": "2280 16th ST NE, Naples, FL",
+      "latitude": 26.27187893,
+      "longitude": -81.57407231,
+      "address_point_id": 102906,
+      "building_id": 103102
+    },
+    {
+      "address": "2350 Everglades BLVD N, Naples, FL",
+      "latitude": 26.27319823,
+      "longitude": -81.54442393,
+      "address_point_id": 267510,
+      "building_id": 103680
+    },
+    {
+      "address": "520 12th AVE NW, Naples, FL",
+      "latitude": 26.25116707,
+      "longitude": -81.61759858,
+      "address_point_id": 140617,
+      "building_id": 87974
+    },
+    {
+      "address": "370 33rd AVE NW, Naples, FL",
+      "latitude": 26.29260707,
+      "longitude": -81.61498581,
+      "address_point_id": 123981,
+      "building_id": 114297
+    },
+    {
+      "address": "2270 17th ST SW, Naples, FL",
+      "latitude": 26.18776489,
+      "longitude": -81.63953037,
+      "address_point_id": 65267,
+      "building_id": 59796
+    },
+    {
+      "address": "3716 39th AVE NE, Naples, FL",
+      "latitude": 26.30299107,
+      "longitude": -81.53326131,
+      "address_point_id": 286851,
+      "building_id": 120309
+    },
+    {
+      "address": "261 2nd ST SE, Naples, FL",
+      "latitude": 26.22505714,
+      "longitude": -81.60321419,
+      "address_point_id": 47084,
+      "building_id": 75756
+    },
+    {
+      "address": "2419 6th AVE SE, Naples, FL",
+      "latitude": 26.22010042,
+      "longitude": -81.55737486,
+      "address_point_id": 279925,
+      "building_id": 73852
+    },
+    {
+      "address": "2390 6th ST NW, Naples, FL",
+      "latitude": 26.27680255,
+      "longitude": -81.61903004,
+      "address_point_id": 188361,
+      "building_id": 105181
+    },
+    {
+      "address": "1544 Everglades BLVD S, Naples, FL",
+      "latitude": 26.20257107,
+      "longitude": -81.54359774,
+      "address_point_id": 281378,
+      "building_id": 66958
+    },
+    {
+      "address": "2991 6th ST NW, Naples, FL",
+      "latitude": 26.28803503,
+      "longitude": -81.62045479,
+      "address_point_id": 165814,
+      "building_id": 111505
+    },
+    {
+      "address": "630 18th AVE NW, Naples, FL",
+      "latitude": 26.26214998,
+      "longitude": -81.62011463,
+      "address_point_id": 128270,
+      "building_id": 95631
+    },
+    {
+      "address": "4530 54th AVE NE, Naples, FL",
+      "latitude": 26.33048522,
+      "longitude": -81.5177047,
+      "address_point_id": 186738,
+      "building_id": 135617
+    },
+    {
+      "address": "730 33rd AVE NW, Naples, FL",
+      "latitude": 26.2926152,
+      "longitude": -81.62209615,
+      "address_point_id": 107296,
+      "building_id": 114270
+    },
+    {
+      "address": "640 6th ST NE, Naples, FL",
+      "latitude": 26.24164781,
+      "longitude": -81.59397129,
+      "address_point_id": 106523,
+      "building_id": 83473
+    },
+    {
+      "address": "1370 16th AVE SW, Naples, FL",
+      "latitude": 26.1997096,
+      "longitude": -81.63383403,
+      "address_point_id": 69659,
+      "building_id": 65874
+    },
+    {
+      "address": "3311 8th AVE SE, Naples, FL",
+      "latitude": 26.21675694,
+      "longitude": -81.54016763,
+      "address_point_id": 128346,
+      "building_id": 72551
+    },
+    {
+      "address": "1775 47th AVE NE, Naples, FL",
+      "latitude": 26.31817699,
+      "longitude": -81.57318241,
+      "address_point_id": 74151,
+      "building_id": 126367
+    },
+    {
+      "address": "4498 8th ST NE, Naples, FL",
+      "latitude": 26.31354166,
+      "longitude": -81.5918556,
+      "address_point_id": 271009,
+      "building_id": 124468
+    },
+    {
+      "address": "4890 10th ST NE, Naples, FL",
+      "latitude": 26.32098712,
+      "longitude": -81.58779758,
+      "address_point_id": 76154,
+      "building_id": 128391
+    },
+    {
+      "address": "982 18th AVE NE, Naples, FL",
+      "latitude": 26.26239629,
+      "longitude": -81.58726079,
+      "address_point_id": 271960,
+      "building_id": 95809
+    },
+    {
+      "address": "2280 4th AVE SE, Naples, FL",
+      "latitude": 26.22233895,
+      "longitude": -81.56018019,
+      "address_point_id": 183688,
+      "building_id": 74663
+    },
+    {
+      "address": "3783 10th AVE SE, Naples, FL",
+      "latitude": 26.21303222,
+      "longitude": -81.5306486,
+      "address_point_id": 53908,
+      "building_id": 71335
+    },
+    {
+      "address": "2687 56th AVE NE, Naples, FL",
+      "latitude": 26.33491353,
+      "longitude": -81.55439539,
+      "address_point_id": 265517,
+      "building_id": 136942
+    },
+    {
+      "address": "4049 6th AVE NE, Naples, FL",
+      "latitude": 26.24226514,
+      "longitude": -81.52546984,
+      "address_point_id": 281268,
+      "building_id": 83677
+    },
+    {
+      "address": "3760 33rd AVE NE, Naples, FL",
+      "latitude": 26.29226809,
+      "longitude": -81.53221855,
+      "address_point_id": 167101,
+      "building_id": 113926
+    },
+    {
+      "address": "3435 26th AVE SE, Naples, FL",
+      "latitude": 26.18370281,
+      "longitude": -81.53721057,
+      "address_point_id": 47438,
+      "building_id": 57635
+    },
+    {
+      "address": "3485 43rd AVE NE, Naples, FL",
+      "latitude": 26.31124826,
+      "longitude": -81.53802687,
+      "address_point_id": 59521,
+      "building_id": 123412
+    },
+    {
+      "address": "3401 21st AVE SW, Naples, FL",
+      "latitude": 26.19123844,
+      "longitude": -81.67575371,
+      "address_point_id": 108112,
+      "building_id": 61901
+    },
+    {
+      "address": "570 16th ST SE, Naples, FL",
+      "latitude": 26.21986497,
+      "longitude": -81.57365012,
+      "address_point_id": 117573,
+      "building_id": 73724
+    },
+    {
+      "address": "1861 19th ST SW, Naples, FL",
+      "latitude": 26.19552813,
+      "longitude": -81.64529745,
+      "address_point_id": 170202,
+      "building_id": 63969
+    },
+    {
+      "address": "811 4th ST SE, Naples, FL",
+      "latitude": 26.2151907,
+      "longitude": -81.59980322,
+      "address_point_id": 51596,
+      "building_id": 72025
+    },
+    {
+      "address": "1541 8th ST NE, Naples, FL",
+      "latitude": 26.25815143,
+      "longitude": -81.59217542,
+      "address_point_id": 55703,
+      "building_id": 92462
+    },
+    {
+      "address": "2311 52nd AVE NE, Naples, FL",
+      "latitude": 26.32793432,
+      "longitude": -81.56184453,
+      "address_point_id": 133232,
+      "building_id": 134141
+    },
+    {
+      "address": "3245 39th AVE NE, Naples, FL",
+      "latitude": 26.30394592,
+      "longitude": -81.54266904,
+      "address_point_id": 268642,
+      "building_id": 120697
+    },
+    {
+      "address": "3310 19th AVE SW, Naples, FL",
+      "latitude": 26.19367786,
+      "longitude": -81.67275722,
+      "address_point_id": 128977,
+      "building_id": 63069
+    },
+    {
+      "address": "490 14th AVE NE, Naples, FL",
+      "latitude": 26.25520818,
+      "longitude": -81.5971238,
+      "address_point_id": 176509,
+      "building_id": 90210
+    },
+    {
+      "address": "1276 29th ST SW, Naples, FL",
+      "latitude": 26.20562415,
+      "longitude": -81.66377683,
+      "address_point_id": 69172,
+      "building_id": 68648
+    },
+    {
+      "address": "1474 Wilson BLVD N, Naples, FL",
+      "latitude": 26.25666472,
+      "longitude": -81.606548,
+      "address_point_id": 278657,
+      "building_id": 91389
+    },
+    {
+      "address": "2661 52nd AVE NE, Naples, FL",
+      "latitude": 26.32758383,
+      "longitude": -81.55480226,
+      "address_point_id": 16775,
+      "building_id": 133701
+    },
+    {
+      "address": "680 14th ST SE, Naples, FL",
+      "latitude": 26.21781054,
+      "longitude": -81.57751978,
+      "address_point_id": 18327,
+      "building_id": 72948
+    },
+    {
+      "address": "1045 11th ST SW, Naples, FL",
+      "latitude": 26.21056892,
+      "longitude": -81.62915491,
+      "address_point_id": 277112,
+      "building_id": 70743
+    },
+    {
+      "address": "4679 Everglades BLVD N, Naples, FL",
+      "latitude": 26.31760781,
+      "longitude": -81.54646122,
+      "address_point_id": 185463,
+      "building_id": 126098
+    },
+    {
+      "address": "4166 43rd AVE NE, Naples, FL",
+      "latitude": 26.31050851,
+      "longitude": -81.52490657,
+      "address_point_id": 276286,
+      "building_id": 123096
+    },
+    {
+      "address": "570 23rd ST NW, Naples, FL",
+      "latitude": 26.23957465,
+      "longitude": -81.65233506,
+      "address_point_id": 249915,
+      "building_id": 82521
+    },
+    {
+      "address": "3467 54th AVE NE, Naples, FL",
+      "latitude": 26.33131977,
+      "longitude": -81.53851014,
+      "address_point_id": 6525,
+      "building_id": 135973
+    },
+    {
+      "address": "2494 Everglades BLVD N, Naples, FL",
+      "latitude": 26.27599694,
+      "longitude": -81.54458363,
+      "address_point_id": 275474,
+      "building_id": 104681
+    },
+    {
+      "address": "3410 12th AVE NE, Naples, FL",
+      "latitude": 26.25151254,
+      "longitude": -81.53850103,
+      "address_point_id": 174783,
+      "building_id": 88023
+    },
+    {
+      "address": "231 37th AVE NE, Naples, FL",
+      "latitude": 26.30144144,
+      "longitude": -81.60301564,
+      "address_point_id": 140130,
+      "building_id": 119477
+    },
+    {
+      "address": "3172 18th AVE NE, Naples, FL",
+      "latitude": 26.26296726,
+      "longitude": -81.54339813,
+      "address_point_id": 279760,
+      "building_id": 95984
+    },
+    {
+      "address": "581 8th ST SE, Naples, FL",
+      "latitude": 26.21922281,
+      "longitude": -81.59109347,
+      "address_point_id": 54703,
+      "building_id": 73476
+    },
+    {
+      "address": "4330 14th ST NE, Naples, FL",
+      "latitude": 26.31092935,
+      "longitude": -81.57984904,
+      "address_point_id": 86970,
+      "building_id": 123323
+    },
+    {
+      "address": "1485 47th AVE NE, Naples, FL",
+      "latitude": 26.31810078,
+      "longitude": -81.57870797,
+      "address_point_id": 191448,
+      "building_id": 126337
+    },
+    {
+      "address": "3860 12th AVE NE, Naples, FL",
+      "latitude": 26.25213177,
+      "longitude": -81.52950161,
+      "address_point_id": 270497,
+      "building_id": 88263
+    },
+    {
+      "address": "1771 Golden Gate BLVD W, Naples, FL",
+      "latitude": 26.22989059,
+      "longitude": -81.64234442,
+      "address_point_id": 153471,
+      "building_id": 77907
+    },
+    {
+      "address": "311 3rd ST SW, Naples, FL",
+      "latitude": 26.22400168,
+      "longitude": -81.61347182,
+      "address_point_id": 147699,
+      "building_id": 75365
+    },
+    {
+      "address": "2460 29th AVE NE, Naples, FL",
+      "latitude": 26.28456186,
+      "longitude": -81.5582753,
+      "address_point_id": 66075,
+      "building_id": 109349
+    },
+    {
+      "address": "4570 20th ST NE, Naples, FL",
+      "latitude": 26.31530822,
+      "longitude": -81.56773453,
+      "address_point_id": 153143,
+      "building_id": 125174
+    },
+    {
+      "address": "3240 14th AVE SE, Naples, FL",
+      "latitude": 26.20459128,
+      "longitude": -81.54126567,
+      "address_point_id": 92574,
+      "building_id": 67953
+    },
+    {
+      "address": "361 27th ST SW, Naples, FL",
+      "latitude": 26.22235493,
+      "longitude": -81.66197997,
+      "address_point_id": 101282,
+      "building_id": 74815
+    },
+    {
+      "address": "3011 12th AVE NE, Naples, FL",
+      "latitude": 26.25299373,
+      "longitude": -81.54728743,
+      "address_point_id": 272632,
+      "building_id": 88828
+    },
+    {
+      "address": "421 35th AVE NE, Naples, FL",
+      "latitude": 26.2987032,
+      "longitude": -81.59930917,
+      "address_point_id": 104715,
+      "building_id": 117965
+    },
+    {
+      "address": "330 31st ST SW, Naples, FL",
+      "latitude": 26.22299675,
+      "longitude": -81.66842049,
+      "address_point_id": 169369,
+      "building_id": 75055
+    },
+    {
+      "address": "326 Golden Gate BLVD E, Naples, FL",
+      "latitude": 26.22902806,
+      "longitude": -81.60037088,
+      "address_point_id": 258119,
+      "building_id": 77527
+    },
+    {
+      "address": "2626 10th AVE NE, Naples, FL",
+      "latitude": 26.24806241,
+      "longitude": -81.55419236,
+      "address_point_id": 117940,
+      "building_id": 86205
+    },
+    {
+      "address": "5282 44th ST NE, Naples, FL",
+      "latitude": 26.3289207,
+      "longitude": -81.51975042,
+      "address_point_id": 281000,
+      "building_id": 134855
+    },
+    {
+      "address": "1811 23rd ST SW, Naples, FL",
+      "latitude": 26.19615659,
+      "longitude": -81.65348725,
+      "address_point_id": 126792,
+      "building_id": 64383
+    },
+    {
+      "address": "3444 12th AVE NE, Naples, FL",
+      "latitude": 26.25215968,
+      "longitude": -81.53793496,
+      "address_point_id": 256226,
+      "building_id": 88272
+    },
+    {
+      "address": "3590 10th AVE NE, Naples, FL",
+      "latitude": 26.24848114,
+      "longitude": -81.53489223,
+      "address_point_id": 105656,
+      "building_id": 86407
+    },
+    {
+      "address": "942 16th ST NE, Naples, FL",
+      "latitude": 26.24729574,
+      "longitude": -81.57400422,
+      "address_point_id": 278088,
+      "building_id": 85861
+    },
+    {
+      "address": "2841 37th AVE NE, Naples, FL",
+      "latitude": 26.30016813,
+      "longitude": -81.55076713,
+      "address_point_id": 268568,
+      "building_id": 118651
+    },
+    {
+      "address": "828 11th ST SW, Naples, FL",
+      "latitude": 26.21416521,
+      "longitude": -81.62701057,
+      "address_point_id": 94723,
+      "building_id": 71762
+    },
+    {
+      "address": "1261 13th ST SW, Naples, FL",
+      "latitude": 26.20644891,
+      "longitude": -81.63326598,
+      "address_point_id": 152871,
+      "building_id": 69035
+    },
+    {
+      "address": "5480 Everglades BLVD N, Naples, FL",
+      "latitude": 26.33180025,
+      "longitude": -81.5453659,
+      "address_point_id": 268559,
+      "building_id": 136054
+    },
+    {
+      "address": "905 15th ST SW, Naples, FL",
+      "latitude": 26.21367126,
+      "longitude": -81.63741383,
+      "address_point_id": 118837,
+      "building_id": 71644
+    },
+    {
+      "address": "981 14th AVE NE, Naples, FL",
+      "latitude": 26.2564075,
+      "longitude": -81.58691474,
+      "address_point_id": 154771,
+      "building_id": 91151
+    },
+    {
+      "address": "3870 14th AVE NE, Naples, FL",
+      "latitude": 26.25570175,
+      "longitude": -81.5290376,
+      "address_point_id": 17960,
+      "building_id": 90348
+    },
+    {
+      "address": "131 19th ST NW, Naples, FL",
+      "latitude": 26.2319395,
+      "longitude": -81.64565111,
+      "address_point_id": 172928,
+      "building_id": 78816
+    },
+    {
+      "address": "670 14th AVE NW, Naples, FL",
+      "latitude": 26.25453563,
+      "longitude": -81.62095555,
+      "address_point_id": 83782,
+      "building_id": 89795
+    },
+    {
+      "address": "2860 22nd AVE SE, Naples, FL",
+      "latitude": 26.18973237,
+      "longitude": -81.54798065,
+      "address_point_id": 196571,
+      "building_id": 60726
+    },
+    {
+      "address": "4948 12th ST NE, Naples, FL",
+      "latitude": 26.32165529,
+      "longitude": -81.58400528,
+      "address_point_id": 155738,
+      "building_id": 128900
+    },
+    {
+      "address": "186 17th ST SW, Naples, FL",
+      "latitude": 26.22615198,
+      "longitude": -81.6401462,
+      "address_point_id": 271393,
+      "building_id": 76340
+    },
+    {
+      "address": "3260 35th AVE NE, Naples, FL",
+      "latitude": 26.29577869,
+      "longitude": -81.54235698,
+      "address_point_id": 114339,
+      "building_id": 115989
+    },
+    {
+      "address": "3275 56th AVE NE, Naples, FL",
+      "latitude": 26.33486244,
+      "longitude": -81.54238594,
+      "address_point_id": 258033,
+      "building_id": 136916
+    },
+    {
+      "address": "2341 17th ST SW, Naples, FL",
+      "latitude": 26.18669694,
+      "longitude": -81.64095198,
+      "address_point_id": 3011,
+      "building_id": 59191
+    },
+    {
+      "address": "1891 19th ST SW, Naples, FL",
+      "latitude": 26.19496142,
+      "longitude": -81.64512161,
+      "address_point_id": 182420,
+      "building_id": 63689
+    },
+    {
+      "address": "3535 29th AVE SW, Naples, FL",
+      "latitude": 26.17678478,
+      "longitude": -81.67704959,
+      "address_point_id": 120042,
+      "building_id": 55173
+    },
+    {
+      "address": "330 23rd ST NW, Naples, FL",
+      "latitude": 26.2355131,
+      "longitude": -81.65275894,
+      "address_point_id": 49600,
+      "building_id": 80295
+    },
+    {
+      "address": "4215 22nd AVE SE, Naples, FL",
+      "latitude": 26.19196605,
+      "longitude": -81.52139285,
+      "address_point_id": 162343,
+      "building_id": 61950
+    },
+    {
+      "address": "3646 56th AVE NE, Naples, FL",
+      "latitude": 26.33384146,
+      "longitude": -81.53506785,
+      "address_point_id": 287915,
+      "building_id": 136502
+    },
+    {
+      "address": "3410 17th AVE SW, Naples, FL",
+      "latitude": 26.19739415,
+      "longitude": -81.67493531,
+      "address_point_id": 117923,
+      "building_id": 65125
+    },
+    {
+      "address": "3730 27th AVE NE, Naples, FL",
+      "latitude": 26.28134525,
+      "longitude": -81.53251535,
+      "address_point_id": 159622,
+      "building_id": 107607
+    },
+    {
+      "address": "3936 29th AVE NE, Naples, FL",
+      "latitude": 26.28513871,
+      "longitude": -81.52775508,
+      "address_point_id": 121025,
+      "building_id": 109618
+    },
+    {
+      "address": "4348 12th ST NE, Naples, FL",
+      "latitude": 26.31109455,
+      "longitude": -81.58373483,
+      "address_point_id": 180172,
+      "building_id": 123435
+    },
+    {
+      "address": "1760 16th ST NE, Naples, FL",
+      "latitude": 26.26227407,
+      "longitude": -81.57427209,
+      "address_point_id": 64455,
+      "building_id": 95571
+    },
+    {
+      "address": "3880 52nd AVE NE, Naples, FL",
+      "latitude": 26.32683985,
+      "longitude": -81.53008399,
+      "address_point_id": 108448,
+      "building_id": 132786
+    },
+    {
+      "address": "3570 3rd AVE NW, Naples, FL",
+      "latitude": 26.2337702,
+      "longitude": -81.67854593,
+      "address_point_id": 58348,
+      "building_id": 79623
+    },
+    {
+      "address": "490 8th ST NE, Naples, FL",
+      "latitude": 26.23894625,
+      "longitude": -81.58988709,
+      "address_point_id": 187894,
+      "building_id": 81893
+    },
+    {
+      "address": "4535 8th ST NE, Naples, FL",
+      "latitude": 26.31453391,
+      "longitude": -81.59292276,
+      "address_point_id": 130374,
+      "building_id": 124860
+    },
+    {
+      "address": "385 31st ST NW, Naples, FL",
+      "latitude": 26.23615384,
+      "longitude": -81.67001057,
+      "address_point_id": 181424,
+      "building_id": 80630
+    },
+    {
+      "address": "3540 10th AVE SE, Naples, FL",
+      "latitude": 26.21188662,
+      "longitude": -81.53543331,
+      "address_point_id": 136515,
+      "building_id": 71023
+    },
+    {
+      "address": "2990 Wilson BLVD N, Naples, FL",
+      "latitude": 26.28752349,
+      "longitude": -81.606698,
+      "address_point_id": 32122,
+      "building_id": 111259
+    },
+    {
+      "address": "360 21st ST NW, Naples, FL",
+      "latitude": 26.23598085,
+      "longitude": -81.64865213,
+      "address_point_id": 169180,
+      "building_id": 80480
+    },
+    {
+      "address": "936 Everglades BLVD S, Naples, FL",
+      "latitude": 26.21378801,
+      "longitude": -81.54351732,
+      "address_point_id": 33020,
+      "building_id": 71547
+    },
+    {
+      "address": "581 20th ST NE, Naples, FL",
+      "latitude": 26.24100666,
+      "longitude": -81.56685618,
+      "address_point_id": 149954,
+      "building_id": 83054
+    },
+    {
+      "address": "41 35th AVE NE, Naples, FL",
+      "latitude": 26.29786449,
+      "longitude": -81.60642144,
+      "address_point_id": 188084,
+      "building_id": 117474
+    },
+    {
+      "address": "3671 27th AVE SW, Naples, FL",
+      "latitude": 26.18026962,
+      "longitude": -81.67975798,
+      "address_point_id": 63824,
+      "building_id": 56652
+    },
+    {
+      "address": "281 39th AVE NE, Naples, FL",
+      "latitude": 26.30514341,
+      "longitude": -81.60199935,
+      "address_point_id": 146137,
+      "building_id": 121273
+    },
+    {
+      "address": "450 7th ST NW, Naples, FL",
+      "latitude": 26.23811314,
+      "longitude": -81.62045162,
+      "address_point_id": 162712,
+      "building_id": 81466
+    },
+    {
+      "address": "2415 39th AVE NE, Naples, FL",
+      "latitude": 26.30379379,
+      "longitude": -81.55962662,
+      "address_point_id": 143828,
+      "building_id": 120655
+    },
+    {
+      "address": "2745 29th AVE NE, Naples, FL",
+      "latitude": 26.28572312,
+      "longitude": -81.55260205,
+      "address_point_id": 142151,
+      "building_id": 109994
+    },
+    {
+      "address": "2878 45th AVE NE, Naples, FL",
+      "latitude": 26.31371568,
+      "longitude": -81.55036683,
+      "address_point_id": 121812,
+      "building_id": 124463
+    },
+    {
+      "address": "1121 29th ST SW, Naples, FL",
+      "latitude": 26.20869178,
+      "longitude": -81.66559579,
+      "address_point_id": 84206,
+      "building_id": 70067
+    },
+    {
+      "address": "2626 24th AVE SE, Naples, FL",
+      "latitude": 26.18612008,
+      "longitude": -81.55386938,
+      "address_point_id": 284301,
+      "building_id": 58750
+    },
+    {
+      "address": "880 2nd ST NE, Naples, FL",
+      "latitude": 26.2458517,
+      "longitude": -81.60222105,
+      "address_point_id": 154598,
+      "building_id": 85306
+    },
+    {
+      "address": "1041 24th AVE NE, Naples, FL",
+      "latitude": 26.27491579,
+      "longitude": -81.5861986,
+      "address_point_id": 16787,
+      "building_id": 104350
+    },
+    {
+      "address": "1822 23rd ST SW, Naples, FL",
+      "latitude": 26.19606068,
+      "longitude": -81.65161922,
+      "address_point_id": 262741,
+      "building_id": 64321
+    },
+    {
+      "address": "241 10th ST NE, Naples, FL",
+      "latitude": 26.23443833,
+      "longitude": -81.5873202,
+      "address_point_id": 63296,
+      "building_id": 79743
+    },
+    {
+      "address": "1860 21st ST SW, Naples, FL",
+      "latitude": 26.19549646,
+      "longitude": -81.64771972,
+      "address_point_id": 44498,
+      "building_id": 63974
+    },
+    {
+      "address": "3610 6th AVE NE, Naples, FL",
+      "latitude": 26.24093483,
+      "longitude": -81.53432252,
+      "address_point_id": 174829,
+      "building_id": 82962
+    },
+    {
+      "address": "3842 20th AVE SE, Naples, FL",
+      "latitude": 26.19399409,
+      "longitude": -81.52903329,
+      "address_point_id": 265679,
+      "building_id": 62883
+    },
+    {
+      "address": "2507 56th AVE NE, Naples, FL",
+      "latitude": 26.33471037,
+      "longitude": -81.55810552,
+      "address_point_id": 259690,
+      "building_id": 136853
+    },
+    {
+      "address": "873 Everglades BLVD N, Naples, FL",
+      "latitude": 26.2462859,
+      "longitude": -81.54554094,
+      "address_point_id": 279922,
+      "building_id": 85377
+    },
+    {
+      "address": "1481 11th ST SW, Naples, FL",
+      "latitude": 26.20241242,
+      "longitude": -81.62904314,
+      "address_point_id": 118819,
+      "building_id": 67086
+    },
+    {
+      "address": "4290 33rd AVE NE, Naples, FL",
+      "latitude": 26.29234824,
+      "longitude": -81.52010773,
+      "address_point_id": 101290,
+      "building_id": 113944
+    },
+    {
+      "address": "2967 29th AVE NE, Naples, FL",
+      "latitude": 26.28560916,
+      "longitude": -81.5478471,
+      "address_point_id": 269846,
+      "building_id": 109965
+    },
+    {
+      "address": "3430 32nd AVE SE, Naples, FL",
+      "latitude": 26.17197124,
+      "longitude": -81.53704498,
+      "address_point_id": 23191,
+      "building_id": 53342
+    },
+    {
+      "address": "243 4th ST NE, Naples, FL",
+      "latitude": 26.23430136,
+      "longitude": -81.5992842,
+      "address_point_id": 277091,
+      "building_id": 79689
+    },
+    {
+      "address": "2081 Wilson BLVD N, Naples, FL",
+      "latitude": 26.26788505,
+      "longitude": -81.60782088,
+      "address_point_id": 160891,
+      "building_id": 100266
+    },
+    {
+      "address": "610 21st ST NW, Naples, FL",
+      "latitude": 26.24051917,
+      "longitude": -81.64861641,
+      "address_point_id": 242969,
+      "building_id": 82993
+    },
+    {
+      "address": "434 15th ST SW, Naples, FL",
+      "latitude": 26.22190348,
+      "longitude": -81.63614992,
+      "address_point_id": 270941,
+      "building_id": 74595
+    },
+    {
+      "address": "4432 2nd AVE NE, Naples, FL",
+      "latitude": 26.23348169,
+      "longitude": -81.51758446,
+      "address_point_id": 281001,
+      "building_id": 79231
+    },
+    {
+      "address": "541 1st ST SW, Naples, FL",
+      "latitude": 26.22000723,
+      "longitude": -81.6093919,
+      "address_point_id": 115585,
+      "building_id": 73858
+    },
+    {
+      "address": "2821 14th AVE SE, Naples, FL",
+      "latitude": 26.20587044,
+      "longitude": -81.5501063,
+      "address_point_id": 458,
+      "building_id": 68552
+    },
+    {
+      "address": "560 10th ST NE, Naples, FL",
+      "latitude": 26.24022496,
+      "longitude": -81.58594722,
+      "address_point_id": 167168,
+      "building_id": 82671
+    },
+    {
+      "address": "481 35th AVE NE, Naples, FL",
+      "latitude": 26.2980024,
+      "longitude": -81.59798874,
+      "address_point_id": 93669,
+      "building_id": 117530
+    },
+    {
+      "address": "5265 42nd ST NE, Naples, FL",
+      "latitude": 26.32841348,
+      "longitude": -81.52478186,
+      "address_point_id": 277692,
+      "building_id": 134448
+    },
+    {
+      "address": "2640 6th AVE SE, Naples, FL",
+      "latitude": 26.21893856,
+      "longitude": -81.55378179,
+      "address_point_id": 43533,
+      "building_id": 73249
+    },
+    {
+      "address": "2280 8th ST NE, Naples, FL",
+      "latitude": 26.2717077,
+      "longitude": -81.58968315,
+      "address_point_id": 97457,
+      "building_id": 103081
+    },
+    {
+      "address": "1841 Wilson BLVD N, Naples, FL",
+      "latitude": 26.26348661,
+      "longitude": -81.60764519,
+      "address_point_id": 32109,
+      "building_id": 96639
+    },
+    {
+      "address": "4937 18th ST NE, Naples, FL",
+      "latitude": 26.32188635,
+      "longitude": -81.5730162,
+      "address_point_id": 278463,
+      "building_id": 129018
+    },
+    {
+      "address": "2941 4th ST NE, Naples, FL",
+      "latitude": 26.28725269,
+      "longitude": -81.60020269,
+      "address_point_id": 58162,
+      "building_id": 111040
+    },
+    {
+      "address": "2062 16th AVE NE, Naples, FL",
+      "latitude": 26.25902652,
+      "longitude": -81.56528147,
+      "address_point_id": 279749,
+      "building_id": 93090
+    },
+    {
+      "address": "4023 20th AVE NE, Naples, FL",
+      "latitude": 26.26764632,
+      "longitude": -81.52722801,
+      "address_point_id": 278284,
+      "building_id": 99712
+    },
+    {
+      "address": "1161 15th ST SW, Naples, FL",
+      "latitude": 26.20832336,
+      "longitude": -81.63754309,
+      "address_point_id": 120478,
+      "building_id": 69905
+    },
+    {
+      "address": "1361 9th ST SW, Naples, FL",
+      "latitude": 26.20474617,
+      "longitude": -81.62507974,
+      "address_point_id": 134616,
+      "building_id": 68154
+    },
+    {
+      "address": "3625 20th AVE SE, Naples, FL",
+      "latitude": 26.19491205,
+      "longitude": -81.53356769,
+      "address_point_id": 263608,
+      "building_id": 63400
+    },
+    {
+      "address": "4065 Everglades BLVD N, Naples, FL",
+      "latitude": 26.30635176,
+      "longitude": -81.54638809,
+      "address_point_id": 68213,
+      "building_id": 121590
+    },
+    {
+      "address": "2921 56th AVE NE, Naples, FL",
+      "latitude": 26.33486782,
+      "longitude": -81.54946466,
+      "address_point_id": 50341,
+      "building_id": 136910
+    },
+    {
+      "address": "3039 12th AVE NE, Naples, FL",
+      "latitude": 26.25306726,
+      "longitude": -81.54621949,
+      "address_point_id": 282727,
+      "building_id": 88833
+    },
+    {
+      "address": "385 1st ST SW, Naples, FL",
+      "latitude": 26.22286819,
+      "longitude": -81.61039534,
+      "address_point_id": 101588,
+      "building_id": 74925
+    },
+    {
+      "address": "2411 18th AVE NE, Naples, FL",
+      "latitude": 26.26375433,
+      "longitude": -81.55906961,
+      "address_point_id": 59042,
+      "building_id": 96713
+    },
+    {
+      "address": "1432 16th ST NE, Naples, FL",
+      "latitude": 26.25608496,
+      "longitude": -81.57387637,
+      "address_point_id": 276833,
+      "building_id": 90825
+    },
+    {
+      "address": "280 27th ST NW, Naples, FL",
+      "latitude": 26.23398736,
+      "longitude": -81.66031828,
+      "address_point_id": 87148,
+      "building_id": 79668
+    },
+    {
+      "address": "4011 8th AVE SE, Naples, FL",
+      "latitude": 26.21659531,
+      "longitude": -81.5258462,
+      "address_point_id": 275612,
+      "building_id": 72477
+    },
+    {
+      "address": "3790 29th AVE NE, Naples, FL",
+      "latitude": 26.28489577,
+      "longitude": -81.5313674,
+      "address_point_id": 163420,
+      "building_id": 109474
+    },
+    {
+      "address": "570 6th ST SE, Naples, FL",
+      "latitude": 26.21835759,
+      "longitude": -81.59341567,
+      "address_point_id": 3309,
+      "building_id": 73095
+    },
+    {
+      "address": "540 16th AVE NE, Naples, FL",
+      "latitude": 26.25878238,
+      "longitude": -81.59609879,
+      "address_point_id": 178960,
+      "building_id": 93020
+    },
+    {
+      "address": "3662 22nd AVE NE, Naples, FL",
+      "latitude": 26.27037948,
+      "longitude": -81.53390439,
+      "address_point_id": 287338,
+      "building_id": 102042
+    },
+    {
+      "address": "4993 18th AVE SE, Naples, FL",
+      "latitude": 26.1987052,
+      "longitude": -81.50694087,
+      "address_point_id": 260967,
+      "building_id": 65332
+    },
+    {
+      "address": "2430 6th AVE SE, Naples, FL",
+      "latitude": 26.2189456,
+      "longitude": -81.55701901,
+      "address_point_id": 18784,
+      "building_id": 73266
+    },
+    {
+      "address": "3405 29th AVE SW, Naples, FL",
+      "latitude": 26.17683126,
+      "longitude": -81.67466579,
+      "address_point_id": 61432,
+      "building_id": 55185
+    },
+    {
+      "address": "771 9th ST SW, Naples, FL",
+      "latitude": 26.21548817,
+      "longitude": -81.62540462,
+      "address_point_id": 139104,
+      "building_id": 72227
+    },
+    {
+      "address": "581 10th ST SE, Naples, FL",
+      "latitude": 26.2193555,
+      "longitude": -81.58687025,
+      "address_point_id": 192932,
+      "building_id": 73522
+    },
+    {
+      "address": "540 16th ST NE, Naples, FL",
+      "latitude": 26.2401686,
+      "longitude": -81.57379723,
+      "address_point_id": 79344,
+      "building_id": 82632
+    },
+    {
+      "address": "475 3rd ST SW, Naples, FL",
+      "latitude": 26.22130631,
+      "longitude": -81.61428197,
+      "address_point_id": 96812,
+      "building_id": 74389
+    },
+    {
+      "address": "1445 47th AVE NE, Naples, FL",
+      "latitude": 26.3184535,
+      "longitude": -81.57966803,
+      "address_point_id": 98515,
+      "building_id": 126628
+    },
+    {
+      "address": "2881 4th ST NW, Naples, FL",
+      "latitude": 26.28611143,
+      "longitude": -81.61633173,
+      "address_point_id": 183938,
+      "building_id": 110416
+    },
+    {
+      "address": "3364 11th AVE SW, Naples, FL",
+      "latitude": 26.20852357,
+      "longitude": -81.67415894,
+      "address_point_id": 159558,
+      "building_id": 70024
+    },
+    {
+      "address": "5493 Everglades BLVD N, Naples, FL",
+      "latitude": 26.33234822,
+      "longitude": -81.54668986,
+      "address_point_id": 281060,
+      "building_id": 136145
+    },
+    {
+      "address": "880 21st ST SW, Naples, FL",
+      "latitude": 26.21399953,
+      "longitude": -81.64780845,
+      "address_point_id": 168861,
+      "building_id": 71754
+    },
+    {
+      "address": "1260 15th ST SW, Naples, FL",
+      "latitude": 26.20652815,
+      "longitude": -81.63585391,
+      "address_point_id": 180365,
+      "building_id": 69081
+    },
+    {
+      "address": "1060 20th AVE NE, Naples, FL",
+      "latitude": 26.26561535,
+      "longitude": -81.58579073,
+      "address_point_id": 116091,
+      "building_id": 98057
+    },
+    {
+      "address": "1535 Everglades BLVD S, Naples, FL",
+      "latitude": 26.20285859,
+      "longitude": -81.54517272,
+      "address_point_id": 114340,
+      "building_id": 67130
+    },
+    {
+      "address": "4680 18th AVE SE, Naples, FL",
+      "latitude": 26.19768086,
+      "longitude": -81.51168197,
+      "address_point_id": 19304,
+      "building_id": 64924
+    },
+    {
+      "address": "291 25th ST NW, Naples, FL",
+      "latitude": 26.23443618,
+      "longitude": -81.65811935,
+      "address_point_id": 116210,
+      "building_id": 79865
+    },
+    {
+      "address": "2370 41st AVE NE, Naples, FL",
+      "latitude": 26.3064626,
+      "longitude": -81.56047795,
+      "address_point_id": 157765,
+      "building_id": 121624
+    },
+    {
+      "address": "3571 13th AVE SW, Naples, FL",
+      "latitude": 26.20559171,
+      "longitude": -81.67811164,
+      "address_point_id": 77445,
+      "building_id": 68703
+    },
+    {
+      "address": "108 20th AVE NE, Naples, FL",
+      "latitude": 26.2660773,
+      "longitude": -81.60572892,
+      "address_point_id": 257605,
+      "building_id": 98560
+    },
+    {
+      "address": "341 Golden Gate BLVD E, Naples, FL",
+      "latitude": 26.2306067,
+      "longitude": -81.60045413,
+      "address_point_id": 134708,
+      "building_id": 78146
+    },
+    {
+      "address": "1440 47th AVE NE, Naples, FL",
+      "latitude": 26.31697098,
+      "longitude": -81.57968214,
+      "address_point_id": 212334,
+      "building_id": 125810
+    },
+    {
+      "address": "1420 47th AVE NE, Naples, FL",
+      "latitude": 26.31682064,
+      "longitude": -81.5802281,
+      "address_point_id": 267824,
+      "building_id": 125764
+    },
+    {
+      "address": "3590 8th AVE NE, Naples, FL",
+      "latitude": 26.24474783,
+      "longitude": -81.53482013,
+      "address_point_id": 151726,
+      "building_id": 84721
+    },
+    {
+      "address": "2850 4th ST NE, Naples, FL",
+      "latitude": 26.28594359,
+      "longitude": -81.59808724,
+      "address_point_id": 99780,
+      "building_id": 110263
+    },
+    {
+      "address": "560 25th ST NW, Naples, FL",
+      "latitude": 26.23939619,
+      "longitude": -81.65602874,
+      "address_point_id": 83171,
+      "building_id": 82382
+    },
+    {
+      "address": "4869 22nd AVE SE, Naples, FL",
+      "latitude": 26.19136751,
+      "longitude": -81.50853718,
+      "address_point_id": 126593,
+      "building_id": 61601
+    },
+    {
+      "address": "2941 8th AVE SE, Naples, FL",
+      "latitude": 26.21663197,
+      "longitude": -81.54757421,
+      "address_point_id": 241348,
+      "building_id": 72519
+    },
+    {
+      "address": "1020 16th ST NE, Naples, FL",
+      "latitude": 26.24885815,
+      "longitude": -81.57388807,
+      "address_point_id": 75861,
+      "building_id": 86715
+    },
+    {
+      "address": "1261 21st ST SW, Naples, FL",
+      "latitude": 26.20631044,
+      "longitude": -81.64959762,
+      "address_point_id": 148713,
+      "building_id": 69001
+    },
+    {
+      "address": "1360 29th ST SW, Naples, FL",
+      "latitude": 26.20420382,
+      "longitude": -81.66387225,
+      "address_point_id": 228212,
+      "building_id": 68023
+    },
+    {
+      "address": "2679 27th AVE NE, Naples, FL",
+      "latitude": 26.28208568,
+      "longitude": -81.55383467,
+      "address_point_id": 272531,
+      "building_id": 108085
+    },
+    {
+      "address": "3358 32nd AVE SE, Naples, FL",
+      "latitude": 26.17204671,
+      "longitude": -81.53841775,
+      "address_point_id": 290698,
+      "building_id": 53371
+    },
+    {
+      "address": "2735 12th AVE NE, Naples, FL",
+      "latitude": 26.25362453,
+      "longitude": -81.55323581,
+      "address_point_id": 241736,
+      "building_id": 89172
+    },
+    {
+      "address": "560 4th ST SE, Naples, FL",
+      "latitude": 26.21959123,
+      "longitude": -81.59796682,
+      "address_point_id": 102168,
+      "building_id": 73642
+    },
+    {
+      "address": "3010 Golden Gate BLVD W, Naples, FL",
+      "latitude": 26.22852661,
+      "longitude": -81.66743791,
+      "address_point_id": 116641,
+      "building_id": 77417
+    },
+    {
+      "address": "840 10th AVE NE, Naples, FL",
+      "latitude": 26.24780762,
+      "longitude": -81.58989433,
+      "address_point_id": 164063,
+      "building_id": 86140
+    },
+    {
+      "address": "4121 16th AVE NE, Naples, FL",
+      "latitude": 26.26056645,
+      "longitude": -81.52385724,
+      "address_point_id": 176270,
+      "building_id": 94165
+    },
+    {
+      "address": "1331 31st ST SW, Naples, FL",
+      "latitude": 26.20464349,
+      "longitude": -81.66979006,
+      "address_point_id": 101617,
+      "building_id": 68212
+    },
+    {
+      "address": "4526 43rd AVE NE, Naples, FL",
+      "latitude": 26.31046041,
+      "longitude": -81.51769667,
+      "address_point_id": 270929,
+      "building_id": 123073
+    },
+    {
+      "address": "3810 12th AVE NE, Naples, FL",
+      "latitude": 26.2521377,
+      "longitude": -81.53049807,
+      "address_point_id": 71596,
+      "building_id": 88231
+    },
+    {
+      "address": "4660 2nd AVE SE, Naples, FL",
+      "latitude": 26.22676346,
+      "longitude": -81.51275722,
+      "address_point_id": 159096,
+      "building_id": 76385
+    },
+    {
+      "address": "3770 58th AVE NE, Naples, FL",
+      "latitude": 26.33757108,
+      "longitude": -81.532634,
+      "address_point_id": 179342,
+      "building_id": 137517
+    },
+    {
+      "address": "2435 37th AVE NE, Naples, FL",
+      "latitude": 26.30015936,
+      "longitude": -81.5590744,
+      "address_point_id": 104628,
+      "building_id": 118690
+    },
+    {
+      "address": "2771 24th AVE NE, Naples, FL",
+      "latitude": 26.27468825,
+      "longitude": -81.55200773,
+      "address_point_id": 148341,
+      "building_id": 104166
+    },
+    {
+      "address": "331 18th ST SE, Naples, FL",
+      "latitude": 26.22415853,
+      "longitude": -81.57068467,
+      "address_point_id": 179726,
+      "building_id": 75355
+    },
+    {
+      "address": "4731 14th AVE SE, Naples, FL",
+      "latitude": 26.20595591,
+      "longitude": -81.51103839,
+      "address_point_id": 94965,
+      "building_id": 68515
+    },
+    {
+      "address": "1730 23rd ST SW, Naples, FL",
+      "latitude": 26.19751145,
+      "longitude": -81.65214649,
+      "address_point_id": 157849,
+      "building_id": 65126
+    },
+    {
+      "address": "4270 8th ST NE, Naples, FL",
+      "latitude": 26.30949643,
+      "longitude": -81.59187164,
+      "address_point_id": 165580,
+      "building_id": 122813
+    },
+    {
+      "address": "460 13th ST SW, Naples, FL",
+      "latitude": 26.22106431,
+      "longitude": -81.63207635,
+      "address_point_id": 129583,
+      "building_id": 74342
+    },
+    {
+      "address": "190 27th ST NW, Naples, FL",
+      "latitude": 26.23269794,
+      "longitude": -81.66036757,
+      "address_point_id": 104568,
+      "building_id": 79150
+    },
+    {
+      "address": "2435 47th AVE NE, Naples, FL",
+      "latitude": 26.31831165,
+      "longitude": -81.55917395,
+      "address_point_id": 144807,
+      "building_id": 126480
+    },
+    {
+      "address": "3473 27th AVE NE, Naples, FL",
+      "latitude": 26.28216832,
+      "longitude": -81.53786822,
+      "address_point_id": 275241,
+      "building_id": 108102
+    },
+    {
+      "address": "131 8th ST SE, Naples, FL",
+      "latitude": 26.22757613,
+      "longitude": -81.59108873,
+      "address_point_id": 144376,
+      "building_id": 76954
+    },
+    {
+      "address": "2431 2nd ST NE, Naples, FL",
+      "latitude": 26.27795602,
+      "longitude": -81.60393578,
+      "address_point_id": 136306,
+      "building_id": 105814
+    },
+    {
+      "address": "611 21st ST SW, Naples, FL",
+      "latitude": 26.21812201,
+      "longitude": -81.65017504,
+      "address_point_id": 71972,
+      "building_id": 73101
+    },
+    {
+      "address": "3290 2nd AVE SE, Naples, FL",
+      "latitude": 26.22632672,
+      "longitude": -81.54059414,
+      "address_point_id": 151193,
+      "building_id": 76227
+    },
+    {
+      "address": "4225 12th AVE NE, Naples, FL",
+      "latitude": 26.2532753,
+      "longitude": -81.52213651,
+      "address_point_id": 263697,
+      "building_id": 88916
+    },
+    {
+      "address": "4380 Everglades BLVD N, Naples, FL",
+      "latitude": 26.31227663,
+      "longitude": -81.5448667,
+      "address_point_id": 176423,
+      "building_id": 123888
+    },
+    {
+      "address": "1130 25th ST SW, Naples, FL",
+      "latitude": 26.20845612,
+      "longitude": -81.65600437,
+      "address_point_id": 170547,
+      "building_id": 69976
+    },
+    {
+      "address": "2456 39th AVE NE, Naples, FL",
+      "latitude": 26.30289303,
+      "longitude": -81.5586192,
+      "address_point_id": 269848,
+      "building_id": 120308
+    },
+    {
+      "address": "570 37th AVE NW, Naples, FL",
+      "latitude": 26.30031217,
+      "longitude": -81.61945797,
+      "address_point_id": 193496,
+      "building_id": 118918
+    },
+    {
+      "address": "411 16th AVE NE, Naples, FL",
+      "latitude": 26.25959446,
+      "longitude": -81.59877442,
+      "address_point_id": 120106,
+      "building_id": 93582
+    },
+    {
+      "address": "1121 27th ST SW, Naples, FL",
+      "latitude": 26.2088172,
+      "longitude": -81.66136798,
+      "address_point_id": 101591,
+      "building_id": 70098
+    },
+    {
+      "address": "570 11th ST SW, Naples, FL",
+      "latitude": 26.21927205,
+      "longitude": -81.62759591,
+      "address_point_id": 90163,
+      "building_id": 73562
+    },
+    {
+      "address": "4015 14th AVE SE, Naples, FL",
+      "latitude": 26.20572013,
+      "longitude": -81.52571916,
+      "address_point_id": 270842,
+      "building_id": 68450
+    },
+    {
+      "address": "2564 28th AVE SE, Naples, FL",
+      "latitude": 26.17892258,
+      "longitude": -81.55425679,
+      "address_point_id": 2329,
+      "building_id": 55833
+    },
+    {
+      "address": "3355 35th AVE NE, Naples, FL",
+      "latitude": 26.29665087,
+      "longitude": -81.54032983,
+      "address_point_id": 92230,
+      "building_id": 116539
+    },
+    {
+      "address": "1431 15th ST SW, Naples, FL",
+      "latitude": 26.20329624,
+      "longitude": -81.63741691,
+      "address_point_id": 141364,
+      "building_id": 67501
+    },
+    {
+      "address": "591 3rd ST SW, Naples, FL",
+      "latitude": 26.2190261,
+      "longitude": -81.61326495,
+      "address_point_id": 24183,
+      "building_id": 73452
+    },
+    {
+      "address": "722 8th ST NE, Naples, FL",
+      "latitude": 26.24302655,
+      "longitude": -81.58906052,
+      "address_point_id": 269968,
+      "building_id": 84192
+    },
+    {
+      "address": "160 17th ST SW, Naples, FL",
+      "latitude": 26.22656308,
+      "longitude": -81.64053237,
+      "address_point_id": 137277,
+      "building_id": 76509
+    },
+    {
+      "address": "2860 2nd AVE SE, Naples, FL",
+      "latitude": 26.22643548,
+      "longitude": -81.54934948,
+      "address_point_id": 192649,
+      "building_id": 76299
+    },
+    {
+      "address": "320 10th ST NE, Naples, FL",
+      "latitude": 26.23583238,
+      "longitude": -81.58591439,
+      "address_point_id": 88877,
+      "building_id": 80285
+    },
+    {
+      "address": "410 6th ST NE, Naples, FL",
+      "latitude": 26.23756559,
+      "longitude": -81.59385776,
+      "address_point_id": 137439,
+      "building_id": 81142
+    },
+    {
+      "address": "2991 22nd AVE NE, Naples, FL",
+      "latitude": 26.27115134,
+      "longitude": -81.5473977,
+      "address_point_id": 114491,
+      "building_id": 102674
+    },
+    {
+      "address": "3080 8th ST NW, Naples, FL",
+      "latitude": 26.28960634,
+      "longitude": -81.62244874,
+      "address_point_id": 52853,
+      "building_id": 112564
+    },
+    {
+      "address": "2845 31st AVE NE, Naples, FL",
+      "latitude": 26.28938614,
+      "longitude": -81.55064111,
+      "address_point_id": 103259,
+      "building_id": 112227
+    },
+    {
+      "address": "3454 47th AVE NE, Naples, FL",
+      "latitude": 26.31763858,
+      "longitude": -81.5385586,
+      "address_point_id": 262639,
+      "building_id": 126115
+    },
+    {
+      "address": "1741 14th AVE NE, Naples, FL",
+      "latitude": 26.25659577,
+      "longitude": -81.57175972,
+      "address_point_id": 161976,
+      "building_id": 91196
+    },
+    {
+      "address": "1090 11th ST SW, Naples, FL",
+      "latitude": 26.2096094,
+      "longitude": -81.62789996,
+      "address_point_id": 54812,
+      "building_id": 70363
+    },
+    {
+      "address": "3471 10th AVE NE, Naples, FL",
+      "latitude": 26.24935165,
+      "longitude": -81.53764794,
+      "address_point_id": 160812,
+      "building_id": 86900
+    },
+    {
+      "address": "4420 12th ST NE, Naples, FL",
+      "latitude": 26.31250703,
+      "longitude": -81.5838628,
+      "address_point_id": 159984,
+      "building_id": 124056
+    },
+    {
+      "address": "1121 9th ST SW, Naples, FL",
+      "latitude": 26.20907987,
+      "longitude": -81.62535435,
+      "address_point_id": 125209,
+      "building_id": 70161
+    },
+    {
+      "address": "2940 2nd AVE SE, Naples, FL",
+      "latitude": 26.22628276,
+      "longitude": -81.54773783,
+      "address_point_id": 189144,
+      "building_id": 76197
+    },
+    {
+      "address": "3441 21st AVE SW, Naples, FL",
+      "latitude": 26.19138672,
+      "longitude": -81.67630194,
+      "address_point_id": 80081,
+      "building_id": 61965
+    },
+    {
+      "address": "3270 19th AVE SW, Naples, FL",
+      "latitude": 26.19387703,
+      "longitude": -81.67188894,
+      "address_point_id": 159992,
+      "building_id": 63171
+    },
+    {
+      "address": "4451 45th AVE NE, Naples, FL",
+      "latitude": 26.31502973,
+      "longitude": -81.51906114,
+      "address_point_id": 269307,
+      "building_id": 124982
+    },
+    {
+      "address": "4635 43rd AVE NE, Naples, FL",
+      "latitude": 26.31161288,
+      "longitude": -81.51546019,
+      "address_point_id": 196554,
+      "building_id": 123573
+    },
+    {
+      "address": "3456 11th AVE SW, Naples, FL",
+      "latitude": 26.2075746,
+      "longitude": -81.67562468,
+      "address_point_id": 257979,
+      "building_id": 69603
+    },
+    {
+      "address": "611 8th ST NE, Naples, FL",
+      "latitude": 26.24121397,
+      "longitude": -81.59160462,
+      "address_point_id": 148843,
+      "building_id": 83233
+    },
+    {
+      "address": "1880 8th ST NE, Naples, FL",
+      "latitude": 26.2643148,
+      "longitude": -81.59027015,
+      "address_point_id": 70394,
+      "building_id": 97270
+    },
+    {
+      "address": "4866 22nd AVE SE, Naples, FL",
+      "latitude": 26.19041595,
+      "longitude": -81.50870247,
+      "address_point_id": 114670,
+      "building_id": 61053
+    },
+    {
+      "address": "3256 33rd AVE NE, Naples, FL",
+      "latitude": 26.29212373,
+      "longitude": -81.54226737,
+      "address_point_id": 169190,
+      "building_id": 113851
+    },
+    {
+      "address": "490 16th ST SE, Naples, FL",
+      "latitude": 26.2212313,
+      "longitude": -81.5735065,
+      "address_point_id": 48163,
+      "building_id": 74292
+    },
+    {
+      "address": "291 22nd ST NE, Naples, FL",
+      "latitude": 26.23559501,
+      "longitude": -81.56278607,
+      "address_point_id": 58822,
+      "building_id": 80145
+    },
+    {
+      "address": "190 20th ST NE, Naples, FL",
+      "latitude": 26.23386973,
+      "longitude": -81.56563306,
+      "address_point_id": 72421,
+      "building_id": 79458
+    },
+    {
+      "address": "1688 19th ST SW, Naples, FL",
+      "latitude": 26.19769945,
+      "longitude": -81.64395386,
+      "address_point_id": 139693,
+      "building_id": 65192
+    },
+    {
+      "address": "1470 15th ST SW, Naples, FL",
+      "latitude": 26.20269897,
+      "longitude": -81.63595837,
+      "address_point_id": 170215,
+      "building_id": 67255
+    },
+    {
+      "address": "3311 14th AVE NE, Naples, FL",
+      "latitude": 26.25696022,
+      "longitude": -81.54067319,
+      "address_point_id": 139963,
+      "building_id": 200240
+    },
+    {
+      "address": "392 27th ST SW, Naples, FL",
+      "latitude": 26.22201896,
+      "longitude": -81.66037466,
+      "address_point_id": 265091,
+      "building_id": 74685
+    },
+    {
+      "address": "1740 10th AVE NE, Naples, FL",
+      "latitude": 26.24806345,
+      "longitude": -81.57166197,
+      "address_point_id": 52025,
+      "building_id": 86239
+    },
+    {
+      "address": "4595 16th ST NE, Naples, FL",
+      "latitude": 26.3156798,
+      "longitude": -81.57706126,
+      "address_point_id": 475,
+      "building_id": 125342
+    },
+    {
+      "address": "2530 Golden Gate BLVD W, Naples, FL",
+      "latitude": 26.22864859,
+      "longitude": -81.65796979,
+      "address_point_id": 98386,
+      "building_id": 77444
+    },
+    {
+      "address": "1361 Golden Gate BLVD W, Naples, FL",
+      "latitude": 26.2302147,
+      "longitude": -81.63421855,
+      "address_point_id": 200674,
+      "building_id": 78112
+    },
+    {
+      "address": "4760 22nd ST NE, Naples, FL",
+      "latitude": 26.31891809,
+      "longitude": -81.56369411,
+      "address_point_id": 17972,
+      "building_id": 126854
+    },
+    {
+      "address": "345 14th AVE NE, Naples, FL",
+      "latitude": 26.25613285,
+      "longitude": -81.60074495,
+      "address_point_id": 176850,
+      "building_id": 90952
+    },
+    {
+      "address": "460 6th ST NE, Naples, FL",
+      "latitude": 26.23837594,
+      "longitude": -81.59415186,
+      "address_point_id": 170201,
+      "building_id": 81555
+    },
+    {
+      "address": "3833 12th AVE NE, Naples, FL",
+      "latitude": 26.25311951,
+      "longitude": -81.52997051,
+      "address_point_id": 271085,
+      "building_id": 88839
+    },
+    {
+      "address": "3780 41st AVE NE, Naples, FL",
+      "latitude": 26.30674217,
+      "longitude": -81.53192896,
+      "address_point_id": 72578,
+      "building_id": 121695
+    },
+    {
+      "address": "3031 4th ST NW, Naples, FL",
+      "latitude": 26.28877357,
+      "longitude": -81.61659363,
+      "address_point_id": 137651,
+      "building_id": 111950
+    },
+    {
+      "address": "1840 8th ST NE, Naples, FL",
+      "latitude": 26.26369148,
+      "longitude": -81.59036836,
+      "address_point_id": 154599,
+      "building_id": 96747
+    },
+    {
+      "address": "4116 4th AVE NE, Naples, FL",
+      "latitude": 26.23753125,
+      "longitude": -81.52390219,
+      "address_point_id": 150891,
+      "building_id": 80989
+    },
+    {
+      "address": "3521 8th AVE NE, Naples, FL",
+      "latitude": 26.24569499,
+      "longitude": -81.53644773,
+      "address_point_id": 175473,
+      "building_id": 85047
+    },
+    {
+      "address": "3320 5th AVE SW, Naples, FL",
+      "latitude": 26.21914275,
+      "longitude": -81.67329167,
+      "address_point_id": 59429,
+      "building_id": 73630
+    },
+    {
+      "address": "3575 3rd AVE NW, Naples, FL",
+      "latitude": 26.23575733,
+      "longitude": -81.67913505,
+      "address_point_id": 98885,
+      "building_id": 80478
+    },
+    {
+      "address": "921 16th ST NE, Naples, FL",
+      "latitude": 26.24706243,
+      "longitude": -81.57519007,
+      "address_point_id": 125960,
+      "building_id": 85744
+    },
+    {
+      "address": "2985 Everglades BLVD N, Naples, FL",
+      "latitude": 26.28685203,
+      "longitude": -81.54609028,
+      "address_point_id": 18381,
+      "building_id": 110684
+    },
+    {
+      "address": "2160 19th ST SW, Naples, FL",
+      "latitude": 26.18996196,
+      "longitude": -81.64313714,
+      "address_point_id": 106852,
+      "building_id": 61104
+    },
+    {
+      "address": "2160 17th ST SW, Naples, FL",
+      "latitude": 26.1900333,
+      "longitude": -81.63985554,
+      "address_point_id": 121211,
+      "building_id": 61130
+    },
+    {
+      "address": "1380 16th AVE NE, Naples, FL",
+      "latitude": 26.25892597,
+      "longitude": -81.57893807,
+      "address_point_id": 99993,
+      "building_id": 93065
+    },
+    {
+      "address": "4672 8th ST NE, Naples, FL",
+      "latitude": 26.31682742,
+      "longitude": -81.59214939,
+      "address_point_id": 104184,
+      "building_id": 125774
+    },
+    {
+      "address": "1161 24th AVE NE, Naples, FL",
+      "latitude": 26.27424863,
+      "longitude": -81.58387119,
+      "address_point_id": 171102,
+      "building_id": 104013
+    },
+    {
+      "address": "510 11th ST NW, Naples, FL",
+      "latitude": 26.23886865,
+      "longitude": -81.62832206,
+      "address_point_id": 211755,
+      "building_id": 81969
+    },
+    {
+      "address": "2082 16th ST NE, Naples, FL",
+      "latitude": 26.26828781,
+      "longitude": -81.57431714,
+      "address_point_id": 261928,
+      "building_id": 100439
+    },
+    {
+      "address": "255 Everglades BLVD S, Naples, FL",
+      "latitude": 26.22566211,
+      "longitude": -81.54506023,
+      "address_point_id": 262305,
+      "building_id": 75915
+    },
+    {
+      "address": "990 19th ST SW, Naples, FL",
+      "latitude": 26.21119008,
+      "longitude": -81.64407641,
+      "address_point_id": 185724,
+      "building_id": 70922
+    },
+    {
+      "address": "3541 50th AVE NE, Naples, FL",
+      "latitude": 26.32401417,
+      "longitude": -81.53698016,
+      "address_point_id": 23957,
+      "building_id": 130556
+    },
+    {
+      "address": "4430 Everglades BLVD N, Naples, FL",
+      "latitude": 26.3132226,
+      "longitude": -81.54476126,
+      "address_point_id": 184770,
+      "building_id": 124276
+    },
+    {
+      "address": "4780 24th AVE SE, Naples, FL",
+      "latitude": 26.18668844,
+      "longitude": -81.5095912,
+      "address_point_id": 84289,
+      "building_id": 58933
+    },
+    {
+      "address": "1471 12th AVE NE, Naples, FL",
+      "latitude": 26.2528446,
+      "longitude": -81.57688793,
+      "address_point_id": 111972,
+      "building_id": 88744
+    },
+    {
+      "address": "485 20th AVE NW, Naples, FL",
+      "latitude": 26.26662648,
+      "longitude": -81.61662387,
+      "address_point_id": 159588,
+      "building_id": 99116
+    },
+    {
+      "address": "2811 4th AVE SE, Naples, FL",
+      "latitude": 26.22371744,
+      "longitude": -81.55047847,
+      "address_point_id": 18299,
+      "building_id": 75143
+    },
+    {
+      "address": "2790 2nd ST NE, Naples, FL",
+      "latitude": 26.28444839,
+      "longitude": -81.60243458,
+      "address_point_id": 129386,
+      "building_id": 109371
+    },
+    {
+      "address": "4246 14th AVE SE, Naples, FL",
+      "latitude": 26.20497678,
+      "longitude": -81.52102905,
+      "address_point_id": 272167,
+      "building_id": 68093
+    },
+    {
+      "address": "2480 6th AVE NE, Naples, FL",
+      "latitude": 26.24080221,
+      "longitude": -81.55714934,
+      "address_point_id": 99585,
+      "building_id": 82933
+    },
+    {
+      "address": "4047 Everglades BLVD N, Naples, FL",
+      "latitude": 26.30605204,
+      "longitude": -81.5463031,
+      "address_point_id": 14569,
+      "building_id": 121495
+    },
+    {
+      "address": "3585 Golden Gate BLVD E, Naples, FL",
+      "latitude": 26.23140899,
+      "longitude": -81.53729455,
+      "address_point_id": 33048,
+      "building_id": 78398
+    },
+    {
+      "address": "4393 26th AVE SE, Naples, FL",
+      "latitude": 26.18397983,
+      "longitude": -81.51756525,
+      "address_point_id": 288291,
+      "building_id": 57741
+    },
+    {
+      "address": "4442 22nd AVE NE, Naples, FL",
+      "latitude": 26.27047002,
+      "longitude": -81.51890195,
+      "address_point_id": 278351,
+      "building_id": 102076
+    },
+    {
+      "address": "2598 45th AVE NE, Naples, FL",
+      "latitude": 26.3136221,
+      "longitude": -81.55615377,
+      "address_point_id": 262384,
+      "building_id": 124448
+    },
+    {
+      "address": "3565 31st AVE NE, Naples, FL",
+      "latitude": 26.28960446,
+      "longitude": -81.53615713,
+      "address_point_id": 179662,
+      "building_id": 112324
+    },
+    {
+      "address": "4131 47th AVE NE, Naples, FL",
+      "latitude": 26.31878499,
+      "longitude": -81.5255784,
+      "address_point_id": 138304,
+      "building_id": 126678
+    },
+    {
+      "address": "1280 19th ST SW, Naples, FL",
+      "latitude": 26.20598412,
+      "longitude": -81.64423898,
+      "address_point_id": 169843,
+      "building_id": 68833
+    },
+    {
+      "address": "3570 31st AVE NE, Naples, FL",
+      "latitude": 26.2886757,
+      "longitude": -81.53593412,
+      "address_point_id": 97801,
+      "building_id": 111717
+    },
+    {
+      "address": "3370 22nd AVE NE, Naples, FL",
+      "latitude": 26.27025141,
+      "longitude": -81.53969987,
+      "address_point_id": 145587,
+      "building_id": 101910
+    },
+    {
+      "address": "711 29th ST NW, Naples, FL",
+      "latitude": 26.242136,
+      "longitude": -81.66613598,
+      "address_point_id": 185757,
+      "building_id": 83918
+    },
+    {
+      "address": "2780 14th AVE NE, Naples, FL",
+      "latitude": 26.2553418,
+      "longitude": -81.55128816,
+      "address_point_id": 130540,
+      "building_id": 90233
+    },
+    {
+      "address": "770 2nd ST SE, Naples, FL",
+      "latitude": 26.21602387,
+      "longitude": -81.6019333,
+      "address_point_id": 82429,
+      "building_id": 72382
+    },
+    {
+      "address": "334 37th AVE NW, Naples, FL",
+      "latitude": 26.30017131,
+      "longitude": -81.61433895,
+      "address_point_id": 272515,
+      "building_id": 118892
+    },
+    {
+      "address": "3240 21st AVE SW, Naples, FL",
+      "latitude": 26.19025239,
+      "longitude": -81.67221694,
+      "address_point_id": 183522,
+      "building_id": 61366
+    },
+    {
+      "address": "4809 10th ST NE, Naples, FL",
+      "latitude": 26.3194263,
+      "longitude": -81.58907941,
+      "address_point_id": 278592,
+      "building_id": 127274
+    },
+    {
+      "address": "490 Wilson BLVD S, Naples, FL",
+      "latitude": 26.22110277,
+      "longitude": -81.60575389,
+      "address_point_id": 176839,
+      "building_id": 74298
+    },
+    {
+      "address": "3321 24th AVE NE, Naples, FL",
+      "latitude": 26.27485324,
+      "longitude": -81.54066713,
+      "address_point_id": 99092,
+      "building_id": 104221
+    },
+    {
+      "address": "645 10th AVE NE, Naples, FL",
+      "latitude": 26.24880529,
+      "longitude": -81.59412648,
+      "address_point_id": 114924,
+      "building_id": 86701
+    },
+    {
+      "address": "2959 30th AVE SE, Naples, FL",
+      "latitude": 26.17643518,
+      "longitude": -81.54681465,
+      "address_point_id": 261950,
+      "building_id": 54779
+    },
+    {
+      "address": "330 12th AVE NE, Naples, FL",
+      "latitude": 26.25122602,
+      "longitude": -81.60014694,
+      "address_point_id": 215574,
+      "building_id": 88021
+    },
+    {
+      "address": "2411 20th AVE NE, Naples, FL",
+      "latitude": 26.26731428,
+      "longitude": -81.5591166,
+      "address_point_id": 138126,
+      "building_id": 99478
+    },
+    {
+      "address": "2423 58th AVE NE, Naples, FL",
+      "latitude": 26.33828002,
+      "longitude": -81.55980709,
+      "address_point_id": 267933,
+      "building_id": 137674
+    },
+    {
+      "address": "2273 4th AVE SE, Naples, FL",
+      "latitude": 26.2237128,
+      "longitude": -81.5604618,
+      "address_point_id": 281188,
+      "building_id": 75174
+    },
+    {
+      "address": "3480 14th AVE NE, Naples, FL",
+      "latitude": 26.25561364,
+      "longitude": -81.53712332,
+      "address_point_id": 104064,
+      "building_id": 90310
+    },
+    {
+      "address": "3420 12th AVE SE, Naples, FL",
+      "latitude": 26.20779366,
+      "longitude": -81.5379255,
+      "address_point_id": 63539,
+      "building_id": 69400
+    },
+    {
+      "address": "540 27th ST NW, Naples, FL",
+      "latitude": 26.2390524,
+      "longitude": -81.66033281,
+      "address_point_id": 52089,
+      "building_id": 82196
+    },
+    {
+      "address": "2645 54th AVE NE, Naples, FL",
+      "latitude": 26.33107075,
+      "longitude": -81.55521563,
+      "address_point_id": 267669,
+      "building_id": 135924
+    },
+    {
+      "address": "2841 24th AVE NE, Naples, FL",
+      "latitude": 26.27476303,
+      "longitude": -81.55068007,
+      "address_point_id": 103478,
+      "building_id": 104208
+    },
+    {
+      "address": "3390 50th AVE NE, Naples, FL",
+      "latitude": 26.32297004,
+      "longitude": -81.53993963,
+      "address_point_id": 77931,
+      "building_id": 129739
+    },
+    {
+      "address": "2795 12th AVE SE, Naples, FL",
+      "latitude": 26.20912727,
+      "longitude": -81.55067908,
+      "address_point_id": 103023,
+      "building_id": 70050
+    },
+    {
+      "address": "4245 4th AVE NE, Naples, FL",
+      "latitude": 26.23874878,
+      "longitude": -81.52140966,
+      "address_point_id": 148469,
+      "building_id": 81611
+    },
+    {
+      "address": "521 Golden Gate BLVD W, Naples, FL",
+      "latitude": 26.23051437,
+      "longitude": -81.61527441,
+      "address_point_id": 53452,
+      "building_id": 78141
+    },
+    {
+      "address": "220 25th AVE NW, Naples, FL",
+      "latitude": 26.27841395,
+      "longitude": -81.61211956,
+      "address_point_id": 176799,
+      "building_id": 106133
+    },
+    {
+      "address": "695 13th ST NW, Naples, FL",
+      "latitude": 26.24205462,
+      "longitude": -81.63388931,
+      "address_point_id": 190167,
+      "building_id": 83808
+    },
+    {
+      "address": "4241 27th AVE NE, Naples, FL",
+      "latitude": 26.2823849,
+      "longitude": -81.52105058,
+      "address_point_id": 286847,
+      "building_id": 108181
+    },
+    {
+      "address": "1710 Golden Gate BLVD E, Naples, FL",
+      "latitude": 26.22962414,
+      "longitude": -81.57197699,
+      "address_point_id": 196553,
+      "building_id": 77662
+    },
+    {
+      "address": "590 20th ST NE, Naples, FL",
+      "latitude": 26.24113239,
+      "longitude": -81.56590376,
+      "address_point_id": 69430,
+      "building_id": 83127
+    },
+    {
+      "address": "471 18th AVE NE, Naples, FL",
+      "latitude": 26.2633424,
+      "longitude": -81.5977219,
+      "address_point_id": 191228,
+      "building_id": 96515
+    },
+    {
+      "address": "1211 18th AVE NE, Naples, FL",
+      "latitude": 26.26343689,
+      "longitude": -81.58269048,
+      "address_point_id": 56136,
+      "building_id": 96533
+    },
+    {
+      "address": "4264 8th AVE NE, Naples, FL",
+      "latitude": 26.24488479,
+      "longitude": -81.52106717,
+      "address_point_id": 280344,
+      "building_id": 84762
+    },
+    {
+      "address": "591 22nd ST SE, Naples, FL",
+      "latitude": 26.21958034,
+      "longitude": -81.56305009,
+      "address_point_id": 60551,
+      "building_id": 73581
+    },
+    {
+      "address": "3335 43rd AVE NE, Naples, FL",
+      "latitude": 26.3113525,
+      "longitude": -81.54097321,
+      "address_point_id": 139426,
+      "building_id": 123494
+    },
+    {
+      "address": "3234 22nd AVE SE, Naples, FL",
+      "latitude": 26.19006395,
+      "longitude": -81.54119544,
+      "address_point_id": 286925,
+      "building_id": 60908
+    },
+    {
+      "address": "260 8th ST NE, Naples, FL",
+      "latitude": 26.23483963,
+      "longitude": -81.58944923,
+      "address_point_id": 127485,
+      "building_id": 79893
+    },
+    {
+      "address": "4460 22nd AVE NE, Naples, FL",
+      "latitude": 26.27058887,
+      "longitude": -81.51856564,
+      "address_point_id": 173353,
+      "building_id": 102118
+    },
+    {
+      "address": "3130 Everglades BLVD S, Naples, FL",
+      "latitude": 26.1736457,
+      "longitude": -81.54321139,
+      "address_point_id": 118515,
+      "building_id": 53895
+    },
+    {
+      "address": "467 20th AVE NE, Naples, FL",
+      "latitude": 26.2670588,
+      "longitude": -81.59787506,
+      "address_point_id": 286597,
+      "building_id": 99421
+    },
+    {
+      "address": "540 22nd AVE NE, Naples, FL",
+      "latitude": 26.26967133,
+      "longitude": -81.59628137,
+      "address_point_id": 52708,
+      "building_id": 101650
+    },
+    {
+      "address": "3885 29th AVE NE, Naples, FL",
+      "latitude": 26.28633226,
+      "longitude": -81.52940994,
+      "address_point_id": 158391,
+      "building_id": 110393
+    },
+    {
+      "address": "1130 Golden Gate BLVD W, Naples, FL",
+      "latitude": 26.228823,
+      "longitude": -81.62956569,
+      "address_point_id": 132255,
+      "building_id": 77476
+    },
+    {
+      "address": "331 14th AVE NW, Naples, FL",
+      "latitude": 26.2558609,
+      "longitude": -81.61388961,
+      "address_point_id": 69436,
+      "building_id": 90762
+    },
+    {
+      "address": "1321 18th AVE NE, Naples, FL",
+      "latitude": 26.26441671,
+      "longitude": -81.58032089,
+      "address_point_id": 21907,
+      "building_id": 97346
+    },
+    {
+      "address": "4470 29th AVE NE, Naples, FL",
+      "latitude": 26.28509872,
+      "longitude": -81.51827454,
+      "address_point_id": 142028,
+      "building_id": 109572
+    },
+    {
+      "address": "2685 35th AVE NE, Naples, FL",
+      "latitude": 26.2965976,
+      "longitude": -81.55393217,
+      "address_point_id": 193572,
+      "building_id": 116520
+    },
+    {
+      "address": "2334 2nd AVE NE, Naples, FL",
+      "latitude": 26.23296303,
+      "longitude": -81.55998856,
+      "address_point_id": 277273,
+      "building_id": 79112
+    },
+    {
+      "address": "830 7th ST NW, Naples, FL",
+      "latitude": 26.24450134,
+      "longitude": -81.62011447,
+      "address_point_id": 157137,
+      "building_id": 84778
+    },
+    {
+      "address": "3885 52nd AVE NE, Naples, FL",
+      "latitude": 26.32847237,
+      "longitude": -81.53055666,
+      "address_point_id": 92950,
+      "building_id": 134568
+    },
+    {
+      "address": "3771 18th AVE NE, Naples, FL",
+      "latitude": 26.26418044,
+      "longitude": -81.53134841,
+      "address_point_id": 110462,
+      "building_id": 97032
+    },
+    {
+      "address": "687 23rd ST SW, Naples, FL",
+      "latitude": 26.21675676,
+      "longitude": -81.65355039,
+      "address_point_id": 277662,
+      "building_id": 72704
+    },
+    {
+      "address": "3345 35th AVE NE, Naples, FL",
+      "latitude": 26.29667623,
+      "longitude": -81.54049829,
+      "address_point_id": 232470,
+      "building_id": 116553
+    },
+    {
+      "address": "535 7th ST SW, Naples, FL",
+      "latitude": 26.21984155,
+      "longitude": -81.62155429,
+      "address_point_id": 80496,
+      "building_id": 73791
+    },
+    {
+      "address": "2146 Everglades BLVD N, Naples, FL",
+      "latitude": 26.26967012,
+      "longitude": -81.54455179,
+      "address_point_id": 281938,
+      "building_id": 101413
+    },
+    {
+      "address": "2641 Wilson BLVD N, Naples, FL",
+      "latitude": 26.28172342,
+      "longitude": -81.60802103,
+      "address_point_id": 88023,
+      "building_id": 108000
+    },
+    {
+      "address": "120 22nd ST NE, Naples, FL",
+      "latitude": 26.23285894,
+      "longitude": -81.56148634,
+      "address_point_id": 76169,
+      "building_id": 79035
+    },
+    {
+      "address": "3450 5th AVE SW, Naples, FL",
+      "latitude": 26.21949504,
+      "longitude": -81.67620367,
+      "address_point_id": 77871,
+      "building_id": 73753
+    },
+    {
+      "address": "630 Everglades BLVD S, Naples, FL",
+      "latitude": 26.21902195,
+      "longitude": -81.5435744,
+      "address_point_id": 117490,
+      "building_id": 73273
+    },
+    {
+      "address": "2875 18th AVE SE, Naples, FL",
+      "latitude": 26.19850193,
+      "longitude": -81.54875339,
+      "address_point_id": 141028,
+      "building_id": 65320
+    },
+    {
+      "address": "841 2nd ST SE, Naples, FL",
+      "latitude": 26.2145866,
+      "longitude": -81.60314845,
+      "address_point_id": 171309,
+      "building_id": 71842
+    },
+    {
+      "address": "431 21st ST SW, Naples, FL",
+      "latitude": 26.22132382,
+      "longitude": -81.64968373,
+      "address_point_id": 193846,
+      "building_id": 74427
+    },
+    {
+      "address": "1061 19th ST SW, Naples, FL",
+      "latitude": 26.21005053,
+      "longitude": -81.64535099,
+      "address_point_id": 183293,
+      "building_id": 70591
+    },
+    {
+      "address": "811 18th ST SE, Naples, FL",
+      "latitude": 26.21542975,
+      "longitude": -81.57066295,
+      "address_point_id": 163294,
+      "building_id": 72117
+    },
+    {
+      "address": "4079 14th AVE NE, Naples, FL",
+      "latitude": 26.25686657,
+      "longitude": -81.5248445,
+      "address_point_id": 286557,
+      "building_id": 91311
+    },
+    {
+      "address": "484 10th ST NE, Naples, FL",
+      "latitude": 26.23901807,
+      "longitude": -81.5855303,
+      "address_point_id": 253717,
+      "building_id": 81929
+    },
+    {
+      "address": "3795 10th AVE SE, Naples, FL",
+      "latitude": 26.21306622,
+      "longitude": -81.53035563,
+      "address_point_id": 119303,
+      "building_id": 71347
+    },
+    {
+      "address": "4026 22nd AVE SE, Naples, FL",
+      "latitude": 26.19020305,
+      "longitude": -81.52543316,
+      "address_point_id": 288364,
+      "building_id": 60946
+    },
+    {
+      "address": "2784 20th AVE NE, Naples, FL",
+      "latitude": 26.26653432,
+      "longitude": -81.55164828,
+      "address_point_id": 270819,
+      "building_id": 98761
+    },
+    {
+      "address": "2661 6th AVE NE, Naples, FL",
+      "latitude": 26.24209443,
+      "longitude": -81.55366084,
+      "address_point_id": 193434,
+      "building_id": 83642
+    },
+    {
+      "address": "270 17th ST SW, Naples, FL",
+      "latitude": 26.224629,
+      "longitude": -81.64030727,
+      "address_point_id": 62311,
+      "building_id": 75684
+    },
+    {
+      "address": "230 35th AVE NW, Naples, FL",
+      "latitude": 26.29676357,
+      "longitude": -81.61228535,
+      "address_point_id": 118997,
+      "building_id": 116849
+    },
+    {
+      "address": "1776 23rd ST SW, Naples, FL",
+      "latitude": 26.19684588,
+      "longitude": -81.65188847,
+      "address_point_id": 116820,
+      "building_id": 64713
+    },
+    {
+      "address": "2915 47th AVE NE, Naples, FL",
+      "latitude": 26.31867439,
+      "longitude": -81.54975197,
+      "address_point_id": 60759,
+      "building_id": 126670
+    },
+    {
+      "address": "3241 12th AVE NE, Naples, FL",
+      "latitude": 26.2530286,
+      "longitude": -81.54195938,
+      "address_point_id": 92704,
+      "building_id": 88818
+    },
+    {
+      "address": "1761 20th AVE NE, Naples, FL",
+      "latitude": 26.26726249,
+      "longitude": -81.57156078,
+      "address_point_id": 95235,
+      "building_id": 99469
+    },
+    {
+      "address": "1471 15th ST SW, Naples, FL",
+      "latitude": 26.20267886,
+      "longitude": -81.63719613,
+      "address_point_id": 2341,
+      "building_id": 67251
+    },
+    {
+      "address": "3027 18th AVE NE, Naples, FL",
+      "latitude": 26.26379864,
+      "longitude": -81.54656293,
+      "address_point_id": 281374,
+      "building_id": 96686
+    },
+    {
+      "address": "3580 4th AVE SE, Naples, FL",
+      "latitude": 26.2229392,
+      "longitude": -81.53480309,
+      "address_point_id": 133067,
+      "building_id": 74856
+    }
+  ],
+  "shelters": [
+    {
+      "name": "Palmetto Ridge High School",
+      "address": "1655 Victory LN, Naples, FL 34120",
+      "latitude": 26.29563041,
+      "longitude": -81.57760027,
+      "address_point_id": 167790
+    },
+    {
+      "name": "Corkscrew Middle School",
+      "address": "1165 Oil Well RD, Naples, FL 34120",
+      "latitude": 26.29426152,
+      "longitude": -81.58547118,
+      "address_point_id": 5561
+    },
+    {
+      "name": "Cypress Palm Middle School",
+      "address": "4255 18th AVE NE, Naples, FL 34120",
+      "latitude": 26.26497157,
+      "longitude": -81.5239576,
+      "address_point_id": 197536
+    },
+    {
+      "name": "Sabal Palm Elementary School",
+      "address": "4095 18th AVE NE, Naples, FL 34120",
+      "latitude": 26.26501193,
+      "longitude": -81.52583098,
+      "address_point_id": 143360
+    },
+    {
+      "name": "Big Cypress Elementary School",
+      "address": "3250 Golden Gate BLVD W, Naples, FL 34120",
+      "latitude": 26.2278956,
+      "longitude": -81.67212302,
+      "address_point_id": 33074
+    },
+    {
+      "name": "Estates Elementary School",
+      "address": "5945 Everglades BLVD N, Naples, FL 34120",
+      "latitude": 26.34055866,
+      "longitude": -81.54836369,
+      "address_point_id": 27339
+    },
+    {
+      "name": "Corkscrew Elementary School",
+      "address": "1065 Oil Well RD, Naples, FL 34120",
+      "latitude": 26.29406046,
+      "longitude": -81.58793098,
+      "address_point_id": 5562
+    }
+  ]
+}

@@ -111,7 +111,7 @@ export const ASSIST_STATUS = { open: 'Open', claimed: 'Accepted', en_route: 'En 
 export const ASSIST_COLOR = { open: '#d64545', claimed: '#2563eb', en_route: '#7c3aed', completed: '#1f9d55', cancelled: '#8a8f98' }
 
 // Default map centre (Example County demo area).
-export const DEFAULT_CENTER = [27.9506, -82.4572]
+export const DEFAULT_CENTER = [26.25, -81.58]
 
 export function emptyShelter(disasterId, location) {
   return {
