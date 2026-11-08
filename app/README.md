@@ -1,116 +1,80 @@
 # Haven mobile app
 
-React Native / Expo SDK 54 household app connected to the Litestar API in `backend/`.
+React Native / Expo SDK 54 app for households in an emergency. It answers three questions: where to go, why it fits the household, and what to do next. It talks to the Haven API in `backend/`.
 
-## Resident dashboard demo
+## Run it
 
-A deterministic, offline demo of the resident-facing "Your household plan" dashboard. It needs no backend and no sign-in.
-
-```sh
-npm run demo            # Expo web dev server with simulated data
-npm run demo -- export  # static build in dist-demo/
-```
-
-- **Scenario:** the fictional Alvarez household (2 adults, 2 children, 1 dog, a wheelchair-accessible entrance need, a vehicle) and three fictional shelters near Seminole Heights, Tampa Bay. Lakeview Recreation Center is recommended at the start.
-- **Layout:** a mobile app with five bottom tabs:
-  - **Plan:** official instruction, recommendation, journey and other options.
-  - **Prepare:** the checklist.
-  - **Updates:** official broadcasts and plan changes.
-  - **Messages:** the coordinator chat.
-  - **Household:** members and needs, edited in place, plus the account.
-
-  On a wide browser window the app renders inside a phone frame.
-- **Presenter controls:** open them from the dark "Demo — simulated conditions" button. They let you:
-  - change the wheelchair requirement
-  - trigger road closures, broadcasts and availability updates
-  - go offline, advance time (stale data), or make the next message fail
-  - reset
-- **What the dashboard never does:** it does not reserve a space or claim a placement, does not claim messages were delivered or read, and does not invent emergency numbers. Coordinator replies are labelled as simulated.
-- **Where the code lives:**
-  - Rules and state: `src/demo/`. `recommend.ts` is a pure rule function with no scores; tests are in `tests/resident-demo.test.ts`.
-  - UI: `src/components/dashboard/` and `src/screens/PlanDashboard.tsx`.
-- **Mode:** the dashboard replaces the app shell only when `EXPO_PUBLIC_DATA_MODE=mock`. The default `api` mode is unchanged.
-
-### Live mode (backend on master)
+Start the backend first. See [`backend/README.md`](../backend/README.md); the API listens on `http://127.0.0.1:8000`.
 
 ```sh
-# from the repository root, once: seed fictional demo data with a known password
-cd backend && DATABASE_PATH=../.runtime/live-demo.sqlite3 uv run --locked python -c "import asyncio; from haven.demo_data import main; asyncio.run(main())"
-DATABASE_PATH=../.runtime/live-demo.sqlite3 uv run --locked litestar --app haven.app:app run --port 8000
-# then, in app/
-npm run demo:live        # sign in as family@family.com (password: family)
-```
-
-`family@family.com` has a seeded household (the backend seeds it; see [../docs/hurricane-demo.md](../docs/hurricane-demo.md)). The app follows the hurricane status, polled every 5 seconds: in peace the Plan tab shows "All clear" and the needs on file, with no shelter. When an operator initiates the hurricane from the government dashboard, the app switches within about 5 seconds to the evacuation order, jumps to the Plan tab and shows the shelter assignment; stopping the disaster returns it to All clear. If the status request fails, the app keeps the last known phase.
-
-The same dashboard reads the signed-in family's profile, plan, shelters and official updates from the API:
-
-- **Who decides:** the backend's allocation plan picks the destination, so the resident app and the government dashboard agree. The local rules only explain why the other shelters weren't chosen.
-- **Edits:** editing household needs sends `PATCH /api/families/{id}`, then `POST /plan/generate`.
-- **Messages:** they go to coordinators as `need_help` reports.
-- **"Space counted for you":** this label comes from the plan's `capacity_reserved` flag. It is still not shown as a confirmed placement.
-- **Not provided by the backend, so not shown:** road closures, routes and travel times. The journey shows a labelled straight-line distance instead.
-- **Messages one way only:** the backend has no coordinator replies.
-- **Needs stored as text:** wheelchair and powered-equipment needs live in the backend's free-text notes. Any accessibility note means the backend requires a wheelchair-accessible shelter.
-- **New accounts:** a household is placed at the centre of the listed shelters, because demo accounts have no address.
-- **Kept on the device:** checklist ticks and "We've left".
-
-## Start the app with the real backend
-
-From the repository root, install [uv](https://docs.astral.sh/uv/getting-started/installation/) if needed, then:
-
-```powershell
-uv sync --project backend --locked --python 3.14
 cd app
 npm install
-npm run backend:seed
-npm run backend:start
+npm start          # Expo dev server on http://localhost:8081
 ```
 
-If using the workspace-local uv already installed for this session, replace the first command with `.\.runtime\uv\uv.exe sync --project backend --locked --python 3.14` from the repository root.
+- Press `w` for the browser.
+- Scan the QR code with Expo Go for a phone. On a phone, set `EXPO_PUBLIC_API_BASE_URL` in `.env` to your computer's LAN IP (see `.env.example`), then restart with `npx expo start --clear`.
 
-In another terminal:
+Sign in with a family account, or choose **Create an account**. An account without a household profile is asked to set one up first.
 
-```powershell
-cd app
-npm start
-```
+## What's in the app
 
-Press `w` for the browser. The API is at `http://127.0.0.1:8000`, its health check is `/health`, and the browser app is at `http://localhost:8081`. The local `.env` is configured for this backend. `backend:start` adds browser CORS support and stores data in `.runtime/haven.sqlite3`. Set `DATABASE_PATH` to choose another database. Loopback browser origins (localhost, 127.0.0.1, and ::1) on any port are allowed by default so Expo can select an available port; `HAVEN_ALLOWED_ORIGINS` accepts a comma-separated override.
+Five tabs:
 
-Python 3.14 is required by the current master code in practice: earlier Python versions eagerly evaluate APSW type-only annotations. The lockfile and backend source are not changed to address this. The workspace-local uv download is ignored by git.
+- **Plan:** the latest official instruction, the recommended shelter, the household's needs matched against it, availability, a map and straight-line distance, and the other shelters with why they weren't chosen.
+- **Prepare:** a checklist based on the household. Ticks are kept on the device.
+- **Updates:** official broadcasts, and notices when the plan changes.
+- **Messages:** messages to the coordination desk.
+- **Household:** members and needs, editable in place, plus sign-out.
 
-With the API stopped, `backend:seed` recreates this disposable database with the Golden Gate Estates scenario: 1,000 synthetic households at real house locations and seven simulated shelters at local school sites. It prints credentials for the demo family and operator accounts; existing data and sessions are discarded. Start the API, sign in with the printed family credentials or choose **Create an account**, then fill out the household survey. The backend automatically allocates a shelter after saving. Coordinates around latitude `26.25`, longitude `-81.58` are convenient test inputs for this scenario. Household profiles and shelter operations are fictional.
+## How it uses the backend
 
-## Test on a phone or emulator
+| App | API |
+|---|---|
+| Sign in, register, sign out | `/api/auth/*`, `/api/me` |
+| Household | `GET`, `POST`, `PATCH` `/api/families` |
+| Recommendation | `GET /api/families/{id}/plan`. After an edit, `POST /api/families/{id}/plan/generate`. |
+| Shelters | `GET /api/shelters?disaster_id=…` |
+| Official updates | `GET /api/disasters/{id}/updates` |
+| Messages | `POST /api/families/{id}/reports` (`need_help`, idempotent `client_request_id`) |
 
-Set `EXPO_PUBLIC_API_BASE_URL` in `.env` to `http://<your-computer-LAN-IP>:8000` for a phone on the same Wi-Fi, or `http://10.0.2.2:8000` for the standard Android emulator. Restart Expo with `npx expo start --clear` after changing the URL. A phone's localhost refers to the phone, not this computer. The development backend listens on all local interfaces; Windows Firewall must permit the connection if prompted. Use HTTPS for a deployed backend.
+Data refreshes every 30 seconds. If the backend can't be reached, the app keeps showing the last data it loaded and marks it as saved, with the time.
 
-## What is connected
+### Who picks the shelter
 
-- Register/login/logout use `/api/auth/*` and `/api/me`. Family accounts are required. Native tokens use SecureStore; browser tokens use sessionStorage for same-tab reloads. Query snapshots are scoped to the account and backend origin.
-- Household create/edit maps to `POST /api/families` and `PATCH /api/families/{id}`. Select an active disaster and supply coordinates, either explicitly or using current location. Editing remains one scrollable page.
-- My plan reads the actual persisted allocation, shelter location, and warnings from `/api/families/{id}/plan`. Critical mismatch and overflow warnings are preserved. Instructions come from the backend; map distance is straight-line distance, not a route.
-- Nearby lists active disasters from `/api/disasters`; these records are not automatically described as official warnings. Updates use the authenticated disaster update feed, including targeted shelter updates. The operator-only operational alert feed is not accessed with a family account.
-- Support messages and situation reports are submitted to `POST /api/families/{id}/reports`. The server's `received` status is required before the app says Sent. Stable `client_request_id` values make retries idempotent. Operators can see them in `/api/disasters/{id}/reports`.
-- This master backend does not expose two-way chat or a family report-history endpoint. The app keeps confirmed receipts on this device and does not invent replies. It checks for refreshed household/plan/update data every 10 seconds while active and online.
+The backend's allocation plan picks the shelter. The app's rules in `src/resident/rules.ts` only explain how the plan fits the household's needs, and why the other shelters weren't chosen.
 
-The backend stores people counts, coordinates, pet presence, care notes, and car availability. Detailed pet counts, street-address text, and the transportation preference remain on this device because the backend has no dedicated fields for them. They are not hidden inside clinical notes, where they could incorrectly affect allocation. Send transportation help through Support. Medication urgency is sent only when explicitly selected.
+### What the app never says
 
-## Verify
+- **No confirmed placement:** "Recommended", "availability reported" and "space counted in the coordinators' plan" are shown separately.
+- **No delivery claims:** messages are only "Sent" or "Not sent", never delivered or read.
+- **After "We've left":** the destination is never swapped automatically.
 
-With the backend running and seeded:
+### Limits of the current backend
 
-```powershell
+- **No routes:** it has no road closures, routes or travel times, so the app shows a labelled straight-line distance.
+- **No replies:** coordinator replies aren't available, so messages are one-way.
+- **Needs stored as text:** wheelchair access, powered equipment and transport help are stored in the free-text `accessibility_notes` and `other_special_care` fields. Any accessibility note makes the backend require a wheelchair-accessible shelter.
+- **No backup power data:** shelters don't report backup power, so that need always shows as unconfirmed.
+- **No address entry:** new households are placed at the centre of the listed shelters.
+
+## Code
+
+- `src/app/`: Expo Router entry. Fonts, theme and auth providers, then sign-in or the app.
+- `src/resident/`: the app's data and logic, with no UI.
+  - `api.ts`: backend schemas and mapping.
+  - `rules.ts`: needs checks and the "What changed" text.
+  - `checklist.ts`, `time.ts`.
+  - `provider.tsx`: loading, refreshing and saving.
+- `src/components/resident/`: the UI.
+- `src/screens/ResidentApp.tsx`: the tab shell.
+
+## Check
+
+```sh
 npm run typecheck
-npm test
-npm run test:backend
-npm run test:backend:ui
+npm test           # API mapping, needs rules, checklist, color contrast (WCAG AA)
 npm run build:web
 ```
 
-`test:backend` creates isolated local test accounts and verifies real HTTP profile/plan/report operations, operator report visibility, idempotency, authorization, and logout. `test:backend:ui` drives the mobile-sized app against that actual server, with no mocked API calls. Screenshots and results are in `.hallmark/screens/`. These checks create records in the local test database; do not point them at a production service.
-
-Run the original backend tests from the repository root with `backend\.venv\Scripts\python.exe -m pytest backend/tests -q` on Windows. Native map rendering, location permission dialogs, and the 911 dialer still need a device smoke test. Android standalone maps require `GOOGLE_MAPS_ANDROID_API_KEY` at build time; Expo Go can preview the native map. The browser uses Leaflet and OpenStreetMap with attribution.
-
-The interface uses IBM Plex Sans, a single mobile column, and the Survey map day/night palette. The app is not emergency dispatch. In immediate danger, contact official emergency services.
+The app is not emergency dispatch. In immediate danger, contact official emergency services.

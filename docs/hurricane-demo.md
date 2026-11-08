@@ -9,7 +9,7 @@ app's reaction. It extends the existing API; no existing endpoint changes shape.
 
 1. **Peace.** The government dashboard is all green: "All clear — no active hurricane." Shelters are
    on standby, households are registered, and Haven keeps their personalized plans pre-computed.
-   The household app shows "All clear" and the needs Haven has on file, but no shelter yet.
+   The household app shows the household's plan and the needs Haven has on file.
 2. **Preview evacuation.** The operator opens the preview. Every household animates from home to its
    destination (a simulation, straight-line paths). A toggle switches between **Nearest shelter**
    and **Haven personalized**. Side-by-side metrics show unmet needs (medication, medical staff,
@@ -17,7 +17,8 @@ app's reaction. It extends the existing API; no existing endpoint changes shape.
    utilization and travel. Clicking a need highlights the affected households.
 3. **Initiate hurricane.** One click: the status becomes active, a critical evacuation broadcast goes to
    all households, and the personalized assignments are published. The dashboard turns to operations
-   mode with a needs monitor. The household app switches to the evacuation order and its shelter.
+   mode. The household app shows the evacuation broadcast as its latest official instruction, above
+   the household's shelter, on its next refresh (every 30 seconds).
 4. **Stop disaster.** Returns to peace and removes the demo run's broadcast and activity, so the demo
    can be rehearsed again. Household profiles and shelters are kept.
 
@@ -132,14 +133,14 @@ cd backend
 just demo-data                                 # rebuilds the disposable demo database
 just dev                                       # API on http://127.0.0.1:8000
 cd ../frontend && npm run dev                  # dashboard on http://localhost:5173
-cd ../app && npm run demo:live                 # household app on http://localhost:8081
+cd ../app && npm start                         # household app on http://localhost:8081 (press w)
 ```
 
 Sign in to the dashboard as `gov@gov.com` (password `gov`) and to the household app as
-`family@family.com` (password `family`). Then: show the green peace dashboard and the phone's "All clear" →
+`family@family.com` (password `family`). Then: show the green peace dashboard and the household's plan on the phone →
 **Preview evacuation**, play "Nearest shelter" and point at the red households and the
-over-capacity shelters → switch to "Haven personalized" → **Initiate hurricane** (the phone switches to
-the evacuation order within about 5 seconds) → **Stop disaster** to rehearse again. Keep the
+over-capacity shelters → switch to "Haven personalized" → **Initiate hurricane** (the phone shows the
+evacuation order within 30 seconds) → **Stop disaster** to rehearse again. Keep the
 dashboard tab in front while the animation plays; browsers pause animation in background tabs.
 
 The initiate broadcast is stored with an explicit `{"type": "all"}` target so reset can find and

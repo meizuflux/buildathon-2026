@@ -21,13 +21,7 @@
     "plugins": [
       "expo-router",
       "expo-sqlite",
-      "expo-secure-store",
-      [
-        "expo-location",
-        {
-          "locationWhenInUsePermission": "Optionally share your location with Haven to include it in your household profile."
-        }
-      ]
+      "expo-secure-store"
     ]
   }
 }

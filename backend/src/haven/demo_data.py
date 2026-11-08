@@ -18,7 +18,7 @@ DEMO_ACCOUNTS = (
     ("gov@gov.com", "operator", "gov"),
 )
 DEMO_FAMILY_ID = "demo_family_resident"
-# Matches WHEELCHAIR_YES in app/src/demo/live.ts so the household app shows the need as confirmed.
+# Matches WHEELCHAIR_YES in app/src/resident/api.ts so the household app shows the need as confirmed.
 DEMO_FAMILY_ACCESSIBILITY = "Wheelchair-accessible entrance needed"
 # Home of the demo household: golden_gate_estates.json households[61]. Its nearest shelter by
 # straight-line distance is demo_shelter_08 (about 1.1 km), which has no medical staff or
