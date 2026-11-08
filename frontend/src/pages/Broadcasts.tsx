@@ -62,7 +62,7 @@ export default function Broadcasts() {
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
-    const where = target.type === 'shelter' ? 'families assigned to the selected shelter' : 'every family in this disaster'
+    const where = target.type === 'shelter' ? 'families assigned to the selected shelter' : 'every family in this hurricane'
     if (f.severity === 'critical' && !confirm(`Send a critical alert to ${where}?`)) return
     setBusy(true)
     try {
@@ -86,7 +86,7 @@ export default function Broadcasts() {
 
   return (
     <div className="hx-page">
-      <Head title="Broadcasts" sub="Publish official updates to every family in this disaster or to families assigned to one shelter." />
+      <Head title="Broadcasts" sub="Publish official updates to every family in this hurricane or to families assigned to one shelter." />
       <div className="hx-bc">
         <form className={`hx-panel hx-compose hx-sev-${f.severity}`} onSubmit={submit}>
           <div className="hx-compose-head">
@@ -111,7 +111,7 @@ export default function Broadcasts() {
           </label>
           <label className="hx-field"><span>Who receives it</span>
             <select value={target.type === 'shelter' ? target.shelter_id : ''} onChange={(e) => set('target', e.target.value ? { type: 'shelter', shelter_id: e.target.value } : { type: 'all' })}>
-              <option value="">All families in this disaster</option>
+              <option value="">All families in this hurricane</option>
               {d.shelters.map((s) => <option key={s.id} value={s.id}>Families assigned to {s.name}</option>)}
             </select>
           </label>
@@ -147,7 +147,7 @@ export default function Broadcasts() {
               </div>
               <p>{u.message}</p>
               <div className="r3">
-                <span className="hx-tag">{u.target?.type === 'shelter' ? `Families assigned to ${shelterName(u.target.shelter_id)}` : 'All families in this disaster'}</span>
+                <span className="hx-tag">{u.target?.type === 'shelter' ? `Families assigned to ${shelterName(u.target.shelter_id)}` : 'All families in this hurricane'}</span>
                 <span title={fullTime(u.published_at)}>Sent {timeAgo(u.published_at)}</span>
               </div>
             </article>

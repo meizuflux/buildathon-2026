@@ -7,12 +7,14 @@ import { errorMessage, loadAllFamilies } from '../lib/ops'
 
 export function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
+  const close = useRef(onClose)
+  close.current = onClose
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close.current()
     document.addEventListener('keydown', onKey)
     ref.current?.querySelector<HTMLElement>('input, select, textarea, button:not(.icon-btn)')?.focus()
     return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [])
   return (
     <div className="hx-modal-back" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className={`hx-modal ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} ref={ref}>
@@ -71,7 +73,7 @@ export function Empty({ children }: { children: ReactNode }) {
   return <div className="empty">{children}</div>
 }
 
-// Every family in the disaster for the map layer, refreshed every 12 s while shown.
+// Every family in the hurricane for the map layer, refreshed every 12 s while shown.
 export function useAllFamilies(disasterId: string | null, enabled = true) {
   const [families, setFamilies] = useState<Family[]>([])
   const [error, setError] = useState<string | null>(null)

@@ -48,11 +48,11 @@ export default function Families() {
 
   const recompute = useCallback(async () => {
     const family = page?.families[0]
-    if (!family || !confirm('Recompute plans for every family in this disaster? Assignments may change.')) return
+    if (!family || !confirm('Recompute plans for every family in this hurricane? Assignments may change.')) return
     setBusy(true); setError(null); setNotice(null)
     try {
       await d.mutate((client) => client.generatePlan(family.id))
-      setNotice('Plans recomputed for this disaster.')
+      setNotice('Plans recomputed for this hurricane.')
       setRevision((v) => v + 1)
     } catch (e) {
       setError(errorMessage(e))
@@ -63,7 +63,7 @@ export default function Families() {
 
   return (
     <div className="hx-page">
-      <Head title="Families" sub="Households in this disaster and the shelter each one is assigned to. Profile and shelter changes recompute plans automatically.">
+      <Head title="Families" sub="Households in this hurricane and the shelter each one is assigned to. Profile and shelter changes recompute plans automatically.">
         <button className="btn btn-primary" disabled={!page?.families.length || busy} onClick={recompute}><RefreshCw size={14} /> {busy ? 'Recomputing…' : 'Recompute all plans'}</button>
       </Head>
       {notice && <p className="notice notice-ok" role="status">{notice}</p>}

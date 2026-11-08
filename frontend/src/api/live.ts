@@ -5,6 +5,9 @@ import type {
   Family,
   FamilyPage,
   FamilyPatch,
+  EvacuationPreview,
+  HurricaneInitiateInput,
+  HurricaneStatus,
   Location,
   Plan,
   PlanPage,
@@ -139,6 +142,16 @@ export const liveApi = {
     ).then((d) => d.activity),
   listAlerts: (disasterId: string) =>
     request<AlertPage>('GET', `/disasters/${e(disasterId)}/alerts?limit=1000`),
+
+  // Hurricane demo (docs/hurricane-demo.md)
+  getHurricane: (disasterId: string) =>
+    request<HurricaneStatus>('GET', `/disasters/${e(disasterId)}/hurricane`),
+  initiateHurricane: (disasterId: string, body: HurricaneInitiateInput) =>
+    request<HurricaneStatus>('POST', `/disasters/${e(disasterId)}/hurricane/initiate`, body),
+  resetHurricane: (disasterId: string) =>
+    request<HurricaneStatus>('POST', `/disasters/${e(disasterId)}/hurricane/reset`),
+  getEvacuationPreview: (disasterId: string) =>
+    request<EvacuationPreview>('GET', `/disasters/${e(disasterId)}/evacuation/preview`),
 }
 
 export type LiveApi = typeof liveApi

@@ -14,6 +14,7 @@ import type {
   ActivityEntry,
   AlertPage,
   Disaster,
+  HurricaneStatus,
   Report,
   Shelter,
   Update,
@@ -25,6 +26,7 @@ type Collections = {
   reports: Report[]
   activity: ActivityEntry[]
   alerts: AlertPage | null
+  hurricane: HurricaneStatus | null
 }
 
 type CollectionKey = keyof Collections
@@ -53,6 +55,7 @@ const COLLECTIONS: { [K in CollectionKey]: (disasterId: string) => Promise<Colle
   reports: (d) => api.listReports(d),
   activity: (d) => api.listActivity(d),
   alerts: (d) => api.listAlerts(d),
+  hurricane: (d) => api.getHurricane(d),
 }
 const COLLECTION_KEYS = Object.keys(COLLECTIONS) as CollectionKey[]
 const EMPTY: Collections = {
@@ -61,6 +64,7 @@ const EMPTY: Collections = {
   reports: [],
   activity: [],
   alerts: null,
+  hurricane: null,
 }
 
 export function DataProvider({ children }: { children: ReactNode }) {

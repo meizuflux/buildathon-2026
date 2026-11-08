@@ -1,7 +1,7 @@
 # Haven Operations dashboard
 
-React + TypeScript + Vite dashboard for government operators managing disaster
-response. The backend's OpenAPI schema is the API contract and is used to
+React + TypeScript + Vite dashboard for government operators managing hurricane
+evacuation. The backend's OpenAPI schema is the API contract and is used to
 generate the dashboard's API types. The dashboard covers family operations,
 shelter management, allocation plans, operational alerts, official updates, and
 reports.

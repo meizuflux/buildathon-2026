@@ -75,3 +75,84 @@ export type PreviewInput = { target: BroadcastTarget }
 export type Preview = Haven.ApiDisastersDisasterIdUpdatesPreviewPreviewUpdate.Http200.ResponseBody
 
 export type Me = Haven.ApiMeMe.Http200.ResponseBody
+
+// ---------------------------------------------------------------------------
+// Hurricane demo (docs/hurricane-demo.md)
+// Hand-written to mirror the contract; not generated.
+// ---------------------------------------------------------------------------
+
+export type HurricanePhase = 'peace' | 'active'
+
+export type HurricaneStatus = {
+  disaster_id: string
+  phase: HurricanePhase
+  hurricane: { name: string; category: number } | null
+  started_at: string | null
+  updated_at: string | null
+}
+
+export type HurricaneInitiateInput = { name?: string; category?: number }
+
+export type Requirement =
+  | 'medication'
+  | 'medical_staff'
+  | 'wheelchair_accessible'
+  | 'pets'
+  | 'child_friendly'
+  | 'special_care'
+
+export type Destination = {
+  shelter_id: string | null
+  distance_km: number | null
+  unmet: Requirement[]
+}
+
+export type EvacuationShelterMetrics = {
+  shelter_id: string
+  name: string
+  people: number
+  total_people: number
+  utilization: number | null
+  people_over_capacity: number
+  unmet_households: number
+}
+
+export type EvacuationMetrics = {
+  households: number
+  people: number
+  unassigned_households: number
+  households_with_needs: number
+  unmet_households: number
+  needs: { requirement: Requirement; households: number; unmet_households: number }[]
+  people_over_capacity: number
+  overcrowded_shelters: number
+  idle_shelters: number
+  max_utilization: number | null
+  min_utilization: number | null
+  travel: {
+    mean_km: number | null
+    p95_km: number | null
+    max_km: number | null
+    total_km: number
+    no_car_mean_km: number | null
+  }
+  shelters: EvacuationShelterMetrics[]
+}
+
+export type EvacuationHousehold = {
+  family_id: string
+  location: Location
+  people: number
+  has_car: boolean
+  requirements: Requirement[]
+  naive: Destination
+  personalized: Destination
+}
+
+export type EvacuationPreview = {
+  disaster_id: string
+  generated_at: string
+  households: EvacuationHousehold[]
+  naive: EvacuationMetrics
+  personalized: EvacuationMetrics
+}

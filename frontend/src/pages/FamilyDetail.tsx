@@ -156,7 +156,7 @@ function EditFamily({ family, onClose, onSaved }: { family: Family; onClose: () 
         {NOTES.map(([k, label]) => (
           <label className="hx-field" key={k}><span>{label}</span><textarea rows={2} value={draft.needs[k] || ''} onChange={(e) => needs({ [k]: e.target.value || null })} /></label>
         ))}
-        <p className="small muted">Saving relevant changes recomputes plans for the disaster.</p>
+        <p className="small muted">Saving relevant changes recomputes plans for the hurricane.</p>
         {error && <p className="notice notice-error" role="alert">{error}</p>}
         <div className="hx-form-actions">
           <button type="button" className="btn" onClick={onClose}>Cancel</button>

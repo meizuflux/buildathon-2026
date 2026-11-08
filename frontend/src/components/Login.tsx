@@ -28,7 +28,7 @@ export default function Login() {
           <img src="/haven-mark.svg" alt="" />
           <div><b>Haven</b><span>Operations</span></div>
         </div>
-        <p className="muted">Sign in with your operator account to manage shelters, families and emergency broadcasts.</p>
+        <p className="muted">Sign in with your operator account to manage shelters, families and hurricane evacuation broadcasts.</p>
         <label className="hx-field"><span>Email</span><input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
         <label className="hx-field"><span>Password</span><input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
         {error && <p className="notice notice-error" role="alert">{error}</p>}

@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import {
-  Bell, ChevronDown, FileText, LayoutDashboard, LogOut, Map, Megaphone, PackageSearch, RefreshCw, Send, Truck, Users, Warehouse,
+  Bell, ChevronDown, CloudLightning, FileText, LayoutDashboard, LogOut, Map, Megaphone, PackageSearch, RefreshCw, RotateCcw, Route, Send, Truck, Users, Warehouse,
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '../auth'
@@ -8,6 +9,7 @@ import { useData } from '../data'
 import { DISASTER_TYPES } from '../lib/constants'
 import { cap, timeAgo } from '../lib/format'
 import { isOpenHelp } from '../lib/ops'
+import { InitiateHurricaneDialog, ResetHurricaneDialog, useHurricanePhase } from './HurricaneDialogs'
 
 type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean; count?: number; preview?: boolean }
 type NavGroup = { group?: string; items: NavItem[] }
@@ -15,11 +17,15 @@ type NavGroup = { group?: string; items: NavItem[] }
 export default function Layout() {
   const { user, logout } = useAuth()
   const d = useData()
+  const phase = useHurricanePhase()
+  const [dialog, setDialog] = useState<'initiate' | 'reset' | null>(null)
+  const hurricane = d.hurricane?.hurricane
   const helpOpen = d.reports.filter(isOpenHelp).length
   const nav: NavGroup[] = [
     { items: [
       { to: '/', label: 'Command center', icon: LayoutDashboard, end: true },
-      { to: '/alerts', label: 'Alerts', icon: Bell, count: d.alerts?.total },
+      { to: '/evacuation-preview', label: 'Evacuation preview', icon: Route },
+      { to: '/alerts', label: 'Alerts', icon: Bell, count: phase === 'active' ? d.alerts?.total : 0 },
       { to: '/map', label: 'Operations map', icon: Map },
       { to: '/families', label: 'Families', icon: Users },
     ] },
@@ -70,16 +76,25 @@ export default function Layout() {
       <div className="hx-main">
         <header className="hx-top">
           <div className="hx-incident">
-            <label htmlFor="hx-disaster" className="sr-only">Disaster</label>
+            <label htmlFor="hx-disaster" className="sr-only">Hurricane</label>
             <select id="hx-disaster" value={d.disasterId || ''} onChange={(e) => d.setDisasterId(e.target.value)}>
               {d.disasters.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
             </select>
             <ChevronDown size={16} />
           </div>
-          {d.disaster && <span className="badge t-muted">{DISASTER_TYPES[d.disaster.type] || d.disaster.type}</span>}
-          {d.disaster?.status === 'active' && <span className="hx-live">Active</span>}
+          {d.disaster && d.disaster.type !== 'hurricane' && <span className="badge t-muted">{DISASTER_TYPES[d.disaster.type] || d.disaster.type}</span>}
+          {phase === 'peace' && <span className="hx-status is-peace"><i aria-hidden="true" />All clear<span className="sub"> · No active hurricane</span></span>}
+          {phase === 'active' && (
+            <span className="hx-status is-active" role="status">
+              <i aria-hidden="true" />
+              {hurricane ? `${hurricane.name} · Cat ${hurricane.category}` : 'Hurricane'} · Evacuation active
+            </span>
+          )}
           <span className="spacer" />
           <button className="hx-sync" onClick={() => d.refresh()} title="Refresh now"><RefreshCw size={13} /> Synced {d.lastSync ? timeAgo(d.lastSync) : '…'}</button>
+          <Link className="btn" to="/evacuation-preview"><Route size={14} /> Preview evacuation</Link>
+          {phase === 'peace' && <button className="btn btn-danger" onClick={() => setDialog('initiate')}><CloudLightning size={14} /> Initiate hurricane</button>}
+          {phase === 'active' && <button className="btn" onClick={() => setDialog('reset')}><RotateCcw size={14} /> Reset to peace</button>}
           <Link className="btn btn-primary" to="/comms/broadcasts"><Send size={14} /> Send broadcast</Link>
         </header>
         {errs.length > 0 ? (
@@ -87,6 +102,8 @@ export default function Layout() {
         ) : <div />}
         <main className="hx-content"><Outlet /></main>
       </div>
+      {dialog === 'initiate' && <InitiateHurricaneDialog onClose={() => setDialog(null)} />}
+      {dialog === 'reset' && <ResetHurricaneDialog onClose={() => setDialog(null)} />}
     </div>
   )
 }
