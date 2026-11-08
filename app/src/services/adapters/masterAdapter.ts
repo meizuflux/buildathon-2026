@@ -37,7 +37,7 @@ export function createMasterAdapter(http: ReturnType<typeof makeHttpClient>, sto
     const petDetails = raw.needs.pets ? local?.petDetails : [];
     return { name: 'My household', adults: raw.adults, children: raw.children, pets: raw.needs.pets ? local?.pets || 1 : 0, petTypes: raw.needs.pets ? local?.petTypes || 'Pets in household' : '', ...(petDetails ? { petDetails } : {}),
       needs: inferredNeeds, otherNeeds: raw.needs.other_special_care ?? '', hasCar: raw.resources.has_car, canDrive: false, seats: 0, needsTransport: local?.needsTransport ?? false, needsShelter: false, needsFood: false,
-      location: { label: sameCoordinates && local ? local.location.label : `${raw.location.latitude.toFixed(5)}, ${raw.location.longitude.toFixed(5)}`, ...raw.location }, id: raw.id, disasterId: raw.disaster_id, updatedAt: raw.updated_at };
+      location: { label: sameCoordinates && local ? local.location.label : `${raw.location.latitude.toFixed(5)}, ${raw.location.longitude.toFixed(5)}`, ...raw.location }, locationMode: local?.locationMode ?? 'home', ...(local?.homeLocation ? { homeLocation: local.homeLocation } : {}), id: raw.id, disasterId: raw.disaster_id, updatedAt: raw.updated_at };
   }
   const getDisasters: ApiAdapter['getDisasters'] = async () => (await http('/api/disasters', z.object({ disasters: z.array(disasterSchema) }))).disasters.map(d => ({ id: d.id, name: d.name, type: d.type, status: d.status, affectedArea: d.affected_area, updatedAt: d.updated_at }));
   async function disasterId() { const profile = await family(); return profile?.disaster_id ?? (await getDisasters())[0]?.id; }

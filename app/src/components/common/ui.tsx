@@ -11,9 +11,9 @@ export type IconName = React.ComponentProps<typeof Feather>['name'];
 export function Icon({ name, size = 20, color }: { name: IconName; size?: number; color?: string }) { const { palette } = useTheme(); return <Feather name={name} size={size} color={color ?? palette.muted} accessible={false} aria-hidden />; }
 export function date(value?: string | null) { return value ? new Date(value).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Not yet synchronized'; }
 export const label = (value: string) => { const text = value.replace(/_/g, ' '); return text.charAt(0).toUpperCase() + text.slice(1); };
-export function Button({ title, onPress, href, variant = 'primary', icon, disabled, busy }: { title: string; onPress?: () => void; href?: Href; variant?: 'primary' | 'secondary' | 'ghost' | 'danger'; icon?: IconName; disabled?: boolean; busy?: boolean }) { const { c, s } = useUI();
-  const dark = variant === 'primary' || variant === 'danger';
-  return <Pressable accessibilityRole="button" accessibilityLabel={title} accessibilityState={{ disabled: !!disabled || !!busy, busy: !!busy }} disabled={disabled || busy} onPress={href ? () => router.push(href) : onPress} style={({ pressed }) => [s.button, variant === 'primary' ? s.primary : variant === 'danger' ? { backgroundColor: c.red } : variant === 'secondary' ? s.secondary : { backgroundColor: c.transparent }, (disabled || busy) && { opacity: 0.55 }, pressed && { opacity: 0.75 }]}>{busy ? <ActivityIndicator color={dark ? c.onPrimary : c.green} /> : icon && !['arrow-right', 'chevron-right'].includes(icon) ? <Icon name={icon} color={dark ? c.onPrimary : c.green} size={17} /> : null}<Text style={[s.buttonText, { color: dark ? c.onPrimary : c.green }]}>{title}</Text></Pressable>;
+export function Button({ title, onPress, href, variant = 'primary', icon, disabled, busy }: { title: string; onPress?: () => void; href?: Href; variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'accent'; icon?: IconName; disabled?: boolean; busy?: boolean }) { const { c, s } = useUI();
+  const dark = variant === 'primary' || variant === 'danger' || variant === 'accent';
+  return <Pressable accessibilityRole="button" accessibilityLabel={title} accessibilityState={{ disabled: !!disabled || !!busy, busy: !!busy }} disabled={disabled || busy} onPress={href ? () => router.push(href) : onPress} style={({ pressed }) => [s.button, variant === 'primary' ? s.primary : variant === 'danger' ? { backgroundColor: c.red } : variant === 'accent' ? s.accent : variant === 'secondary' ? s.secondary : { backgroundColor: c.transparent }, (disabled || busy) && { opacity: 0.55 }, pressed && { opacity: 0.75 }]}>{busy ? <ActivityIndicator color={dark ? c.onPrimary : c.green} /> : icon && !['arrow-right', 'chevron-right'].includes(icon) ? <Icon name={icon} color={dark ? c.onPrimary : c.green} size={17} /> : null}<Text style={[s.buttonText, { color: dark ? c.onPrimary : c.green }]}>{title}</Text></Pressable>;
 }
 export function Card({ children, style }: { children: React.ReactNode; style?: React.ComponentProps<typeof View>['style'] }) { const { c, s } = useUI(); return <View style={[s.card, style]}>{children}</View>; }
 export function Row({ children, style }: { children: React.ReactNode; style?: React.ComponentProps<typeof View>['style'] }) { const { c, s } = useUI(); return <View style={[s.row, style]}>{children}</View>; }
@@ -40,9 +40,14 @@ export function QueryState({ query, children }: { query: { isPending: boolean; i
 export function Page({ title, subtitle, children, action, footer }: { title: string; subtitle?: string; children: React.ReactNode; action?: React.ReactNode; footer?: React.ReactNode }) { const { c, s } = useUI();
   const sync = useSyncContext();
   const theme = useTheme();
-  return <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: c.cream }}><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><View style={s.topbar}><Row style={{ width: '100%', maxWidth: 480, alignSelf: 'center', paddingHorizontal: 24, justifyContent: 'space-between' }}><Text style={s.caption}>{!sync.online ? 'Offline. Saved information' : sync.syncError ? 'Connection needs attention' : 'Connected'}</Text><Row><Pressable accessibilityRole="button" accessibilityLabel={theme.dark ? "Switch to day mode" : "Switch to night mode"} onPress={() => theme.setMode(theme.dark ? 'light' : 'dark')} style={{ minHeight: 48, minWidth: 48, alignItems: 'center', justifyContent: 'center' }}><Icon name={theme.dark ? 'sun' : 'moon'} size={18} /></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Refresh information" onPress={() => void sync.refresh()} style={{ paddingVertical: 10, paddingHorizontal: 4, minHeight: 48 }}><Row><Icon name="refresh-cw" size={14} /><Text style={[s.caption, { color: c.green }]}>{sync.syncing ? 'Refreshing…' : 'Refresh'}</Text></Row></Pressable></Row></Row></View><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 24, gap: 32, width: '100%', maxWidth: 480, alignSelf: 'center', paddingBottom: 44 }} refreshControl={<RefreshControl refreshing={sync.syncing} onRefresh={() => void sync.refresh()} tintColor={c.green} />}>
-    <View style={{ gap: 4 }}><Text style={s.caption}>Last full refresh: {date(sync.lastSync)}</Text></View>
-    {(!sync.online || sync.syncError) && <Notice>{!sync.online ? `You’re offline. Saved plans and assignments may be outdated. Last refresh: ${date(sync.lastSync)}. Verify availability with the provider.` : `${sync.syncError} Last full refresh: ${date(sync.lastSync)}.`}</Notice>}
+  return <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: c.cream }}><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><View style={s.topbar}><Row style={s.brandRow}><Row style={s.brandGroup}><View style={s.brandMark}><View style={s.brandMarkBar} /><View style={[s.brandMarkBar, s.brandMarkBarShort]} /><View style={[s.brandMarkBar, s.brandMarkBarShorter]} /></View><Text style={s.brandName}>Haven</Text></Row><Row style={{ gap: 4 }}>
+    {!sync.online && <Text style={s.caption}>Offline</Text>}
+    {!!sync.syncError && <Text style={s.caption}>Connection issue</Text>}
+    <Pressable accessibilityRole="button" accessibilityLabel="Open updates" onPress={() => router.push('/updates')} style={s.headerIcon}><Icon name="bell" size={20} color={c.ink} /></Pressable>
+    <Pressable accessibilityRole="button" accessibilityLabel="Refresh information" onPress={() => void sync.refresh()} style={s.headerIcon}><Icon name="refresh-cw" size={17} color={c.ink} /></Pressable>
+    <Pressable accessibilityRole="button" accessibilityLabel={theme.dark ? "Switch to day mode" : "Switch to night mode"} onPress={() => theme.setMode(theme.dark ? 'light' : 'dark')} style={s.headerIcon}><Icon name={theme.dark ? 'sun' : 'moon'} size={17} color={c.ink} /></Pressable>
+  </Row></Row></View><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, gap: 20, width: '100%', maxWidth: 480, alignSelf: 'center', paddingBottom: 32 }} refreshControl={<RefreshControl refreshing={sync.syncing} onRefresh={() => void sync.refresh()} tintColor={c.green} />}>
+    {(!sync.online || !!sync.syncError) && <Notice>{!sync.online ? `You’re offline. Saved plans and assignments may be outdated. Last refresh: ${date(sync.lastSync)}. Verify availability with the provider.` : `${sync.syncError} Last full refresh: ${date(sync.lastSync)}.`}</Notice>}
     {sync.online && sync.syncing && <Notice>Refreshing saved information. Resource availability has not yet been reverified. Last full refresh: {date(sync.lastSync)}.</Notice>}
     {!!sync.storageError && <Notice danger>{sync.storageError}</Notice>}
     <Row style={{ justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}><View style={{ gap: 8, flexShrink: 1, minWidth: 0 }}><Text accessibilityRole="header" aria-level={1} style={s.h1}>{title}</Text>{subtitle && <Body muted>{subtitle}</Body>}</View>{action}</Row>
@@ -52,15 +57,15 @@ export function Page({ title, subtitle, children, action, footer }: { title: str
 }
 const createStyles = (c: Palette) => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  card: { paddingVertical: 8, borderRadius: 0, backgroundColor: c.transparent, gap: 16, minWidth: 0 },
-  h1: { fontFamily: type.semibold, fontSize: type.heading, color: c.ink, lineHeight: 32, minWidth: 0 },
+  card: { padding: 14, borderRadius: 8, borderWidth: 1, borderColor: c.border, backgroundColor: c.white, gap: 12, minWidth: 0 },
+  h1: { fontFamily: type.semibold, fontSize: type.heading, color: c.ink, lineHeight: 30, letterSpacing: 0, minWidth: 0 },
   h2: { fontFamily: type.semibold, fontSize: type.section, color: c.ink, lineHeight: 28, minWidth: 0, flexShrink: 1 },
   h3: { fontFamily: type.semibold, fontSize: type.title, color: c.ink, lineHeight: 24, minWidth: 0, flexShrink: 1 },
-  body: { fontFamily: type.family, color: c.text, fontSize: type.body, lineHeight: 24 },
-  caption: { fontFamily: type.family, color: c.muted, fontSize: type.caption, lineHeight: 20, flexShrink: 1 },
+  body: { fontFamily: type.family, color: c.text, fontSize: type.body, lineHeight: 21 },
+  caption: { fontFamily: type.family, color: c.muted, fontSize: type.caption, lineHeight: 17, flexShrink: 1 },
   sectionLabel: { fontFamily: type.medium, fontSize: 13, color: c.muted, lineHeight: 22 },
-  button: { minHeight: 48, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 8, flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center', maxWidth: '100%' },
-  primary: { backgroundColor: c.green }, secondary: { backgroundColor: c.greenLight },
+  button: { minHeight: 44, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8, flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center', maxWidth: '100%' },
+  primary: { backgroundColor: c.green }, accent: { backgroundColor: c.red }, secondary: { backgroundColor: c.greenLight },
   buttonText: { fontFamily: type.semibold, fontSize: type.label, flexShrink: 1 },
   badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, alignSelf: 'flex-start', flexShrink: 0 },
   notice: { padding: 16, borderRadius: 0, borderLeftWidth: 4, borderLeftColor: c.amber, backgroundColor: c.white, alignItems: 'flex-start' },
@@ -69,7 +74,15 @@ const createStyles = (c: Palette) => StyleSheet.create({
   toggle: { minHeight: 54, paddingVertical: 14, paddingHorizontal: 0, borderWidth: 0, borderColor: c.fieldBorder, borderRadius: 8, flexDirection: 'row', gap: 12, alignItems: 'center', marginBottom: 8 },
   check: { height: 22, width: 22, borderWidth: 1, borderColor: c.fieldBorder, borderRadius: 3, alignItems: 'center', justifyContent: 'center' },
   iconTile: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
-  topbar: { minHeight: 48, paddingVertical: 0, backgroundColor: c.chrome, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  topbar: { minHeight: 54, paddingVertical: 2, paddingHorizontal: 20, backgroundColor: c.chrome, borderBottomWidth: 1, borderBottomColor: c.border, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 12 },
+  brandRow: { width: '100%', maxWidth: 440, alignSelf: 'center', justifyContent: 'space-between' },
+  brandGroup: { gap: 8 },
+  brandMark: { width: 23, height: 22, justifyContent: 'center', gap: 2, overflow: 'hidden' },
+  brandMarkBar: { width: 18, height: 4, borderRadius: 2, backgroundColor: c.green, transform: [{ skewX: '-28deg' }] },
+  brandMarkBarShort: { width: 14 },
+  brandMarkBarShorter: { width: 10 },
+  brandName: { fontFamily: type.semibold, fontSize: 17, lineHeight: 22, color: c.ink },
+  headerIcon: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' },
   divider: { height: 16, backgroundColor: c.transparent },
   grid: { flexDirection: 'row', gap: 20, alignItems: 'stretch' },
 });

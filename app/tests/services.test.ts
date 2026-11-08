@@ -6,6 +6,7 @@ import { householdSchema, householdInputSchema, planSchema, assistanceSchema, re
 import { makeHttpClient, ApiError } from '../src/services/api/http';
 import { affectedQueries } from '../src/utils/changes';
 import { newestPlan } from '../src/utils/planVersions';
+import { parseAddressResults } from '../src/services/addressSearch';
 import type { CacheStore } from '../src/storage/cache';
 const memory = (): CacheStore => { const values = new Map<string, string>(); return { async get<T>(key: string) { const value = values.get(key); return value ? JSON.parse(value) as T : null; }, async set(key, value) { values.set(key, JSON.stringify(value)); }, async remove(key) { values.delete(key); } }; };
 
@@ -21,6 +22,27 @@ test('household onboarding, editing, and persistent restore preserve the shared 
   assert(planSchema.safeParse(await restored.getCurrentPlan()).success);
   assert(!householdInputSchema.safeParse({ ...household, adults: 0, children: 0 }).success);
   assert(!householdInputSchema.safeParse({ ...household, children: 1.5 }).success);
+});
+test('household location mode and home address persist when switching to current location', async () => {
+  const store = memory(); const api = new MockAdapter(store, 0);
+  const homeLocation = { label: '1200 River Road, Durham, NC 27701', latitude: 36.01, longitude: -78.91 };
+  const household = await api.createHousehold({ ...households()[0]!, locationMode: 'home', homeLocation });
+  const currentLocation = { label: 'Current location · Durham, NC', latitude: 36.02, longitude: -78.92 };
+  await api.updateHousehold({ ...household, location: currentLocation, locationMode: 'current', homeLocation });
+  const restored = await new MockAdapter(store, 0).getHousehold();
+  assert.equal(restored?.locationMode, 'current');
+  assert.deepEqual(restored?.homeLocation, homeLocation);
+  assert.deepEqual(restored?.location, currentLocation);
+});
+test('address lookup formats selected results and ignores invalid coordinates or payloads', () => {
+  const results = parseAddressResults({ features: [
+    { geometry: { coordinates: [-78.91, 36.01] }, properties: { housenumber: '1200', street: 'River Road', city: 'Durham', state: 'NC', postcode: '27701', country: 'United States' } },
+    { geometry: { coordinates: [-78.91, 36.01] }, properties: { housenumber: '1200', street: 'River Road', city: 'Durham', state: 'NC', postcode: '27701', country: 'United States' } },
+    { geometry: { coordinates: [-78.91, 36.01] }, properties: { city: 'Durham', state: 'NC' } },
+    { geometry: { coordinates: [-181, 36.01] }, properties: { street: 'Invalid Road', city: 'Durham' } },
+  ] });
+  assert.deepEqual(results, [{ label: '1200 River Road, Durham, NC, 27701, United States', latitude: 36.01, longitude: -78.91 }]);
+  assert.deepEqual(parseAddressResults(null), []);
 });
 test('assistance submission stays submitted and retries are idempotent', async () => {
   const api = new MockAdapter(undefined, 0); await api.selectHousehold(1);
