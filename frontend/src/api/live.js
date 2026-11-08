@@ -42,7 +42,6 @@ const q = (params) => {
   return s ? `?${s}` : ''
 }
 const e = encodeURIComponent
-const rid = () => crypto.randomUUID()
 
 export const liveApi = {
   login: (email, password) => request('POST', '/auth/login', { email, password }),
@@ -69,36 +68,8 @@ export const liveApi = {
 
   listReports: (disasterId) => request('GET', `/disasters/${e(disasterId)}/reports`).then((d) => d.reports),
 
-  listResourceTypes: () => request('GET', '/resource-types').then((d) => d.resource_types),
-
-  listOrganizations: (disasterId) => request('GET', `/organizations${q({ disaster_id: disasterId })}`).then((d) => d.organizations),
-  createOrganization: (org) => request('POST', '/organizations', org),
-  updateOrganization: (id, patch) => request('PATCH', `/organizations/${e(id)}`, patch),
-
-  listInventory: (disasterId) => request('GET', `/inventory${q({ disaster_id: disasterId })}`).then((d) => d.items),
-  setInventory: (orgId, items) => request('PATCH', `/organizations/${e(orgId)}/inventory`, { items }).then((d) => d.items),
-
-  listNeeds: (disasterId) => request('GET', `/needs${q({ disaster_id: disasterId })}`).then((d) => d.needs),
-  createNeed: (need) => request('POST', '/needs', need),
-  updateNeed: (id, patch) => request('PATCH', `/needs/${e(id)}`, patch),
-
-  listShipments: (disasterId) => request('GET', `/shipments${q({ disaster_id: disasterId })}`).then((d) => d.shipments),
-  createShipment: (shipment) => request('POST', '/shipments', shipment),
-  updateShipment: (id, patch) => request('PATCH', `/shipments/${e(id)}`, patch),
-
-  listConversations: (disasterId) => request('GET', `/conversations${q({ disaster_id: disasterId })}`).then((d) => d.conversations),
-  createConversation: (body) => request('POST', '/conversations', { ...body, client_request_id: rid() }),
-  listMessages: (id) => request('GET', `/conversations/${e(id)}/messages`).then((d) => d.messages),
-  sendMessage: (id, body) => request('POST', `/conversations/${e(id)}/messages`, { body, client_request_id: rid() }),
-  markConversationRead: (id) => request('POST', `/conversations/${e(id)}/read`),
 
   listActivity: (disasterId) => request('GET', `/disasters/${e(disasterId)}/activity?limit=50`).then((d) => d.activity),
   listAlerts: (disasterId) => request('GET', `/disasters/${e(disasterId)}/alerts?limit=1000`),
-
-  // Partner portal accounts (Part 2 §10)
-  listPartnerAccounts: (disasterId) => request('GET', `/partner-accounts${q({ disaster_id: disasterId })}`).then((d) => d.accounts),
-  createPartnerAccount: (body) => request('POST', '/partner-accounts', body),
-  updatePartnerAccount: (id, patch) => request('PATCH', `/partner-accounts/${e(id)}`, patch),
-  resetPartnerPassword: (id) => request('POST', `/partner-accounts/${e(id)}/reset-password`),
 
 }

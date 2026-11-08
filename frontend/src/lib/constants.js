@@ -11,40 +11,6 @@ export const REPORT_TYPES = {
 }
 export const DISASTER_TYPES = { hurricane: 'Hurricane', flood: 'Flood', tsunami: 'Tsunami', tornado: 'Tornado' }
 
-export const PRIORITIES = ['critical', 'high', 'medium', 'low']
-export const PRIORITY_RANK = { critical: 0, high: 1, medium: 2, low: 3 }
-
-export const CATEGORIES = {
-  water: 'Water',
-  food: 'Food',
-  medication: 'Medication',
-  medical_supplies: 'Medical supplies',
-  baby: 'Baby & infant',
-  bedding: 'Bedding',
-  hygiene: 'Hygiene',
-  clothes: 'Clothes',
-  power: 'Power & fuel',
-}
-
-export const ORG_TYPES = { government: 'Government', nonprofit: 'Nonprofit', private: 'Private', faith: 'Faith-based', medical: 'Medical' }
-export const ORG_SERVICES = {
-  distribution: 'Distribution',
-  food: 'Food',
-  medical: 'Medical',
-  transport: 'Transport',
-  shelter_support: 'Shelter support',
-  logistics: 'Logistics',
-}
-export const ORG_STATUSES = ['active', 'limited', 'inactive']
-
-export const SHIPMENT_FLOW = ['requested', 'approved', 'in_transit', 'delivered']
-export const SHIPMENT_LABEL = { requested: 'Requested', approved: 'Approved', in_transit: 'In transit', delivered: 'Delivered', cancelled: 'Cancelled' }
-export const SHIPMENT_NEXT = {
-  requested: { status: 'approved', label: 'Approve' },
-  approved: { status: 'in_transit', label: 'Mark departed' },
-  in_transit: { status: 'delivered', label: 'Confirm delivery' },
-}
-
 export const AUDIENCE_NEEDS = {
   immediate_medication: 'Needs medication',
   accessibility: 'Accessibility needs',
@@ -105,11 +71,6 @@ export const BROADCAST_TEMPLATES = [
   },
 ]
 
-// Citizen assistance (Part 2 §11)
-export const ASSIST_KINDS = { delivery: 'Supply delivery', transport: 'Transport', medical: 'Medical', welfare_check: 'Welfare check', other: 'Other' }
-export const ASSIST_STATUS = { open: 'Open', claimed: 'Accepted', en_route: 'En route', completed: 'Completed', cancelled: 'Cancelled' }
-export const ASSIST_COLOR = { open: '#d64545', claimed: '#2563eb', en_route: '#7c3aed', completed: '#1f9d55', cancelled: '#8a8f98' }
-
 // Default map centre (Example County demo area).
 export const DEFAULT_CENTER = [26.25, -81.58]
 
@@ -123,20 +84,5 @@ export function emptyShelter(disasterId, location) {
     capacity: { total_people: 100, available_people: 100 },
     capabilities: { pets_allowed: false, child_friendly: false, wheelchair_accessible: false, medical_staff: [], special_care_notes: '' },
     resources: { food: 'unknown', water: 'unknown', medication: 'unknown', clothes: 'unknown' },
-  }
-}
-
-export function emptyOrganization(disasterId) {
-  return {
-    disaster_id: disasterId,
-    name: '',
-    type: 'nonprofit',
-    services: ['distribution'],
-    status: 'active',
-    address: '',
-    location: { latitude: DEFAULT_CENTER[0], longitude: DEFAULT_CENTER[1] },
-    contact: { name: '', phone: '', email: '' },
-    coverage_radius_km: 15,
-    notes: '',
   }
 }

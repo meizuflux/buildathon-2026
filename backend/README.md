@@ -62,17 +62,8 @@ All paths below start with `/api`. Handlers are grouped in `haven/routers`, with
 | POST | `/families/{family_id}/reports` | Submit an idempotent family report. |
 | GET | `/disasters/{disaster_id}/reports` | List family reports as an operator. |
 | GET | `/disasters/{disaster_id}/activity` | Operator timeline of recorded actions, newest first; optional `limit` (1–1000, default 50). |
-| GET | `/resource-types` | List the seeded supply catalog (authenticated users). |
-| GET, POST | `/organizations` | List or create organizations for a disaster (operator only). |
-| GET, PATCH | `/organizations/{organization_id}` | Read or update an organization (operator only). |
-| GET | `/inventory` | List organization stock for a disaster (operator only). |
-| PATCH | `/organizations/{organization_id}/inventory` | Set stock quantities for an organization (operator only). |
-| GET, POST | `/needs` | List or create resource needs (operator only). |
-| PATCH | `/needs/{need_id}` | Update a need (operator only). |
-| GET, POST | `/shipments` | List or create shipments (operator only). |
-| PATCH | `/shipments/{shipment_id}` | Update a shipment's status, ETA, or notes (operator only). |
 
-Family and plan listings accept `limit` (1–1000, default 100) and `offset` (default 0), and return `total`, `limit`, and `offset`. Shelter listings already include resource availability, capabilities, and capacity.
+Family and plan listings accept `limit` (1–1000, default 100) and `offset` (default 0), and return `total`, `limit`, and `offset`. Shelter listings include resource availability labels, capabilities, and capacity; these describe shelter readiness and are not an inventory tracker or resource request system.
 
 PATCH requests merge supplied nested fields, preserving omitted fields. Nullable notes may be cleared with `null`. Coordinates, counts, capacities, and enumerated values are validated. Errors use `{"error":{"code":"...","message":"..."}}` consistently.
 

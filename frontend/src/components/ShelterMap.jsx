@@ -1,24 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import L from 'leaflet'
-import { MapContainer, TileLayer, CircleMarker, Marker, Polyline, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, CircleMarker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
-import { DEFAULT_CENTER, ORG_TYPES, RESOURCE_KEYS, REPORT_TYPES, SHIPMENT_LABEL } from '../lib/constants.js'
+import { DEFAULT_CENTER, RESOURCE_KEYS, REPORT_TYPES } from '../lib/constants.js'
 import { LEVEL_LABEL, cap, shelterLevel, timeAgo } from '../lib/format.js'
-import { isLate } from '../lib/logistics.js'
 
 export const LEVEL_COLOR = { ok: '#1f9d55', low: '#d98a00', full: '#d64545', closed: '#8a8f98' }
-const SHIP_COLOR = { requested: '#94a3b8', approved: '#2563eb', in_transit: '#2563eb' }
 
 const radiusFor = (total) => Math.max(7, Math.min(20, 5 + Math.sqrt(total || 0)))
-
-const orgIcon = (org) =>
-  L.divIcon({
-    className: '',
-    html: `<span class="org-pin org-${org.type} ${org.status !== 'active' ? 'org-dim' : ''}">${org.services.includes('transport') ? '⇄' : org.services.includes('medical') ? '+' : '■'}</span>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-  })
 
 function FitToData({ points, disasterId }) {
   const map = useMap()
@@ -49,18 +38,13 @@ function ClickToPick({ onPick }) {
 }
 
 export default function ShelterMap({
-  shelters, families = [], familyError, reports, organizations = [], shipments = [], disasterId, selectedId, onSelect, focus,
+  shelters, families = [], familyError, reports, disasterId, selectedId, onSelect, focus,
   layers, setLayers, picking, draftLocation, onPick,
 }) {
   const points = useMemo(
-    () => [...shelters, ...organizations, ...families].map((s) => [s.location.latitude, s.location.longitude]),
-    [shelters, organizations, families],
+    () => [...shelters, ...families].map((s) => [s.location.latitude, s.location.longitude]),
+    [shelters, families],
   )
-  const where = (ref) => (ref.kind === 'shelter' ? shelters : organizations).find((x) => x.id === ref.id)?.location
-  const routes = shipments
-    .filter((s) => ['requested', 'approved', 'in_transit'].includes(s.status))
-    .map((s) => ({ s, a: where(s.from), b: where(s.to) }))
-    .filter((r) => r.a && r.b)
 
   return (
     <div className={`map-wrap ${picking ? 'is-picking' : ''}`}>
@@ -72,15 +56,6 @@ export default function ShelterMap({
         <FitToData points={points} disasterId={disasterId} />
         <FlyTo target={focus} />
         {picking && <ClickToPick onPick={onPick} />}
-
-        {layers.shipments && routes.map(({ s, a, b }) => (
-          <Polyline key={s.id} positions={[[a.latitude, a.longitude], [b.latitude, b.longitude]]}
-            pathOptions={{ color: isLate(s) ? '#d64545' : SHIP_COLOR[s.status], weight: 3, opacity: 0.8, dashArray: s.status === 'in_transit' ? '8 6' : '2 6' }}>
-            <Tooltip sticky>
-              {SHIPMENT_LABEL[s.status]}{isLate(s) ? ' (late)' : ''}: {s.from.name} → {s.to.name}
-            </Tooltip>
-          </Polyline>
-        ))}
 
         {layers.reports && reports.filter((r) => r.location).map((r) => (
           <CircleMarker key={r.id} center={[r.location.latitude, r.location.longitude]} radius={6}
@@ -102,20 +77,6 @@ export default function ShelterMap({
               <Link to={`/families/${encodeURIComponent(family.id)}`}>View family profile →</Link>
             </Popup>}
           </CircleMarker>
-        ))}
-
-        {layers.organizations && organizations.map((o) => (
-          <Marker key={o.id} position={[o.location.latitude, o.location.longitude]} icon={orgIcon(o)}>
-            <Tooltip direction="top" offset={[0, -8]}>{o.name}</Tooltip>
-            {!picking && (
-              <Popup>
-                <strong>{o.name}</strong>
-                <div className="popup-meta">{ORG_TYPES[o.type]} · {cap(o.status)}</div>
-                <div className="popup-meta">{o.address}</div>
-                <Link to={`/organizations/${o.id}`}>Open organization →</Link>
-              </Popup>
-            )}
-          </Marker>
         ))}
 
         {layers.shelters && shelters.map((s) => {
@@ -151,7 +112,7 @@ export default function ShelterMap({
       ) : (
         <>
           <div className="layer-toggle" role="group" aria-label="Map layers">
-            {[['shelters', 'Shelters'], ['families', 'Families'], ['organizations', 'Organizations'], ['shipments', 'Shipments'], ['reports', 'Family reports']].map(([k, label]) => (
+            {[['shelters', 'Shelters'], ['families', 'Families'], ['reports', 'Family reports']].map(([k, label]) => (
               <label key={k} className="check">
                 <input type="checkbox" checked={layers[k]} onChange={(e) => setLayers((l) => ({ ...l, [k]: e.target.checked }))} />
                 {label}
@@ -161,10 +122,8 @@ export default function ShelterMap({
           </div>
           <div className="legend" aria-label="Map legend">
             {Object.entries(LEVEL_COLOR).map(([k, c]) => <span key={k}><i style={{ background: c }} />{LEVEL_LABEL[k]}</span>)}
-            <span><span className="org-pin org-nonprofit legend-pin">■</span>Organization</span>
             <span><i style={{ background: '#60a5fa', border: '1px solid #1d4ed8' }} />Family</span>
             <span><i className="legend-report" />Family report</span>
-            <span><i className="legend-route" />Shipment</span>
           </div>
         </>
       )}

@@ -120,24 +120,3 @@ CREATE TABLE IF NOT EXISTS broadcast_targets (
     update_id TEXT PRIMARY KEY REFERENCES disaster_updates(id) ON DELETE CASCADE,
     target_json TEXT NOT NULL
 );
-
-CREATE TABLE IF NOT EXISTS organizations (id TEXT PRIMARY KEY, disaster_id TEXT NOT NULL REFERENCES disasters(id), data TEXT NOT NULL, updated_at TEXT NOT NULL);
-CREATE INDEX IF NOT EXISTS organizations_disaster_idx ON organizations(disaster_id);
-CREATE TABLE IF NOT EXISTS resource_types (id TEXT PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL, unit TEXT NOT NULL);
-INSERT OR IGNORE INTO resource_types VALUES
- ('water_bottled','Bottled water','water','cases'),
- ('food_mre','Ready-to-eat meals','food','meals'),
- ('food_canned','Canned food','food','cases'),
- ('insulin','Insulin (refrigerated)','medication','vials'),
- ('oxygen','Oxygen','medical_supplies','units'),
- ('medical_supplies','Medical supplies','medical_supplies','kits'),
- ('baby_supplies','Baby supplies','baby','kits'),
- ('bedding','Bedding','bedding','sets'),
- ('hygiene','Hygiene supplies','hygiene','kits'),
- ('clothes','Clothes','clothes','sets'),
- ('power','Power supplies','power','units');
-CREATE TABLE IF NOT EXISTS inventory (organization_id TEXT NOT NULL REFERENCES organizations(id), resource_type_id TEXT NOT NULL REFERENCES resource_types(id), quantity INTEGER NOT NULL CHECK(quantity >= 0), reserved INTEGER NOT NULL CHECK(reserved >= 0 AND reserved <= quantity), updated_at TEXT NOT NULL, PRIMARY KEY(organization_id, resource_type_id));
-CREATE TABLE IF NOT EXISTS needs (id TEXT PRIMARY KEY, disaster_id TEXT NOT NULL REFERENCES disasters(id), requester_kind TEXT NOT NULL, requester_id TEXT NOT NULL, resource_type_id TEXT NOT NULL REFERENCES resource_types(id), quantity_needed INTEGER NOT NULL, quantity_fulfilled INTEGER NOT NULL, priority TEXT NOT NULL, status TEXT NOT NULL, needed_by TEXT, notes TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
-CREATE INDEX IF NOT EXISTS needs_disaster_idx ON needs(disaster_id);
-CREATE TABLE IF NOT EXISTS shipments (id TEXT PRIMARY KEY, disaster_id TEXT NOT NULL REFERENCES disasters(id), source_id TEXT NOT NULL REFERENCES organizations(id), destination_kind TEXT NOT NULL, destination_id TEXT NOT NULL, items TEXT NOT NULL, need_ids TEXT NOT NULL, priority TEXT NOT NULL, status TEXT NOT NULL, eta TEXT, notes TEXT, status_history TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
-CREATE INDEX IF NOT EXISTS shipments_disaster_idx ON shipments(disaster_id);
