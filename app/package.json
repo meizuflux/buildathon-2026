@@ -10,12 +10,14 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
+    "test:all": "npm run typecheck && npm test",
     "build:web": "expo export --platform web",
     "design:audit": "tsx scripts/backend-browser.ts",
     "backend:start": "node scripts/backend.mjs",
     "backend:seed": "node scripts/backend.mjs --seed",
     "test:backend": "tsx scripts/backend-integration.ts",
     "test:backend:ui": "tsx scripts/backend-browser.ts",
+    "test:live": "npm run test:backend && npm run test:backend:ui",
     "backend:verify": "node scripts/verify-backend.mjs"
   },
   "dependencies": {

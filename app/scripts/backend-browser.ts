@@ -17,7 +17,8 @@ async function run() {
   const { shelters } = await shelterResponse.json() as { shelters: { status: string; location: { latitude: number; longitude: number }; capabilities: { pets_allowed: boolean; child_friendly: boolean } }[] };
   const shelter = shelters.find(item => item.status === 'open' && item.capabilities.pets_allowed && item.capabilities.child_friendly);
   assert(shelter, 'The seeded disaster must have an open child- and pet-friendly shelter.');
-  const browser = await puppeteer.launch({ executablePath: process.env.CHROME_PATH ?? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', headless: true });
+  const defaultChrome = process.platform === 'win32' ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' : process.platform === 'darwin' ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' : '/usr/bin/google-chrome';
+  const browser = await puppeteer.launch({ executablePath: process.env.CHROME_PATH ?? defaultChrome, headless: true });
   await browser.defaultBrowserContext().overridePermissions(new URL(url).origin, ['geolocation']);
   const out = resolve(appRoot, '.expo/backend-screens'); mkdirSync(out, { recursive: true });
   const errors: string[] = []; const reports: { id: string; status: string; message: string }[] = [];
@@ -53,7 +54,7 @@ async function run() {
     await page.locator('[aria-label="Continue"]').click();
     await page.waitForSelector('[aria-label="Save household profile"]');
     await page.locator('[aria-label="Save household profile"]').click();
-    await page.waitForFunction(() => document.body.innerText.includes('Assigned shelter'), { timeout: 30000 });
+    await page.waitForFunction(() => document.body.innerText.includes('Assigned shelter'), { timeout: 30000 }).catch(async error => { console.log((await page.evaluate(() => document.body.innerText)).slice(0, 3000)); await page.screenshot({ path: resolve(out, 'live-backend-save-failure.png') }); throw error; });
     await clickVisible('Nearby');
     await page.waitForSelector('.leaflet-container');
     await page.screenshot({ path: resolve(out, 'live-backend-shelter.png') });

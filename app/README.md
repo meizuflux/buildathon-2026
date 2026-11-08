@@ -42,6 +42,18 @@ Set `EXPO_PUBLIC_API_BASE_URL` in `.env` to `http://<your-computer-LAN-IP>:8000`
 - Support messages and situation reports are submitted to `POST /api/families/{id}/reports`. The server's `received` status is required before the app says Sent. Stable `client_request_id` values make retries idempotent. Operators can see them in `/api/disasters/{id}/reports`.
 - This master backend does not expose two-way chat or a family report-history endpoint. The app keeps confirmed receipts on this device and does not invent replies. It checks for refreshed household/plan/update data every 10 seconds while active and online.
 
+## Features flagged as unavailable
+
+The app treats the root `backend/` as the source of truth and disables controls the backend cannot back yet. They stay visible and greyed with an explanation instead of returning fake data (`app/src/constants/capabilities.ts`):
+
+- Update source filters (Government / Relief organizations / Unverified) — updates carry severity but no source category.
+- Detailed per-pet counts — the backend stores only whether pets are present.
+- Transportation assistance preference — no backend field; send a Support message instead.
+- Submitted report history — only a local receipt list is kept; there is no family report-history endpoint.
+- Message history and replies — sending is a real family report, but there is no chat/history API.
+
+Assistance request queues and plan history have no backend endpoints and no active UI. `npm run backend:verify` fails if any tracked backend file diverges from `origin/master`.
+
 The backend stores people counts, coordinates, pet presence, care notes, and car availability. Detailed pet counts, street-address text, and the transportation preference remain on this device because the backend has no dedicated fields for them. They are not hidden inside clinical notes, where they could incorrectly affect allocation. Send transportation help through Support. Medication urgency is sent only when explicitly selected.
 
 ## Verify
@@ -53,10 +65,11 @@ npm run typecheck
 npm test
 npm run test:backend
 npm run test:backend:ui
+npm run backend:verify
 npm run build:web
 ```
 
-`test:backend` creates isolated local test accounts and verifies real HTTP profile/plan/report operations, operator report visibility, idempotency, authorization, and logout. `test:backend:ui` drives the mobile-sized app against that actual server, with no mocked API calls. Screenshots and results are in `.hallmark/screens/`. These checks create records in the local test database; do not point them at a production service.
+`test:backend` creates isolated local test accounts and verifies real HTTP profile/plan/report operations, operator report visibility, idempotency, authorization, and logout. `test:backend:ui` drives the mobile-sized app against that actual server, with no mocked API calls (set `CHROME_PATH` to a Chrome/Chromium binary). Screenshots and results are in `.expo/backend-screens/`. These checks create records in the local test database; do not point them at a production service.
 
 Run the original backend tests from the repository root with `backend\.venv\Scripts\python.exe -m pytest backend/tests -q` on Windows. Native map rendering, location permission dialogs, and the 911 dialer still need a device smoke test. Android standalone maps require `GOOGLE_MAPS_ANDROID_API_KEY` at build time; Expo Go can preview the native map. The browser uses Leaflet and OpenStreetMap with attribution.
 

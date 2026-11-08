@@ -1,8 +1,8 @@
 ﻿# Integration with master
 
-The app branch imports the backend unchanged from origin/master commit `1d3c8ee8535951a7443e2d3511d96f3bf03a7b7d`. Run `npm run backend:verify` to compare source files. The stale local master branch is intentionally not reset, merged, or otherwise modified.
+The app branch rebases onto current `origin/master` and uses the repository-root `backend/` directory as the single source of truth. `npm run backend:verify` compares every tracked backend file with `origin/master`. Backend source, lockfile, authentication rules, and allocation behavior are never modified by this app.
 
-The API source of truth is `backend/src/haven/openapi.py` and `backend/src/haven/routers`. `src/services/api/masterSchemas.ts` validates its response shapes. `src/services/adapters/masterAdapter.ts` translates those shapes into the mobile app models. The previous proposed `/api/v1` endpoints are not used by the connected adapter.
+The API source of truth is `backend/src/haven/openapi.py` and `backend/src/haven/routers`. `src/services/api/masterSchemas.ts` validates its response shapes. `src/services/adapters/masterAdapter.ts` translates those shapes into the mobile app models. `src/constants/capabilities.ts` records features the backend does not expose; those controls are rendered disabled/greyed instead of being faked. The previous proposed `/api/v1` API is not used by the connected adapter.
 
 Authentication uses POST /api/auth/register, POST /api/auth/login, GET /api/me, POST /api/auth/logout. Send Bearer tokens; the logout response is an empty 204. Only family accounts can create their own household; operator credentials are not embedded in the app.
 

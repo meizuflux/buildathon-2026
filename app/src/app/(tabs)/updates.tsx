@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { View, Text } from 'react-native';
 import { Page, Card, Row, Icon, Title, Body, Badge, Attribution, Button, Metadata, QueryState, Empty, label, useUI, type IconName } from '../../components/common/ui';
 import { useUpdates } from '../../hooks/queries';
+import { backendCapabilities, unsupportedLabels } from '../../constants/capabilities';
 const icons: Record<string, IconName> = { warning: 'alert-triangle', government: 'info', organization: 'users', request: 'message-circle', resource: 'home', plan: 'map' };
 export default function Updates() {
-	const { c } = useUI(); const query = useUpdates(); const [filter, setFilter] = useState('all');
+	const { c, s } = useUI(); const query = useUpdates(); const [filter, setFilter] = useState('all');
 	const feed = [...(query.data ?? [])].filter(update => filter === 'all' || update.source.kind === filter).sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 	const filters = [{ id: 'all', title: 'All updates' }, { id: 'government', title: 'Government' }, { id: 'organization', title: 'Relief organizations' }, { id: 'unverified', title: 'Unverified reports' }];
 	return <Page title="Updates" subtitle="Latest information for your area.">
-		<Row style={{ flexWrap: 'wrap', gap: 8 }}>{filters.map(item => <Button key={item.id} title={item.title} variant={filter === item.id ? 'primary' : 'secondary'} onPress={() => setFilter(item.id)} />)}</Row>
+		<Row style={{ flexWrap: 'wrap', gap: 8 }}>{filters.map(item => <Button key={item.id} title={item.title} variant={filter === item.id ? 'primary' : 'secondary'} disabled={item.id !== 'all' && !backendCapabilities.updatesSourceFilters} onPress={() => setFilter(item.id)} />)}</Row>
+		{!backendCapabilities.updatesSourceFilters && <Text style={s.caption}>{unsupportedLabels.updatesSourceFilters}</Text>}
 		<QueryState query={query}>{feed.length ? <View style={{ gap: 10 }}>{feed.map(update => <Card key={update.id} style={update.category === 'warning' ? { backgroundColor: c.redLight, borderColor: c.redLight } : undefined}>
 			<Row style={{ alignItems: 'flex-start' }}><Icon name={icons[update.category] ?? 'info'} color={update.category === 'warning' ? c.red : c.blue} size={20} /><View style={{ flex: 1, gap: 6 }}>
 				<Row style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}><Metadata>{label(update.category)}</Metadata><Badge value={update.source.verified ? 'verified' : 'unverified'} /></Row>

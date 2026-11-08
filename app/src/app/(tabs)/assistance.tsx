@@ -9,6 +9,7 @@ import { adapter } from '../../services/adapters';
 import { config } from '../../constants/config';
 import { cache } from '../../storage/cache';
 import { requestId } from '../../utils/id';
+import { unsupportedLabels } from '../../constants/capabilities';
 import { type } from '../../constants/theme';
 import type { MessageInput, SupportMessage } from '../../types/models';
 export default function Assistance() {
@@ -57,7 +58,7 @@ export default function Assistance() {
     <View style={{ padding: 16, borderLeftWidth: 4, borderLeftColor: c.red, backgroundColor: c.white, gap: 8 }}><Row style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}><Title small>Immediate danger?</Title><Pressable accessibilityRole="button" accessibilityLabel="Call 911" onPress={() => void callEmergency()} style={({ pressed }) => ({ minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 8, opacity: pressed ? 0.65 : 1 })}><Icon name="phone" color={c.ink} size={18} /><Text style={{ fontFamily: type.semibold, fontSize: 19, color: c.ink }}>Call 911</Text></Pressable></Row><Text style={s.caption}>In the United States, call 911 for emergency help. Messages are submitted to your coordination team as reports.</Text></View>
     {!!callError && <Notice danger>{callError}</Notice>}
     <View style={{ gap: 24 }}><Row><Icon name="message-square" color={c.green} /><Title small>Your messages</Title></Row>
-      {configured && <Text style={s.caption}>The team can read your messages in its reports dashboard. Replies are not available in this version.</Text>}
+      {configured && <Text style={s.caption}>The team can read your messages in its reports dashboard. {unsupportedLabels.messageHistory} Sent messages are kept on this device as receipts.</Text>}
       {!configured && <Body muted>The support service is not connected. You can write a message and keep it here until sending is available.</Body>}
       <QueryState query={query}>{messages.length ? messages.map(message => <View key={message.id} style={{ alignSelf: message.sender === 'household' ? 'flex-end' : 'flex-start', maxWidth: '94%', gap: 8 }}><Text style={s.caption}>{message.sender === 'household' ? 'You' : 'Support team'}</Text><View style={{ backgroundColor: message.sender === 'household' ? c.greenLight : c.white, borderRadius: 8, padding: 16 }}><Body>{message.body}</Body></View><Text style={s.caption}>{date(message.createdAt)}{message.sender === 'household' ? ' · Sent' : ''}</Text></View>) : <View style={{ paddingVertical: 16, gap: 8 }}><Body>No messages yet.</Body><Text style={s.caption}>Tell the team what you need, or ask about your shelter.</Text></View>}</QueryState>
 
