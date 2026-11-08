@@ -214,6 +214,93 @@ class ReportList(TypedDict):
     reports: list[Report]
 
 
+Requirement = Literal[
+    "medication",
+    "medical_staff",
+    "wheelchair_accessible",
+    "pets",
+    "child_friendly",
+    "special_care",
+]
+
+
+class HurricaneInfo(TypedDict):
+    name: str
+    category: int
+
+
+class HurricaneStatus(TypedDict):
+    disaster_id: str
+    phase: Literal["peace", "active"]
+    hurricane: HurricaneInfo | None
+    started_at: str | None
+    updated_at: str | None
+
+
+class Destination(TypedDict):
+    shelter_id: str | None
+    distance_km: float | None
+    unmet: list[Requirement]
+
+
+class EvacuationHousehold(TypedDict):
+    family_id: str
+    location: LocationResponse
+    people: int
+    has_car: bool
+    requirements: list[Requirement]
+    naive: Destination
+    personalized: Destination
+
+
+class NeedSummary(TypedDict):
+    requirement: Requirement
+    households: int
+    unmet_households: int
+
+
+class TravelSummary(TypedDict):
+    mean_km: float | None
+    p95_km: float | None
+    max_km: float | None
+    total_km: float
+    no_car_mean_km: float | None
+
+
+class ShelterLoad(TypedDict):
+    shelter_id: str
+    name: str
+    people: int
+    total_people: int
+    utilization: float | None
+    people_over_capacity: int
+    unmet_households: int
+
+
+class EvacuationMetrics(TypedDict):
+    households: int
+    people: int
+    unassigned_households: int
+    households_with_needs: int
+    unmet_households: int
+    needs: list[NeedSummary]
+    people_over_capacity: int
+    overcrowded_shelters: int
+    idle_shelters: int
+    max_utilization: float | None
+    min_utilization: float | None
+    travel: TravelSummary
+    shelters: list[ShelterLoad]
+
+
+class EvacuationPreview(TypedDict):
+    disaster_id: str
+    generated_at: str
+    households: list[EvacuationHousehold]
+    naive: EvacuationMetrics
+    personalized: EvacuationMetrics
+
+
 BEARER = [{"BearerAuth": []}]
 
 

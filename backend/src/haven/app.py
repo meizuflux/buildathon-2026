@@ -19,6 +19,7 @@ from haven.routers.activity import router as activity_router
 from haven.routers.alerts import router as alerts_router
 from haven.routers.coordination import router as coordination_router
 from haven.routers.families import router as families_router
+from haven.routers.hurricane import router as hurricane_router
 from haven.routers.relief import router as relief_router
 from haven.startup import initialize_database
 
@@ -69,6 +70,7 @@ app = Litestar(
                 coordination_router,
                 alerts_router,
                 activity_router,
+                hurricane_router,
             ],
         ),
     ],

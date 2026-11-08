@@ -5,9 +5,16 @@ from contextlib import closing
 
 from litestar.testing import TestClient
 
+from haven.allocation_policy import compatibility_mismatches, distance
 from haven.app import app
 from haven.db import database_path
-from haven.demo_data import DEMO_ACCOUNTS, DEMO_DISASTER_ID, DEMO_LOCATIONS, seed_demo_data
+from haven.demo_data import (
+    DEMO_ACCOUNTS,
+    DEMO_DISASTER_ID,
+    DEMO_FAMILY_ID,
+    DEMO_LOCATIONS,
+    seed_demo_data,
+)
 from haven.demo_households import generate_households
 
 
@@ -48,12 +55,16 @@ def test_shared_demo_password_and_seeded_golden_gate_scenario(tmp_path, monkeypa
             client.get(
                 "/api/families", params={"disaster_id": DEMO_DISASTER_ID}, headers=headers
             ).json()["total"]
-            == 1000
+            == 1001
         )
-        plans = client.get(
-            f"/api/disasters/{DEMO_DISASTER_ID}/plans?limit=1000", headers=headers
-        ).json()["plans"]
-        assert len(plans) == 1000
+        plans = []
+        for offset in (0, 1000):
+            page = client.get(
+                f"/api/disasters/{DEMO_DISASTER_ID}/plans?limit=1000&offset={offset}",
+                headers=headers,
+            ).json()
+            plans += page["plans"]
+        assert len(plans) == page["total"] == 1001
         assert all(plan["shelter"] is not None and plan["capacity_reserved"] for plan in plans)
         assert all(not plan["alerts"] for plan in plans)
 
@@ -81,9 +92,9 @@ def test_reseeding_recreates_the_entire_demo_database(tmp_path, monkeypatch):
     assert first_credentials != second_credentials
     with closing(sqlite3.connect(database_path())) as connection:
         assert connection.execute("SELECT count(*) FROM shelters").fetchone()[0] == 9
-        assert connection.execute("SELECT count(*) FROM families").fetchone()[0] == 1000
-        assert connection.execute("SELECT count(*) FROM current_assignments").fetchone()[0] == 1000
-        assert connection.execute("SELECT count(*) FROM plans").fetchone()[0] == 1000
+        assert connection.execute("SELECT count(*) FROM families").fetchone()[0] == 1001
+        assert connection.execute("SELECT count(*) FROM current_assignments").fetchone()[0] == 1001
+        assert connection.execute("SELECT count(*) FROM plans").fetchone()[0] == 1001
         assert connection.execute(
             "SELECT min(adults + children), max(adults + children) FROM families"
         ).fetchone() == (1, 8)
@@ -114,7 +125,8 @@ def test_reseeding_recreates_the_entire_demo_database(tmp_path, monkeypatch):
         )
         locations = json.loads(DEMO_LOCATIONS.read_text())
         assert connection.execute(
-            "SELECT latitude, longitude FROM families ORDER BY id"
+            "SELECT latitude, longitude FROM families WHERE id != ? ORDER BY id",
+            (DEMO_FAMILY_ID,),
         ).fetchall() == [(h["latitude"], h["longitude"]) for h in locations["households"]]
         assert connection.execute(
             "SELECT address, latitude, longitude FROM shelters ORDER BY id"
@@ -182,3 +194,56 @@ def test_household_locations_are_distinct_verified_estates_homes():
     assert all(south <= h["latitude"] <= north and west <= h["longitude"] <= east for h in homes)
     assert len(data["shelters"]) == 9
     assert all("Naples, FL" in s["address"] for s in data["shelters"])
+
+
+def test_demo_family_is_failed_by_nearest_shelter_but_not_by_haven(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "resident.sqlite3"))
+    asyncio.run(seed_demo_data())
+    with closing(sqlite3.connect(database_path())) as connection:
+        row = connection.execute(
+            "SELECT f.adults, f.children, f.latitude, f.longitude, f.needs_json, f.resources_json, "
+            "u.email FROM families f JOIN users u ON u.id = f.owner_user_id WHERE f.id = ?",
+            (DEMO_FAMILY_ID,),
+        ).fetchone()
+        assert row is not None
+        adults, children, latitude, longitude, needs_json, resources_json, email = row
+        assert email == "family@demo.example"
+        assert (adults, children) == (2, 1)
+        needs = json.loads(needs_json)
+        assert needs["pets"] and needs["immediate_medication"] and needs["medical_notes"]
+        assert needs["accessibility_notes"] == "Wheelchair-accessible entrance needed"
+        assert needs["other_special_care"] is None
+        assert json.loads(resources_json) == {"has_car": False}
+        homes = json.loads(DEMO_LOCATIONS.read_text())["households"]
+        assert (latitude, longitude) in {(h["latitude"], h["longitude"]) for h in homes}
+
+        family = {
+            "location": {"latitude": latitude, "longitude": longitude},
+            "needs": needs,
+            "adults": adults,
+            "children": children,
+        }
+        shelters = [
+            {
+                "id": shelter_id,
+                "location": {"latitude": lat, "longitude": lon},
+                "capabilities": json.loads(capabilities),
+                "resources": json.loads(resources),
+            }
+            for shelter_id, lat, lon, capabilities, resources in connection.execute(
+                "SELECT id, latitude, longitude, capabilities_json, resources_json FROM shelters"
+            )
+        ]
+        nearest = min(shelters, key=lambda shelter: distance(family, shelter))
+        assert not nearest["capabilities"]["medical_staff"]
+        assert "medical_staff" in compatibility_mismatches(family, nearest)
+
+        plan = json.loads(
+            connection.execute(
+                "SELECT plan_json FROM plans WHERE family_id = ? ORDER BY version DESC LIMIT 1",
+                (DEMO_FAMILY_ID,),
+            ).fetchone()[0]
+        )
+        assert plan["shelter"] is not None
+        assert plan["shelter"]["id"] != nearest["id"]
+        assert not any(alert["code"] == "shelter_needs_mismatch" for alert in plan["alerts"])

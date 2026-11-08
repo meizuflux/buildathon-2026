@@ -273,6 +273,338 @@ export namespace Haven {
         };
     };
 
+    export namespace ApiDisastersDisasterIdEvacuationPreviewEvacuationPreview {
+        export namespace Http200 {
+            export type ResponseBody = {
+                disaster_id: string;
+                generated_at: string;
+                households: {
+                    family_id: string;
+                    has_car: boolean;
+                    location: {
+                        latitude: number;
+                        longitude: number;
+                    };
+                    naive: {
+                        distance_km: null | number;
+                        shelter_id: null | string;
+                        unmet: ("child_friendly" | "medical_staff" | "medication" | "pets" | "special_care" | "wheelchair_accessible")[];
+                    };
+                    people: number;
+                    personalized: {
+                        distance_km: null | number;
+                        shelter_id: null | string;
+                        unmet: ("child_friendly" | "medical_staff" | "medication" | "pets" | "special_care" | "wheelchair_accessible")[];
+                    };
+                    requirements: ("child_friendly" | "medical_staff" | "medication" | "pets" | "special_care" | "wheelchair_accessible")[];
+                } [];
+                naive: {
+                    households: number;
+                    households_with_needs: number;
+                    idle_shelters: number;
+                    max_utilization: null | number;
+                    min_utilization: null | number;
+                    needs: {
+                        households: number;
+                        requirement: "child_friendly" | "medical_staff" | "medication" | "pets" | "special_care" | "wheelchair_accessible";
+                        unmet_households: number;
+                    } [];
+                    overcrowded_shelters: number;
+                    people: number;
+                    people_over_capacity: number;
+                    shelters: {
+                        name: string;
+                        people: number;
+                        people_over_capacity: number;
+                        shelter_id: string;
+                        total_people: number;
+                        unmet_households: number;
+                        utilization: null | number;
+                    } [];
+                    travel: {
+                        max_km: null | number;
+                        mean_km: null | number;
+                        no_car_mean_km: null | number;
+                        p95_km: null | number;
+                        total_km: number;
+                    };
+                    unassigned_households: number;
+                    unmet_households: number;
+                };
+                personalized: {
+                    households: number;
+                    households_with_needs: number;
+                    idle_shelters: number;
+                    max_utilization: null | number;
+                    min_utilization: null | number;
+                    needs: {
+                        households: number;
+                        requirement: "child_friendly" | "medical_staff" | "medication" | "pets" | "special_care" | "wheelchair_accessible";
+                        unmet_households: number;
+                    } [];
+                    overcrowded_shelters: number;
+                    people: number;
+                    people_over_capacity: number;
+                    shelters: {
+                        name: string;
+                        people: number;
+                        people_over_capacity: number;
+                        shelter_id: string;
+                        total_people: number;
+                        unmet_households: number;
+                        utilization: null | number;
+                    } [];
+                    travel: {
+                        max_km: null | number;
+                        mean_km: null | number;
+                        no_car_mean_km: null | number;
+                        p95_km: null | number;
+                        total_km: number;
+                    };
+                    unassigned_households: number;
+                    unmet_households: number;
+                };
+            };
+        };
+
+        export namespace Http400 {
+            export type ResponseBody = {
+                detail: string;
+                extra ? : Record < string,
+                unknown > | null | unknown[];
+                status_code: number;
+            };
+        };
+
+        export namespace Http401 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http403 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http404 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http500 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export interface PathParameters {
+            disaster_id: string;
+        };
+    };
+
+    export namespace ApiDisastersDisasterIdHurricaneGetHurricane {
+        export namespace Http200 {
+            export type ResponseBody = {
+                disaster_id: string;
+                hurricane: null | {
+                    category: number;
+                    name: string;
+                };
+                phase: "active" | "peace";
+                started_at: null | string;
+                updated_at: null | string;
+            };
+        };
+
+        export namespace Http400 {
+            export type ResponseBody = {
+                detail: string;
+                extra ? : Record < string,
+                unknown > | null | unknown[];
+                status_code: number;
+            };
+        };
+
+        export namespace Http404 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http500 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export interface PathParameters {
+            disaster_id: string;
+        };
+    };
+
+    export namespace ApiDisastersDisasterIdHurricaneInitiateInitiateHurricane {
+        export namespace Http200 {
+            export type ResponseBody = {
+                disaster_id: string;
+                hurricane: null | {
+                    category: number;
+                    name: string;
+                };
+                phase: "active" | "peace";
+                started_at: null | string;
+                updated_at: null | string;
+            };
+        };
+
+        export namespace Http400 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http401 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http403 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http404 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http409 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http500 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export interface PathParameters {
+            disaster_id: string;
+        };
+
+        export type RequestBody = null | {
+            category ? : number;
+            name ? : string;
+        };
+    };
+
+    export namespace ApiDisastersDisasterIdHurricaneResetResetHurricane {
+        export namespace Http200 {
+            export type ResponseBody = {
+                disaster_id: string;
+                hurricane: null | {
+                    category: number;
+                    name: string;
+                };
+                phase: "active" | "peace";
+                started_at: null | string;
+                updated_at: null | string;
+            };
+        };
+
+        export namespace Http400 {
+            export type ResponseBody = {
+                detail: string;
+                extra ? : Record < string,
+                unknown > | null | unknown[];
+                status_code: number;
+            };
+        };
+
+        export namespace Http401 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http403 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http404 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http500 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export interface PathParameters {
+            disaster_id: string;
+        };
+    };
+
     export namespace ApiDisastersDisasterIdPlansListPlans {
         export namespace Http200 {
             export type ResponseBody = {

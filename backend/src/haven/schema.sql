@@ -120,3 +120,13 @@ CREATE TABLE IF NOT EXISTS broadcast_targets (
     update_id TEXT PRIMARY KEY REFERENCES disaster_updates(id) ON DELETE CASCADE,
     target_json TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS hurricane_status (
+    disaster_id TEXT PRIMARY KEY REFERENCES disasters(id) ON DELETE CASCADE,
+    phase TEXT NOT NULL CHECK (phase IN ('peace', 'active')),
+    hurricane_name TEXT,
+    category INTEGER CHECK (category IS NULL OR category BETWEEN 1 AND 5),
+    started_at TEXT,
+    broadcast_update_id TEXT,
+    updated_at TEXT NOT NULL
+);
