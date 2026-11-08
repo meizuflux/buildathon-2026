@@ -1,18 +1,17 @@
 import { useMemo } from 'react'
-import { Link, NavLink } from 'react-router-dom'
-import { ArrowRight, Boxes, CircleHelp, ClipboardList, Plus, Truck, type LucideIcon } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowRight, CircleHelp, Plus } from 'lucide-react'
 import { useData } from '../data'
 import { buildLogisticsPreview, type LogisticsPriority } from '../lib/logisticsPreview'
 import { Empty, Head } from '../components/ui'
 
 export type LogisticsSection = 'needs' | 'dispatch' | 'inventory'
 
-const SECTIONS: Record<LogisticsSection, { title: string; sub: string; icon: LucideIcon; action: string }> = {
-  needs: { title: 'Needs', sub: 'Requests for supplies and support across the response.', icon: ClipboardList, action: 'Add need' },
-  dispatch: { title: 'Dispatch', sub: 'How deliveries could move from request to arrival.', icon: Truck, action: 'Create dispatch' },
-  inventory: { title: 'Inventory', sub: 'Supplies and quantities at local staging sites.', icon: Boxes, action: 'Add inventory' },
+const SECTIONS: Record<LogisticsSection, { title: string; sub: string; action: string }> = {
+  needs: { title: 'Needs', sub: 'Requests for supplies and support across the response.', action: 'Add need' },
+  dispatch: { title: 'Dispatch', sub: 'How deliveries could move from request to arrival.', action: 'Create dispatch' },
+  inventory: { title: 'Inventory', sub: 'Supplies and quantities at local staging sites.', action: 'Add inventory' },
 }
-const SECTION_KEYS = Object.keys(SECTIONS) as LogisticsSection[]
 const AVAIL_TONE: Record<string, string> = { available: 't-green', limited: 't-amber', unavailable: 't-red', unknown: 't-muted' }
 const PRIORITY_TONE: Record<LogisticsPriority, string> = { Urgent: 't-red', High: 't-amber', Routine: 't-muted' }
 
@@ -34,12 +33,6 @@ export default function Logistics({ section = 'needs' }: { section?: LogisticsSe
         <CircleHelp size={18} />
         <div><strong>Preview only.</strong> Shelter details are live. Requests, quantities and delivery steps are examples, and actions are not available yet.</div>
       </div>
-      <nav className="hx-tabs" aria-label="Logistics sections">
-        {SECTION_KEYS.map((key) => {
-          const Icon = SECTIONS[key].icon
-          return <NavLink key={key} to={`/logistics/${key}`} className={({ isActive }) => (isActive ? 'active' : '')}><Icon size={15} />{SECTIONS[key].title}</NavLink>
-        })}
-      </nav>
 
       {d.errors.shelters ? <p className="notice notice-error">Shelter details could not be loaded. Try refreshing.</p>
         : !preview ? <Empty>Loading shelter details…</Empty>
