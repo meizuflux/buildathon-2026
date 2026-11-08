@@ -9,11 +9,39 @@ import { compact, type Algo } from '../lib/evac'
 
 export type EvacPin = { id: string; name: string; lat: number; lng: number; total: number }
 export type EvacFilter = Requirement | 'any' | null
+/** ready: everyone at home. running: plays once, then onDone. done: everyone at their shelter. */
+export type EvacPhase = 'ready' | 'running' | 'done'
 
 const TRAVEL_S = 2.8 // each household's trip
 const STAGGER_S = 2.2 // start times are spread over this window (total about 5 s)
 const COLORS = ['#9fb2c6', '#4fc48d', '#f2615e'] // neutral, all met, unmet
 const TWO_PI = Math.PI * 2
+const SLOT_GAP = 5 // px between neighbouring arrivals; dots are 6 px wide, so the crowd touches
+const PIN_CLEAR = 22 // keep arrivals just outside the shelter pin (radius 19 plus its ring)
+
+// The n hex-grid points nearest the shelter, outside the pin: a tight crowd, not a ring.
+const slotCache = new Map<number, [number, number][]>()
+function crowdSlots(n: number): [number, number][] {
+  const cached = slotCache.get(n)
+  if (cached) return cached
+  const rowH = SLOT_GAP * Math.sqrt(3) / 2
+  const need = (PIN_CLEAR * PIN_CLEAR * Math.PI + n * SLOT_GAP * rowH) / Math.PI
+  const reach = Math.sqrt(need) + SLOT_GAP * 2
+  const pts: [number, number, number][] = []
+  for (let r = -Math.ceil(reach / rowH); r <= Math.ceil(reach / rowH); r++) {
+    const y = r * rowH
+    const off = (r & 1) * SLOT_GAP / 2
+    for (let c = -Math.ceil(reach / SLOT_GAP) - 1; c <= Math.ceil(reach / SLOT_GAP) + 1; c++) {
+      const x = c * SLOT_GAP + off
+      const d = Math.hypot(x, y)
+      if (d >= PIN_CLEAR && d <= reach) pts.push([x, y, d])
+    }
+  }
+  pts.sort((a, b) => a[2] - b[2] || a[0] - b[0] || a[1] - b[1])
+  const slots = pts.slice(0, n).map(([x, y]): [number, number] => [x, y])
+  slotCache.set(n, slots)
+  return slots
+}
 
 type Model = {
   n: number
@@ -49,8 +77,8 @@ function buildModel(households: EvacuationHousehold[], pins: EvacPin[], algo: Al
     delay: new Float32Array(n), jx: new Float32Array(n), jy: new Float32Array(n),
     people: new Int32Array(n), shelter: new Int16Array(n), byColor: [], doneAt: 0,
   }
-  const counters = new Int32Array(pins.length)
   const lists: number[][] = [[], [], []]
+  const arrivals: number[][] = pins.map(() => [])
   let maxDelay = 0
   households.forEach((h, i) => {
     const dest = h[algo]
@@ -64,18 +92,28 @@ function buildModel(households: EvacuationHousehold[], pins: EvacPin[], algo: Al
     if (si >= 0) {
       m.destLat[i] = pins[si].lat
       m.destLng[i] = pins[si].lng
-      // Golden-angle spiral gives each arrival a stable spot around its shelter.
-      const k = counters[si]++
-      const a = k * 2.39996
-      const r = 27 + 3.1 * Math.sqrt(k)
-      m.jx[i] = Math.cos(a) * r
-      m.jy[i] = Math.sin(a) * r
+      arrivals[si].push(i)
     } else {
       m.destLat[i] = m.homeLat[i]
       m.destLng[i] = m.homeLng[i]
     }
     const color = dest.unmet.length > 0 || (si < 0 && h.requirements.length > 0) ? 2 : h.requirements.length > 0 ? 1 : 0
     lists[color].push(i)
+  })
+  // Pack each shelter's arrivals into its nearest crowd slots, matching the side they came from,
+  // so the crowd grows towards its neighbourhoods and paths don't cross.
+  arrivals.forEach((members, si) => {
+    if (!members.length) return
+    const pin = pins[si]
+    const cosLat = Math.cos((pin.lat * Math.PI) / 180)
+    const bearing = (i: number) => Math.atan2(-(m.homeLat[i] - pin.lat), (m.homeLng[i] - pin.lng) * cosLat)
+    const byBearing = [...members].sort((a, b) => bearing(a) - bearing(b) || a - b)
+    const slots = [...crowdSlots(members.length)].sort((a, b) => Math.atan2(a[1], a[0]) - Math.atan2(b[1], b[0]))
+    byBearing.forEach((i, k) => {
+      const jitter = hash01(households[i].family_id + ':j') - 0.5
+      m.jx[i] = slots[k][0] + jitter
+      m.jy[i] = slots[k][1] - jitter
+    })
   })
   m.byColor = lists.map((l) => Int32Array.from(l))
   m.doneAt = maxDelay + TRAVEL_S
@@ -93,11 +131,12 @@ function computeLit(m: Model, filter: EvacFilter): Uint8Array {
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
-export default function EvacCanvas({ households, pins, algo, runKey, filter }: {
+export default function EvacCanvas({ households, pins, algo, phase, onDone, filter }: {
   households: EvacuationHousehold[]
   pins: EvacPin[]
   algo: Algo
-  runKey: number
+  phase: EvacPhase
+  onDone: () => void
   filter: EvacFilter
 }) {
   const map = useMap()
@@ -105,6 +144,9 @@ export default function EvacCanvas({ households, pins, algo, runKey, filter }: {
   const modelRef = useRef<Model>(model)
   const litRef = useRef<Uint8Array>(new Uint8Array(0))
   const filterRef = useRef<EvacFilter>(filter)
+  const phaseRef = useRef<EvacPhase>(phase)
+  const onDoneRef = useRef(onDone)
+  onDoneRef.current = onDone
   const ctl = useRef<{ restart: () => void; redraw: () => void } | null>(null)
 
   // Canvas, draw loop and map listeners: created once per map.
@@ -141,7 +183,8 @@ export default function EvacCanvas({ households, pins, algo, runKey, filter }: {
       const h = container.clientHeight
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.clearRect(0, 0, w, h)
-      const elapsed = reduced() ? Infinity : (now - t0) / 1000
+      const ph = phaseRef.current
+      const elapsed = ph === 'ready' ? 0 : ph === 'done' || reduced() ? Infinity : (now - t0) / 1000
       if (xs.length !== m.n) { xs = new Float32Array(m.n); ys = new Float32Array(m.n) }
       if (arrived.length !== m.pins.length) arrived = new Int32Array(m.pins.length)
       arrived.fill(0)
@@ -225,7 +268,11 @@ export default function EvacCanvas({ households, pins, algo, runKey, filter }: {
           ctx.fillText(label, pt.x, pt.y - 37)
         }
       }
-      return !finished
+      if (ph === 'running' && finished) {
+        phaseRef.current = 'done'
+        onDoneRef.current()
+      }
+      return ph === 'running' && !finished
     }
 
     const frame = (now: number) => {
@@ -258,14 +305,19 @@ export default function EvacCanvas({ households, pins, algo, runKey, filter }: {
     }
   }, [map])
 
-  // New data, algorithm or Replay: rebuild highlight flags and play from the start.
+  // New data or algorithm: swap the model and redraw in the current phase (never restarts on its own).
   useEffect(() => {
     modelRef.current = model
-    filterRef.current = filter
-    litRef.current = computeLit(model, filter)
-    ctl.current?.restart()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model, runKey])
+    litRef.current = computeLit(model, filterRef.current)
+    ctl.current?.redraw()
+  }, [model])
+
+  // Run plays once from the start; ready and done just redraw.
+  useEffect(() => {
+    phaseRef.current = phase
+    if (phase === 'running') ctl.current?.restart()
+    else ctl.current?.redraw()
+  }, [phase])
 
   // Highlight changes only redraw.
   useEffect(() => {

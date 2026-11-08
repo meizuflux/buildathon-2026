@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
-import { CloudLightning, Play, RefreshCw, X } from 'lucide-react'
+import { CloudLightning, Play, RefreshCw, RotateCcw, X } from 'lucide-react'
 import type { EvacuationMetrics, Requirement } from '../api/types'
 import { useData } from '../data'
 import { Meter, Seg } from '../components/ui'
 import OpsMap from '../components/OpsMap'
-import EvacCanvas, { type EvacFilter, type EvacPin } from '../components/EvacCanvas'
+import EvacCanvas, { type EvacFilter, type EvacPhase, type EvacPin } from '../components/EvacCanvas'
 import { InitiateHurricaneDialog, useHurricanePhase } from '../components/HurricaneDialogs'
 import { REQUIREMENTS, REQ_UNMET_LABEL, km, pct, useEvacuationPreview, type Algo } from '../lib/evac'
 
@@ -78,20 +78,24 @@ export default function EvacuationPreview() {
   const phase = useHurricanePhase()
   const { preview, loading, error, reload } = useEvacuationPreview(d.disasterId)
   const [algo, setAlgo] = useState<Algo>('naive')
-  const [runKey, setRunKey] = useState(0)
+  const [run, setRun] = useState<EvacPhase>('ready')
   const [filter, setFilter] = useState<EvacFilter>(null)
   const [initiating, setInitiating] = useState(false)
 
   const households = preview?.households
   const extraPoints = useMemo(() => (households ?? []).map((h): [number, number] => [h.location.latitude, h.location.longitude]), [households])
+  // The dashboard re-polls shelters every few seconds as new objects. Key the pins on their values so a
+  // poll never rebuilds (and so never disturbs) the animation.
+  const shelterKey = d.shelters.filter((s) => s.status !== 'closed')
+    .map((s) => `${s.id}|${s.name}|${s.location.latitude}|${s.location.longitude}`).join('\n')
   const pins = useMemo<EvacPin[]>(() => {
-    if (!preview) return []
+    if (!preview || !shelterKey) return []
     const totals = new Map(preview[algo].shelters.map((s) => [s.shelter_id, s.total_people]))
-    return d.shelters.filter((s) => s.status !== 'closed').map((s) => ({
-      id: s.id, name: s.name.replace(/^Demo — /, ''), lat: s.location.latitude, lng: s.location.longitude,
-      total: totals.get(s.id) ?? s.capacity.total_people ?? 0,
-    }))
-  }, [preview, algo, d.shelters])
+    return shelterKey.split('\n').map((line) => {
+      const [id, name, lat, lng] = line.split('|')
+      return { id, name: name.replace(/^Demo — /, ''), lat: Number(lat), lng: Number(lng), total: totals.get(id) ?? 0 }
+    })
+  }, [preview, algo, shelterKey])
 
   const rows = useMemo(() => (preview ? buildRows(preview.naive, preview.personalized) : []), [preview])
   const metrics = preview?.[algo]
@@ -100,21 +104,23 @@ export default function EvacuationPreview() {
     return households.filter((h) => (filter === 'any' ? h[algo].unmet.length > 0 : h[algo].unmet.includes(filter))).length
   }, [households, filter, algo])
 
-  const pick = (a: Algo) => { setAlgo(a); setRunKey((k) => k + 1) }
+  const pick = (a: Algo) => { setAlgo(a); setRun('ready') }
   const toggleFilter = (f: EvacFilter) => setFilter((cur) => (cur === f ? null : f))
 
   return (
     <div className="hx-overview hx-evac">
       <div className="hx-mapcol">
         <OpsMap shelters={d.shelters} layers={NO_LAYERS} fitKey={`${d.disasterId}:${preview ? 1 : 0}`} extraPoints={extraPoints} popups={false}>
-          {preview && <EvacCanvas households={preview.households} pins={pins} algo={algo} runKey={runKey} filter={filter} />}
+          {preview && <EvacCanvas households={preview.households} pins={pins} algo={algo} phase={run} onDone={() => setRun('done')} filter={filter} />}
         </OpsMap>
 
         <div className="hx-float hx-evac-controls">
           <div className="row">
             <Seg label="Routing method" value={algo} onChange={pick}
               options={[['naive', 'Nearest shelter (old)'], ['personalized', 'Haven personalized']]} />
-            <button className="btn" onClick={() => setRunKey((k) => k + 1)} disabled={!preview}><Play size={13} /> Replay</button>
+            {run === 'done'
+              ? <button className="btn" onClick={() => setRun('ready')}><RotateCcw size={13} /> Reset</button>
+              : <button className="btn btn-primary" onClick={() => setRun('running')} disabled={!preview || run === 'running'}><Play size={13} /> {run === 'running' ? 'Running…' : 'Run preview'}</button>}
             {phase === 'peace' && <button className="btn btn-danger" onClick={() => setInitiating(true)}><CloudLightning size={14} /> Initiate hurricane</button>}
           </div>
           <span className="small muted">Simulation · straight-line paths, not routes</span>
