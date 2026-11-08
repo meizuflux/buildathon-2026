@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     email TEXT NOT NULL COLLATE NOCASE UNIQUE,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('family', 'operator', 'hub_staff')),
+    role TEXT NOT NULL CHECK (role IN ('family', 'operator')),
     created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS sessions (

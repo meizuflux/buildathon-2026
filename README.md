@@ -10,9 +10,9 @@ Haven is a disaster response coordination project. It brings together a governme
 
 ## Project structure
 
-- [`app/`](app/) — Mobile app placeholder.
+- [`app/`](app/) — React Native/Expo household app.
 - [`backend/`](backend/) — Litestar API with an SQLite database, authentication, family profiles, shelters, alerts, reports, and shelter allocation.
-- [`frontend/`](frontend/) — React/Vite operations dashboard, with preview-only WIP screens for logistics.
+- [`frontend/`](frontend/) — React/Vite operations dashboard, including preview-only logistics screens.
 
 ## Getting started
 

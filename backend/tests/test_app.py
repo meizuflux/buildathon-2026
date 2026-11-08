@@ -17,7 +17,22 @@ def test_startup_creates_schema_and_health_endpoint(tmp_path, monkeypatch):
             row[0]
             for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
         }
-    assert not {"organizations", "resource_types", "inventory", "needs", "shipments"} & tables
+    assert (
+        not {
+            "organizations",
+            "resource_types",
+            "inventory",
+            "needs",
+            "shipments",
+            "hubs",
+            "hub_staff",
+            "supply_requests",
+            "pledges",
+            "custom_submissions",
+            "pickup_requests",
+        }
+        & tables
+    )
     assert {
         "users",
         "sessions",
@@ -27,16 +42,6 @@ def test_startup_creates_schema_and_health_endpoint(tmp_path, monkeypatch):
         "plans",
         "disaster_updates",
         "reports",
-        "resource_types",
-        "organizations",
-        "inventory",
-        "needs",
-        "shipments",
-        "custom_submissions",
-        "pickup_requests",
-        "hub_staff",
-        "supply_requests",
-        "pledges",
     } <= tables
 
 
@@ -60,6 +65,11 @@ def test_openapi_docs_and_schema(tmp_path, monkeypatch):
                 "/api/organizations",
                 "/api/inventory",
                 "/api/resource-types",
+                "/api/hubs",
+                "/api/hubs/nearby",
+                "/api/pledges",
+                "/api/requests",
+                "/api/custom",
             )
         )
         assert {

@@ -45,6 +45,8 @@ Demo data is disposable: there are no data migrations, version markers, or compa
 
 All paths below start with `/api`. Handlers are grouped in `haven/routers`, with shared authorization in `api_common.py` and native async APSW connections in `db.py`.
 
+CORS allows all origins by default; set `CORS_ORIGINS` to a comma-separated list to restrict it.
+
 | Method | Path | Behavior |
 | --- | --- | --- |
 | GET | `/disasters` | List active disasters. |
@@ -114,81 +116,3 @@ Resolved conditions disappear when the frontend fetches again; this is not an
 historical event log. Replace the displayed list on refresh. Offset pagination
 can shift as conditions change. Limits range from 1 to 1000. The endpoint is
 operator-only because family alerts expose operational household information.
-
-## Donation distribution
-
-Community hubs (churches, fire stations, schools) hold donated supplies. Citizens never pick a hub. They say what they have or need, and the server matches them: a donation goes to the best drop-off hub, and a request goes to the best source hub, where its items are reserved. Hub staff confirm drop-offs and log stock. Government workers claim matched requests, choose delivery or pickup, and dispatch transport to clear full hubs.
-
-Roles: `family` (citizen), `hub_staff` (linked to one hub through the `hub_staff` table), and `operator`. Migration 3 adds the donation tables and the `hub_staff` role to existing databases, so no database needs recreating.
-
-Donations are built on the operator logistics tables in `haven/routers/logistics.py` (organizations, inventory, resource types). A hub is an organization with a row in `hubs` (site type and storage size); `hub_view` combines the two and computes % full from current stock. Organizations without a hub row are back-office depots. Operator shipments and citizen requests reserve and deduct the same `inventory` rows, so stock is never double-booked. The catalog is the logistics resource types plus specific citizen items (baby formula, diapers, blankets, cots, generators, and so on). `resource_type_details` marks which ones citizens can request and pledge; clinical items and the broad operational types are operator-only.
-
-**Nobody types in hub stock.** Quantities change only through app events: pledges received, requests fulfilled, shipments, walk-in donations, and transport pickups. A hub's `capacity_pct` is units on hand divided by its `storage_units` (set once), recalculated after every change. Targets come from demand (`donations/targets.py`): each item's target is `ceil(1.5 × demand) + baseline`. Demand is the last 7 days of citizen requests plus the unfilled part of open shelter needs, each counted at the nearest hub. The baseline is a small standing stock of essentials, such as 20 cases of water and 10 packs of diapers.
-
-Each hub supply in a response has `resource_type_id`, `name`, `unit`, `quantity`, `target`, `pledged`, `reserved` (promised to shipments and matched requests), `available = quantity - reserved`, and `need = max(target - quantity - pledged, 0)`. Hub responses also include `storage_units` and `open_pickup`.
-
-### Hubs and transport
-
-| Endpoint | Auth | Purpose |
-|---|---|---|
-| `GET /api/hubs/nearby?lat=&lng=&radius_km=25&limit=20&needs=&has=` | public | Hubs within the radius, nearest first, with `distance_km`. `needs=<resource_type_id>` keeps hubs short on it; `has=<resource_type_id>` keeps hubs with some available |
-| `GET /api/hubs?min_capacity=0` | public | Hubs at or above a capacity percentage, fullest first |
-| `GET /api/hubs/{hub_id}` | public | One hub |
-| `PUT /api/hubs/{hub_id}` | operator | `{"site_type", "storage_units", "capacity_pct"}` makes an organization a public hub or changes its settings. With `storage_units`, % full follows stock; `capacity_pct` is only used without it |
-| `POST /api/hubs/{hub_id}/walk-ins` | that hub's staff, operator | `{"items": [{"resource_type_id", "quantity"}]}` logs goods that arrived without a pledge; may match waiting requests |
-| `POST /api/hubs/{hub_id}/pickups` | operator | Dispatches transport; 409 `pickup_already_open` if one is already dispatched |
-| `GET /api/pickups?status=` | operator | Pickups, newest first, with `hub_name` |
-| `PATCH /api/pickups/{pickup_id}` | operator | `{"status": "completed" or "cancelled"}`. Completing moves the hub's surplus (stock above its targets that isn't reserved) to the nearest depot and returns it as `moved` |
-
-### Citizen requests
-
-`open` (waiting for supplies) → auto-match → `matched` (hub chosen, items reserved) → claim → `assigned` → fulfill → `fulfilled`. A request is matched the moment it's created if any hub can cover it. Otherwise it's matched automatically when stock arrives: a pledge is received, a hub or organization is restocked, or a shipment is delivered or cancelled. The assignee can release a claimed request back to `matched`, and the citizen can cancel until it's fulfilled, which returns the reserved items.
-
-| Endpoint | Auth | Purpose |
-|---|---|---|
-| `POST /api/requests` | family | `{"items": [{"resource_type_id","quantity"}], "latitude", "longitude", "address", "notes"}`. 409 `request_limit` when the citizen is at their cap |
-| `GET /api/requests/limits` | family | `{"active", "base_cap", "resource_types": {id: {"cap", "level", "pressure"}}}` |
-| `GET /api/requests/mine` | family | The citizen's requests, with source `hub` and `method` once assigned |
-| `POST /api/requests/{id}/cancel` | family (owner) | 409 `request_closed` once fulfilled or cancelled |
-| `GET /api/requests?status=&assigned_to_me=true` | operator | Oldest first. Each request has `hub` and `match` (`distance_km`, `score`, `reasons`) once matched |
-| `POST /api/requests/{id}/claim` | operator | `{"method": "delivery" or "pickup"}`. Only for `matched` requests (409 `request_not_matched` otherwise) |
-| `POST /api/requests/{id}/release` | assignee | Back to `matched`; the hub and reservation are kept |
-| `POST /api/requests/{id}/fulfill` | assignee | Removes the items from the source hub's inventory |
-
-**Request matching** (`donations/planner.py`, `donations/matching.py`): each hub that can cover a request is scored in kilometre-equivalents. The score is the distance, plus 15 times the share of the drawn units that would push the hub below its target (pending pledges count as stock), minus 5 for hubs at 90% capacity or more (2 at 70% or more), since sending goods out frees space. All waiting requests are matched together with a regret heuristic, so no two requests are promised the same units and a request with few options is placed before one with many.
-
-**Drop-off matching**: a donation goes to the active hub that minimises distance plus 10 times the share of donated units the hub doesn't need, plus 3 if the hub is 70% or more full. Hubs at 90% or more, or more than 50 km away, are skipped.
-
-**Fair-share cap** (`donations/fairness.py`): a citizen may hold 3 active (open or assigned) requests. For each resource type, pressure is open demand divided by available hub stock; below 0.25 the cap rises to 4, from 0.6 it drops to 2, and from 1.0 to 1. A request is limited by its scarcest resource type.
-
-### Drop-off pledges
-
-`pending` → `received` (items added to inventory) or `no_show`; the citizen can cancel while pending.
-
-| Endpoint | Auth | Purpose |
-|---|---|---|
-| `POST /api/pledges` | family | `{"items": [...], "latitude", "longitude", "notes"}`. The server picks the drop-off hub and returns the pledge with `hub` and `match`. 409 `no_hub_available` if no hub nearby has space |
-| `POST /api/hubs/{hub_id}/pledges` | family | Pledge to a specific hub (not used by the citizen app). 409 `hub_full` at 90% capacity or more |
-| `GET /api/pledges/mine` | family | The citizen's pledges |
-| `POST /api/pledges/{id}/cancel` | family (owner) | Pending pledges only |
-| `GET /api/hubs/{hub_id}/pledges?status=pending` | that hub's staff, operator | Oldest first, with `donor_email` |
-| `POST /api/pledges/{id}/receive` | that hub's staff, operator | Adds the items to inventory |
-| `POST /api/pledges/{id}/no-show` | that hub's staff, operator | Closes the pledge without changing inventory |
-
-### Custom items
-
-For things outside the catalog (a wheelchair, a crib, phone chargers). A government worker reviews each one: approving it picks a hub and sends the citizen instructions; declining sends a reason. Each citizen can have one submission awaiting review at a time. Custom items don't touch tracked inventory.
-
-`pending` → approve → `approved` → complete → `completed`; `pending` → decline → `declined`; the citizen can cancel while it's `pending` or `approved`.
-
-| Endpoint | Auth | Purpose |
-|---|---|---|
-| `POST /api/custom-submissions` | family | `{"kind": "donation" or "request", "description", "quantity", "latitude", "longitude", "notes"}`. 409 `custom_pending` if one is already awaiting review |
-| `GET /api/custom-submissions/mine` | family | The citizen's custom items, with `hub` and the reviewer's `response` |
-| `POST /api/custom-submissions/{id}/cancel` | family (owner) | Cancel while pending or approved |
-| `GET /api/custom-submissions?status=&kind=` | operator | Review queue, oldest first. Pending items include `nearby_hubs` (the three nearest active hubs) |
-| `POST /api/custom-submissions/{id}/approve` | operator | `{"hub_id", "message"}` |
-| `POST /api/custom-submissions/{id}/decline` | operator | `{"message"}` |
-| `POST /api/custom-submissions/{id}/complete` | operator | Mark an approved item as handed over |
-
-CORS allows all origins by default; set `CORS_ORIGINS` to a comma-separated list to restrict it. Matching also runs whenever the request queue or a citizen's activity is read, so stock that arrives through operator shipments is picked up without changes to the logistics module. UI components live in `app/src/donations/` (React Native) and `frontend/src/donations/` (React + Tailwind); `donations-sandbox/` runs them against this API. They are not yet mounted in the dashboard or the mobile app.

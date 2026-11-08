@@ -1,6 +1,6 @@
 ﻿# Haven mobile app
 
-React Native / Expo SDK 54 app connected to the Litestar backend copied from `origin/master` at `1d3c8ee8535951a7443e2d3511d96f3bf03a7b7d`. All integration work is on the `app` branch. The backend source is unchanged; `npm run backend:verify` compares every imported backend file with that source commit.
+React Native / Expo SDK 54 household app connected to the Litestar API in `backend/`.
 
 ## Start the app with the real backend
 
@@ -23,11 +23,11 @@ cd app
 npm start
 ```
 
-Press `w` for the browser. The API is at `http://127.0.0.1:8000`, its health check is `/health`, and the browser app is at `http://localhost:8081`. The local `.env` is configured for this backend. `backend:start` wraps the unchanged backend with browser CORS support and stores data in `.runtime/haven.sqlite3`. Set `DATABASE_PATH` to choose another database. Loopback browser origins (localhost, 127.0.0.1, and ::1) on any port are allowed by default so Expo can select an available port; `HAVEN_ALLOWED_ORIGINS` accepts a comma-separated override.
+Press `w` for the browser. The API is at `http://127.0.0.1:8000`, its health check is `/health`, and the browser app is at `http://localhost:8081`. The local `.env` is configured for this backend. `backend:start` adds browser CORS support and stores data in `.runtime/haven.sqlite3`. Set `DATABASE_PATH` to choose another database. Loopback browser origins (localhost, 127.0.0.1, and ::1) on any port are allowed by default so Expo can select an available port; `HAVEN_ALLOWED_ORIGINS` accepts a comma-separated override.
 
 Python 3.14 is required by the current master code in practice: earlier Python versions eagerly evaluate APSW type-only annotations. The lockfile and backend source are not changed to address this. The workspace-local uv download is ignored by git.
 
-`backend:seed` runs master's existing Tampa scenario in this isolated local database. Its disasters, addresses, and shelters are fictional test data. It does not create a shared sign-in password. Choose **Create an account** in the mobile app, then fill out the household survey. The backend automatically allocates a shelter after saving. For the seeded Tampa scenario, coordinates around latitude `27.95`, longitude `-82.46` are convenient test inputs.
+With the API stopped, `backend:seed` recreates this disposable database with the Golden Gate Estates scenario: 1,000 synthetic households at real house locations and seven simulated shelters at local school sites. It prints credentials for the demo family and operator accounts; existing data and sessions are discarded. Start the API, sign in with the printed family credentials or choose **Create an account**, then fill out the household survey. The backend automatically allocates a shelter after saving. Coordinates around latitude `26.25`, longitude `-81.58` are convenient test inputs for this scenario. Household profiles and shelter operations are fictional.
 
 ## Test on a phone or emulator
 
@@ -49,7 +49,6 @@ The backend stores people counts, coordinates, pet presence, care notes, and car
 With the backend running and seeded:
 
 ```powershell
-npm run backend:verify
 npm run typecheck
 npm test
 npm run test:backend

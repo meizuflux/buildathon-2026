@@ -42,7 +42,7 @@ def test_registration_login_and_logout(client):
     result = login(client)
     assert result.status_code == 200
     body = result.json()
-    assert body["user"] == {"id": user_id, "role": "family", "family_id": None, "hub_id": None}
+    assert body["user"] == {"id": user_id, "role": "family", "family_id": None}
     headers = {"Authorization": f"Bearer {body['access_token']}"}
     assert client.get("/api/me", headers=headers).json() == body["user"]
     with closing(connect()) as connection:

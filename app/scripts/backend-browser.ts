@@ -35,9 +35,9 @@ async function run() {
     await page.locator('[aria-label="We have access to a car"]').click();
     await page.locator('[aria-label="Continue"]').click();
     await page.waitForSelector('[aria-label="Full home address"]');
-    await page.locator('[aria-label="Full home address"]').fill('100 Integration Street, Tampa, FL 33602');
-    await page.locator('[aria-label="Latitude"]').fill('27.95');
-    await page.locator('[aria-label="Longitude"]').fill('-82.46');
+    await page.locator('[aria-label="Full home address"]').fill('Demo household, Golden Gate Estates, Naples, FL 34120');
+    await page.locator('[aria-label="Latitude"]').fill('26.25');
+    await page.locator('[aria-label="Longitude"]').fill('-81.58');
     await page.locator('[aria-label="Continue"]').click();
     await page.waitForSelector('[aria-label="Save household profile"]');
     await page.locator('[aria-label="Save household profile"]').click();

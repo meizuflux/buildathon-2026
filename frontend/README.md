@@ -10,7 +10,7 @@ and Inventory. Shelter names, reserved capacity, resource availability, and upda
 times use the shelters already loaded from the API. Example requests and delivery
 stages are generated from that shelter data; controls are disabled and no logistics
 API calls or changes are saved. Stock quantities are shown as not tracked because
-shelters only report availability labels. Organizations and the partner portal are removed.
+shelters only report availability labels.
 
 ## Run
 

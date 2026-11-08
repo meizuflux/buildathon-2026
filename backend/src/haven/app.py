@@ -13,7 +13,6 @@ from litestar.response import Response
 
 from haven.auth import DatabaseTokenAuthMiddleware
 from haven.db import connect
-from haven.donations import router as donations_router
 from haven.openapi import errors
 from haven.routers.accounts import router as accounts_router
 from haven.routers.activity import router as activity_router
