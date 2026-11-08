@@ -37,11 +37,26 @@ export const liveUpdateSchema = z.object({
 });
 export const liveDisasterSchema = z.object({ id: z.string(), type: z.string(), name: z.string(), status: z.string(), affected_area: z.string(), updated_at: z.string() });
 
+export const liveHurricaneSchema = z.object({
+  disaster_id: z.string(), phase: z.enum(['peace', 'active']),
+  hurricane: z.object({ name: z.string(), category: z.number().int() }).nullable(),
+  started_at: z.string().nullable(), updated_at: z.string().nullable(),
+});
+
+export type LiveHurricane = z.infer<typeof liveHurricaneSchema>;
 export type LiveFamily = z.infer<typeof liveFamilySchema>;
 export type LiveShelter = z.infer<typeof liveShelterSchema>;
 export type LivePlan = z.infer<typeof livePlanSchema>;
 export type LiveUpdate = z.infer<typeof liveUpdateSchema>;
 export type LiveDisaster = z.infer<typeof liveDisasterSchema>;
+
+/** App-level hurricane status. In peace there is no name or category. */
+export interface HurricaneView { phase: 'peace' | 'active'; name: string | null; category: number | null; startedAt: string | null }
+
+export function hurricaneFromApi(h: LiveHurricane): HurricaneView {
+  const active = h.phase === 'active';
+  return { phase: h.phase, name: active ? h.hurricane?.name ?? null : null, category: active ? h.hurricane?.category ?? null : null, startedAt: active ? h.started_at : null };
+}
 
 /** Source label for anything published through the backend. Its demo data is fictional. */
 /** The backend only records whether there are pets, not how many or what kind. */
@@ -83,6 +98,7 @@ export function householdFromFamily(f: LiveFamily, label: string): DemoHousehold
     poweredEquipment: powerAnswer(care),
     vehicle: f.resources.has_car ? 'yes' : 'no',
     transportHelp: care.includes(TRANSPORT) ? 'yes' : 'no',
+    medication: f.needs.immediate_medication,
     location: { label, lat: f.location.latitude, lng: f.location.longitude },
   };
 }

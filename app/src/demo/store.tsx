@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { cache } from '../storage/cache';
 import { initialState, reducer, steps, view, type Action, type DemoState, type View } from './state';
+import type { HurricaneView } from './live';
 import type { DemoHousehold } from './types';
 
 const KEY = 'resident-demo-state';
@@ -14,6 +15,7 @@ const RECALCULATES = new Set<Action['type']>(['setHousehold', 'triggerClosure', 
 /** Live-backend extras. Absent in the simulated demo. */
 export interface LiveExtras {
   disasterName: string;
+  affectedArea: string;
   lastSync: number | null;
   error: string | null;
   refresh: () => void;
@@ -23,6 +25,10 @@ export interface LiveExtras {
 export interface DemoContext {
   mode: 'demo' | 'live';
   live?: LiveExtras;
+  /** Hurricane status. Undefined in the simulated demo, which behaves as an active hurricane. */
+  hurricane?: HurricaneView;
+  /** Increases each time the status flips from peace to active, so the app can jump to the Plan tab. */
+  evacuationSeq?: number;
   state: DemoState;
   view: View;
   steps: ReturnType<typeof steps>;

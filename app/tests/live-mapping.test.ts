@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  broadcastsFromUpdates, familyPatch, householdFromFamily, instructionFromUpdates, recommendationFromPlan, shelterFromApi,
+  broadcastsFromUpdates, familyPatch, hurricaneFromApi, householdFromFamily, liveHurricaneSchema, instructionFromUpdates, recommendationFromPlan, shelterFromApi,
   type LiveFamily, type LivePlan, type LiveShelter,
 } from '../src/demo/live';
 
@@ -75,4 +75,16 @@ test('updates become broadcasts and the newest critical one is the instruction',
   assert.equal(instruction?.headline, 'Evacuate');
   assert.equal(instruction?.level, 'mandatory');
   assert.equal(instructionFromUpdates([updates[1]!]), null);
+});
+
+test('hurricane status maps to the app view; peace carries no name or category', () => {
+  const peace = liveHurricaneSchema.parse({ disaster_id: 'dis_1', phase: 'peace', hurricane: null, started_at: null, updated_at: null });
+  assert.deepEqual(hurricaneFromApi(peace), { phase: 'peace', name: null, category: null, startedAt: null });
+  const active = liveHurricaneSchema.parse({ disaster_id: 'dis_1', phase: 'active', hurricane: { name: 'Hurricane Delia', category: 4 }, started_at: '2026-11-08T12:00:00Z', updated_at: '2026-11-08T12:00:00Z' });
+  assert.deepEqual(hurricaneFromApi(active), { phase: 'active', name: 'Hurricane Delia', category: 4, startedAt: '2026-11-08T12:00:00Z' });
+  assert.throws(() => liveHurricaneSchema.parse({ disaster_id: 'x', phase: 'unknown', hurricane: null, started_at: null, updated_at: null }));
+});
+
+test('household maps immediate medication', () => {
+  assert.equal(householdFromFamily({ ...family, needs: { ...family.needs, immediate_medication: true } }, 'Home').medication, true);
 });

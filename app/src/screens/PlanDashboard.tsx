@@ -14,6 +14,7 @@ import { localMinute } from '../demo/live';
 import { STALE_AFTER_MINUTES } from '../demo/scenario';
 import { useDemo } from '../demo/store';
 import { clock } from '../demo/time';
+import { planMode } from '../demo/hurricane';
 
 type Tab = 'plan' | 'prepare' | 'updates' | 'messages' | 'household';
 type Badge = { count?: number; dot?: boolean; alert?: boolean };
@@ -38,7 +39,7 @@ function scrollTo(id: string) {
 
 export default function PlanDashboard() {
   const { c } = useDash();
-  const { mode, live, state, view, steps, updating, dispatch, sendMessage, saveHousehold } = useDemo();
+  const { mode, live, hurricane, evacuationSeq, state, view, steps, updating, dispatch, sendMessage, saveHousehold } = useDemo();
   const { width, height } = useWindowDimensions();
   const framed = width >= FRAME_MIN_WIDTH;
   const isLive = mode === 'live';
@@ -46,6 +47,13 @@ export default function PlanDashboard() {
   const [editing, setEditing] = useState(false);
   const [presenterOpen, setPresenterOpen] = useState(framed);
   const presenter = !isLive && presenterOpen;
+
+  const allClear = planMode(hurricane) === 'all-clear';
+  // An evacuation order arriving while the app is open brings the household to the Plan tab.
+  const seenSeq = React.useRef(evacuationSeq ?? 0);
+  useEffect(() => {
+    if ((evacuationSeq ?? 0) > seenSeq.current) { seenSeq.current = evacuationSeq ?? 0; setTab('plan'); }
+  }, [evacuationSeq]);
 
   // Badges: unseen updates, a changed plan, failed messages, steps left.
   const updateIds = [...view.broadcasts.map((b) => b.id), ...state.notices.map((n) => n.id)];
@@ -55,7 +63,7 @@ export default function PlanDashboard() {
   useEffect(() => { if (tab === 'updates') setSeen(updateIds); }, [tab, updateIds.join()]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'plan') setSeenChange(changeKey); }, [tab, changeKey]);
   const badges: Record<Tab, Badge> = {
-    plan: { dot: changeKey !== '' && changeKey !== seenChange },
+    plan: { dot: !allClear && changeKey !== '' && changeKey !== seenChange },
     prepare: { count: steps.filter((x) => !state.checked.includes(x.id)).length },
     updates: { count: updateIds.filter((id) => !seen.includes(id)).length },
     messages: { count: state.messages.filter((m) => m.state === 'failed').length, alert: true },
@@ -63,13 +71,13 @@ export default function PlanDashboard() {
   };
 
   const rec = view.recommendation;
-  const d = rec.destination;
+  const d = allClear ? null : rec.destination;
   const stale = state.online && !!d && view.now - d.shelter.spacesReportedAt > STALE_AFTER_MINUTES;
   const editNeeds = () => { setTab('household'); setEditing(true); };
 
   const panes: Record<Tab, React.ReactNode> = {
     plan: (
-      <PlanPane rec={rec} household={view.household} now={view.now} updating={updating} lastChange={view.lastChange}
+      <PlanPane hurricane={hurricane} area={live?.affectedArea ?? 'your area'} rec={rec} household={view.household} now={view.now} updating={updating} lastChange={view.lastChange}
         instruction={view.instruction} closures={view.closures} travelling={!!state.travellingTo} online={state.online}
         onReviewJourney={() => scrollTo('journey')} onEditNeeds={editNeeds} onMessage={() => setTab('messages')}
         onLeft={() => dispatch({ type: 'startJourney' })} />
@@ -78,7 +86,7 @@ export default function PlanDashboard() {
     updates: <UpdatesPane broadcasts={view.broadcasts} notices={state.notices} />,
     messages: <MessagesPane messages={state.messages} online={state.online} live={isLive} onSend={sendMessage} />,
     household: (
-      <HouseholdPane household={state.household} rec={rec} online={state.online} editing={editing} onEditing={setEditing}
+      <HouseholdPane household={state.household} rec={allClear ? { ...rec, destination: null, alternatives: [] } : rec} online={state.online} editing={editing} onEditing={setEditing}
         onSave={saveHousehold} onViewPlan={() => setTab('plan')}
         account={isLive
           ? { label: 'Family account', detail: `Connected to Haven · ${live?.disasterName ?? ''}`, onSignOut: live?.signOut }
@@ -90,7 +98,7 @@ export default function PlanDashboard() {
     <View style={{ flex: 1, backgroundColor: c.cream }}>
       <TopBar online={state.online} time={isLive ? (live?.lastSync ? `synced ${clock(localMinute(live.lastSync))}` : 'not synced') : clock(view.now)}
         label={isLive
-          ? <LiveLabel name={live?.disasterName ?? ''} compact />
+          ? <LiveLabel name={live?.disasterName ?? ''} hurricane={hurricane} compact />
           : <DemoLabel now={view.now} open={presenter} onPress={() => setPresenterOpen(!presenterOpen)} compact />} />
       <View style={{ flex: 1 }}>
         {TABS.map((t) => (

@@ -6,7 +6,10 @@ import { type } from '../../constants/theme';
 import type { Step } from '../../demo/checklist';
 import type { DemoHousehold, Broadcast, Closure, Message, OfficialInstruction, Recommendation as Rec, SystemNotice } from '../../demo/types';
 import { Icon } from '../common/ui';
+import { planMode } from '../../demo/hurricane';
+import type { HurricaneView } from '../../demo/live';
 import { Alternatives } from './Alternatives';
+import { AllClearPane, EvacuationBanner } from './Hurricane';
 import { HouseholdFit, NeedsFields } from './Household';
 import { Journey } from './Journey';
 import { NextSteps } from './NextSteps';
@@ -26,13 +29,16 @@ export function PaneTitle({ title, subtitle }: { title: string; subtitle?: strin
   );
 }
 
-export function PlanPane({ rec, household, now, updating, lastChange, instruction, closures, travelling, online, onReviewJourney, onEditNeeds, onMessage, onLeft }: {
+export function PlanPane({ hurricane, area, rec, household, now, updating, lastChange, instruction, closures, travelling, online, onReviewJourney, onEditNeeds, onMessage, onLeft }: {
+  hurricane?: HurricaneView; area: string;
   rec: Rec; household: DemoHousehold; now: number; updating: boolean; lastChange: string[]; instruction: OfficialInstruction | null;
   closures: Closure[]; travelling: boolean; online: boolean;
   onReviewJourney: () => void; onEditNeeds: () => void; onMessage: () => void; onLeft: () => void;
 }) {
+  if (planMode(hurricane) === 'all-clear') return <AllClearPane household={household} area={area} />;
   return (
     <View style={{ gap: 24 }}>
+      <EvacuationBanner hurricane={hurricane} />
       <PaneTitle title="Your plan" subtitle="Where to go and how to get there" />
       {instruction && <OfficialInstructionBand instruction={instruction} now={now} />}
       <Recommendation rec={rec} household={household} now={now} updating={updating} lastChange={lastChange}

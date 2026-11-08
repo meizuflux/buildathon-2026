@@ -21,6 +21,8 @@ export interface DemoHousehold {
   poweredEquipment: Answer;
   vehicle: Answer;
   transportHelp: Answer;
+  /** Live mode only: the backend records immediate medication need. */
+  medication?: boolean;
   location: { label: string; lat: number; lng: number };
 }
 

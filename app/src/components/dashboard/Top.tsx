@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { type } from '../../constants/theme';
+import type { HurricaneView } from '../../demo/live';
 import { clock } from '../../demo/time';
 import type { OfficialInstruction } from '../../demo/types';
 import { Icon } from '../common/ui';
@@ -22,13 +23,20 @@ export function DemoLabel({ now, onPress, open, compact }: { now: number; onPres
 }
 
 /** Live mode: data comes from the Haven service, whose demo records are fictional. */
-export function LiveLabel({ name, compact }: { name: string; compact?: boolean }) {
+export function LiveLabel({ name, compact, hurricane }: { name: string; compact?: boolean; hurricane?: HurricaneView }) {
   const { c } = useDash();
+  const peace = hurricane?.phase === 'peace';
+  const active = hurricane?.phase === 'active';
+  // The chip sits on the dark presenter colour in both themes, so the status colours are fixed.
+  const allClear = '#7ED3A6';
+  const text = peace ? 'All clear' : active ? hurricane.name ?? 'Hurricane' : compact ? 'Live · demo data' : 'Live service · demo data';
   return (
-    <View accessible accessibilityLabel={`Connected to Haven service. ${name}. Demo data, fictional records.`}
+    <View accessible accessibilityLabel={`Connected to Haven service. ${peace ? 'All clear, no active hurricane' : active ? `${text}, evacuation order in effect` : name}. Demo data, fictional records.`}
       style={{ minHeight: 44, paddingHorizontal: 12, borderRadius: 10, backgroundColor: c.presenter, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-      <Icon name="database" size={15} color={c.presenterText} />
-      <Text style={{ fontFamily: type.medium, fontSize: compact ? 13 : 14, color: c.presenterText }}>{compact ? 'Live · demo data' : 'Live service · demo data'}</Text>
+      {peace ? <Icon name="check-circle" size={15} color={allClear} />
+        : active ? <View aria-hidden style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#F04438' }} />
+        : <Icon name="database" size={15} color={c.presenterText} />}
+      <Text numberOfLines={1} style={{ fontFamily: type.medium, fontSize: compact ? 13 : 14, color: peace ? allClear : c.presenterText, flexShrink: 1 }}>{text}</Text>
     </View>
   );
 }

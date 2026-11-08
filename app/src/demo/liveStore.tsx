@@ -12,37 +12,49 @@ import { ApiError } from '../services/api/http';
 import { cache } from '../storage/cache';
 import { preparationSteps } from './checklist';
 import {
-  broadcastsFromUpdates, familyPatch, householdFromFamily, instructionFromUpdates, liveDisasterSchema, liveFamilySchema,
-  livePlanSchema, liveShelterSchema, liveUpdateSchema, localMinute, PETS_UNSPECIFIED, recommendationFromPlan, shelterFromApi,
-  type LiveDisaster, type LiveFamily, type LivePlan, type LiveShelter, type LiveUpdate,
+  broadcastsFromUpdates, familyPatch, hurricaneFromApi, householdFromFamily, instructionFromUpdates, liveDisasterSchema, liveFamilySchema,
+  liveHurricaneSchema, livePlanSchema, liveShelterSchema, liveUpdateSchema, localMinute, PETS_UNSPECIFIED, recommendationFromPlan, shelterFromApi,
+  type HurricaneView, type LiveDisaster, type LiveFamily, type LivePlan, type LiveShelter, type LiveUpdate,
 } from './live';
+import { evacuationNotice, transition } from './hurricane';
 import { assess, describeChange } from './recommend';
 import { STATE_VERSION, view, type Action as DemoAction, type DemoState } from './state';
 import { Context, type DemoContext } from './store';
 import type { DemoHousehold, Message, Recommendation, SystemNotice } from './types';
 
-const POLL_MS = 30000;
+/** Poll fast so the demo reacts to "Initiate hurricane" within a few seconds. */
+const POLL_MS = 5000;
 const meSchema = z.object({ id: z.string(), role: z.string(), family_id: z.string().nullable() });
 
-interface Data { family: LiveFamily; disaster: LiveDisaster; shelters: LiveShelter[]; plan: LivePlan; updates: LiveUpdate[] }
+interface Data { family: LiveFamily; disaster: LiveDisaster; shelters: LiveShelter[]; plan: LivePlan; updates: LiveUpdate[]; hurricane: HurricaneView }
 interface Local { checked: string[]; travellingTo: string | null; messages: Message[] }
 
 const enc = encodeURIComponent;
 async function disasters() { return (await http('/api/disasters', z.object({ disasters: z.array(liveDisasterSchema) }))).disasters; }
 async function shelters(disasterId: string) { return (await http('/api/shelters?disaster_id=' + enc(disasterId), z.object({ shelters: z.array(liveShelterSchema) }))).shelters; }
 
-async function fetchAll(): Promise<Data | null> {
+async function fetchHurricane(disasterId: string): Promise<HurricaneView> {
+  return hurricaneFromApi(await http('/api/disasters/' + enc(disasterId) + '/hurricane', liveHurricaneSchema));
+}
+
+/** `lastHurricane` is the last known status: a failed status request keeps it instead of flipping to peace. */
+async function fetchAll(lastHurricane: HurricaneView | null): Promise<Data | null> {
   const me = await http('/api/me', meSchema);
   if (!me.family_id) return null;
   const family = await http('/api/families/' + enc(me.family_id), liveFamilySchema);
-  const [all, shelterList, plan, updates] = await Promise.all([
+  const [all, shelterList, plan, updates, hurricane] = await Promise.all([
     disasters(),
     shelters(family.disaster_id),
     http('/api/families/' + enc(family.id) + '/plan', livePlanSchema),
     http('/api/disasters/' + enc(family.disaster_id) + '/updates', z.object({ updates: z.array(liveUpdateSchema) })).then((r) => r.updates),
+    fetchHurricane(family.disaster_id).catch((e) => {
+      if (e instanceof ApiError && e.status === 401) throw e;
+      if (lastHurricane) return lastHurricane;
+      throw e;
+    }),
   ]);
-  const disaster = all.find((d) => d.id === family.disaster_id) ?? { id: family.disaster_id, type: 'Disaster', name: 'Active disaster', status: 'active', affected_area: 'your area', updated_at: family.updated_at };
-  return { family, disaster, shelters: shelterList, plan, updates };
+  const disaster = all.find((d) => d.id === family.disaster_id) ?? { id: family.disaster_id, type: 'Hurricane', name: 'Active hurricane', status: 'active', affected_area: 'your area', updated_at: family.updated_at };
+  return { family, disaster, shelters: shelterList, plan, updates, hurricane };
 }
 
 /** Keep the household's destination after they marked that they left; explain any plan change instead. */
@@ -63,19 +75,23 @@ function keepDestination(rec: Recommendation, h: DemoHousehold, list: ReturnType
   };
 }
 
-function build(data: Data, local: Local, prev: DemoState | null, title: string): DemoState {
+function build(data: Data, local: Local, prev: DemoState | null, title: string, evacuation = false): DemoState {
   const household = householdFromFamily(data.family, `Home in ${data.disaster.affected_area}`);
   const list = data.shelters.map(shelterFromApi);
   const recommendation = keepDestination(recommendationFromPlan(data.plan, household, list), household, list, local.travellingTo);
-  const lines = prev ? describeChange(prev.recommendation, recommendation) : [];
+  // While there is no active hurricane the plan is held back: no plan-change notices that would name a shelter.
+  const active = data.hurricane.phase === 'active';
+  const lines = prev && active && !evacuation ? describeChange(prev.recommendation, recommendation) : [];
   const now = localMinute(Date.now());
   const seq = (prev?.seq ?? 1) + 1;
-  const notices: SystemNotice[] = lines.length ? [{ id: `NT-${seq}`, at: now, title, lines }, ...(prev?.notices ?? [])] : prev?.notices ?? [];
+  const base = prev?.notices ?? [];
+  const notices: SystemNotice[] = evacuation ? [evacuationNotice(`NT-${seq}`, now, data.hurricane, recommendation), ...base]
+    : lines.length ? [{ id: `NT-${seq}`, at: now, title, lines }, ...base] : base;
   return {
     version: STATE_VERSION, now, household, shelters: list, closures: [],
     instruction: instructionFromUpdates(data.updates), broadcasts: broadcastsFromUpdates(data.updates),
     messages: local.messages, notices, checked: local.checked, travellingTo: local.travellingTo,
-    online: true, failNextMessage: false, recommendation, lastChange: lines.length ? lines : prev?.lastChange ?? [],
+    online: true, failNextMessage: false, recommendation, lastChange: lines.length ? lines : active && !evacuation ? prev?.lastChange ?? [] : [],
     saved: null, cursors: { closure: 0, broadcast: 0, availability: 0, reply: 0 }, seq,
   };
 }
@@ -89,6 +105,7 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [lastSync, setLastSync] = useState<number | null>(null);
+  const [evacuationSeq, setEvacuationSeq] = useState(0);
   const data = useRef<Data | null>(null);
   const local = useRef<Local>({ checked: [], travellingTo: null, messages: [] });
   const latest = useRef<DemoState | null>(null);
@@ -101,14 +118,16 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
 
   const sync = useCallback(async (title = 'Coordinators’ plan updated') => {
     try {
-      const next = await fetchAll();
+      const next = await fetchAll(data.current?.hurricane ?? null);
       if (!next) { setPhase('setup'); return; }
       if (!data.current || data.current.family.id !== next.family.id) {
         const saved = await cache.get<Local>(localKey(next.family.id)).catch(() => null);
         local.current = { checked: saved?.checked ?? [], travellingTo: saved?.travellingTo ?? null, messages: (saved?.messages ?? []).map((m) => (m.state === 'sending' ? { ...m, state: 'failed' } : m)) };
       }
+      const change = transition(data.current?.hurricane ?? null, next.hurricane);
       data.current = next;
-      setState((prev) => build(next, local.current, prev, title));
+      setState((prev) => build(next, local.current, prev, title, change === 'evacuation'));
+      if (change === 'evacuation') setEvacuationSeq((n) => n + 1);
       setError(null);
       setLastSync(Date.now());
       setPhase('ready');
@@ -179,7 +198,7 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
 
   const createProfile = useCallback(async (h: DemoHousehold) => {
     const disaster = (await disasters())[0];
-    if (!disaster) throw new Error('No active disaster is listed by the service.');
+    if (!disaster) throw new Error('No active hurricane is listed by the service.');
     const list = await shelters(disaster.id);
     // Demo accounts have no address; place the household at the centre of the listed shelters.
     const lat = list.reduce((t, s) => t + s.location.latitude, 0) / Math.max(1, list.length);
@@ -203,8 +222,10 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     dispatch,
     sendMessage,
     saveHousehold,
-    live: { disasterName: data.current?.disaster.name ?? '', lastSync, error, refresh: () => { void sync(); }, signOut: () => { void auth.signOut(); } },
-  }, [state, updating, dispatch, sendMessage, saveHousehold, lastSync, error, sync, auth]);
+    hurricane: data.current?.hurricane,
+    evacuationSeq,
+    live: { disasterName: data.current?.disaster.name ?? '', affectedArea: data.current?.disaster.affected_area ?? 'your area', lastSync, error, refresh: () => { void sync(); }, signOut: () => { void auth.signOut(); } },
+  }, [state, updating, dispatch, sendMessage, saveHousehold, lastSync, error, sync, auth, evacuationSeq]);
 
   if (phase === 'setup') return <SetupHousehold onCreate={createProfile} onSignOut={() => void auth.signOut()} />;
   if (phase === 'ready' && value) return <Context.Provider value={value}>{children}</Context.Provider>;

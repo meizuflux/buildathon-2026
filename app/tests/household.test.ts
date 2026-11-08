@@ -36,9 +36,8 @@ test('shelter coordinates are optional and approximate distance handles missing 
   assert.equal(distanceMiles(shelter.coordinates, shelter.coordinates), 0);
   assert(Math.abs(distanceMiles({ latitude: 0, longitude: 0 }, { latitude: 0, longitude: 1 }) - 69.093) < 0.01);
 });
-test('hurricane views hide safety status while other hazard views retain it', () => {
-  assert.equal(showSafetyStatus('Hurricanes'), false);
-  assert.equal(showSafetyStatus('All', 'Hurricane'), false);
-  for (const hazard of ['Flood', 'Earthquake', 'Wildfire', 'Storm']) assert.equal(showSafetyStatus('All', hazard), true);
-  for (const filter of ['Floods', 'Quakes', 'Fire', 'Storms']) assert.equal(showSafetyStatus(filter), true);
+test('a hurricane alert hides the safety status card; other alert types keep it', () => {
+  assert.equal(showSafetyStatus('Hurricane'), false);
+  assert.equal(showSafetyStatus(), true);
+  for (const hazard of ['Flood', 'Earthquake', 'Wildfire', 'Storm']) assert.equal(showSafetyStatus(hazard), true);
 });
