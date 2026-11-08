@@ -21,8 +21,8 @@ async function run() {
   const api = createMasterAdapter(http, store, base);
   assert.equal(await api.getHousehold(), null);
   const disasters = await api.getDisasters(); assert(disasters.length, 'Run npm run backend:seed first.');
-  const disaster = disasters.find(d => d.id === 'demo_tampa_hurricane')!; assert(disaster);
-  const input = { name: 'My household', disasterId: disaster.id, adults: 2, children: 2, pets: 2, petTypes: '2 dogs', petDetails: [{ kind: 'Dogs', count: 2 }], needs: [], otherNeeds: '', hasCar: true, canDrive: false, seats: 0, needsTransport: false, needsShelter: false, needsFood: false, location: { label: '100 Integration Street, Tampa, FL', latitude: 27.95, longitude: -82.46 } };
+  const disaster = disasters.find(d => d.id === 'demo_golden_gate_hurricane')!; assert(disaster);
+  const input = { name: 'My household', disasterId: disaster.id, adults: 2, children: 2, pets: 2, petTypes: '2 dogs', petDetails: [{ kind: 'Dogs', count: 2 }], needs: [], otherNeeds: '', hasCar: true, canDrive: false, seats: 0, needsTransport: false, needsShelter: false, needsFood: false, location: { label: '100 Integration Road, Golden Gate Estates, FL', latitude: 26.28490551, longitude: -81.54218268 } };
   const family = await api.createHousehold(input); assert.equal(family.adults, 2); assert.equal(family.petDetails?.[0]?.count, 2);
   assert.equal((await api.getHousehold())?.location.label, input.location.label);
   const plan = await api.getCurrentPlan(); assert(plan?.shelterAssignment?.coordinates, 'The actual allocator must return a mapped shelter.');

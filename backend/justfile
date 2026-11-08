@@ -14,6 +14,10 @@ prod:
 schema:
     uv run --locked python -c 'import asyncio; from haven.startup import initialize_database; asyncio.run(initialize_database())'
 
+# Generate TypeScript API types for the dashboard from the OpenAPI schema.
+schema-typescript:
+    uv run --locked litestar --app haven.app:app schema typescript --output ../frontend/src/api/api-specs.ts --namespace Haven
+
 # Run the test suite.
 test:
     uv run --locked pytest -q
@@ -39,6 +43,6 @@ check: lint format-check typecheck test
 create-operator:
     uv run --locked python -m haven.create_operator
 
-# Create demo accounts and the fictional Tampa scenario; existing data is preserved.
+# Recreate the disposable SQLite database with fresh demo accounts and the Estates scenario.
 demo-data:
     uv run --locked python -m haven.demo_data

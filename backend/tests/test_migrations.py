@@ -27,7 +27,7 @@ def test_legacy_database_is_migrated_once_without_losing_data():
             await migrate_database(connection)
 
             version = await (await connection.execute("PRAGMA user_version")).fetchone()
-            assert version == (3,)
+            assert version == (2,)
             tables = await (
                 await connection.execute(
                     "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
@@ -37,10 +37,13 @@ def test_legacy_database_is_migrated_once_without_losing_data():
             assert ("shelter_capacity_budgets",) in tables
             assert ("activity",) in tables
             assert ("broadcast_targets",) in tables
-            assert ("shipments",) in tables
-            assert await (
-                await connection.execute("SELECT count(*) FROM resource_types")
-            ).fetchone() != (0,)
+            assert not {
+                ("organizations",),
+                ("resource_types",),
+                ("inventory",),
+                ("needs",),
+                ("shipments",),
+            } & set(tables)
             assert await (await connection.execute("SELECT id FROM disasters")).fetchone() == (
                 "disaster",
             )
