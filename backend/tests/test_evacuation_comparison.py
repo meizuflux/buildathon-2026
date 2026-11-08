@@ -80,8 +80,8 @@ def test_nearest_picks_closest_open_or_full_shelter_and_breaks_ties_by_id():
     near = family("f", 1, 0)
     near["location"]["longitude"] = 0.4
     chosen = allocate_nearest([family("f", 1, 0), near | {"id": "g"}], shelters)
-    assert chosen["f"]["id"] == "a"
-    assert chosen["g"]["id"] == "c"
+    assert chosen["f"] is not None and chosen["f"]["id"] == "a"
+    assert chosen["g"] is not None and chosen["g"]["id"] == "c"
     assert allocate_nearest([family("f", 1, 0)], [shelter("x", 0.0, 1, status="closed")]) == {
         "f": None
     }
