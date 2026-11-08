@@ -3,11 +3,55 @@
 Fresh databases are bootstrapped from ``schema.sql``. Migrations upgrade
 databases created by earlier application versions; SQLite's ``user_version``
 keeps the applied version in the database itself.
+
+A migration is either a SQL script or an async function for changes plain SQL can't express.
 """
+
+import asyncio
+from collections.abc import Awaitable, Callable
 
 import apsw
 
-_MIGRATIONS: tuple[tuple[int, str], ...] = (
+from haven.db import SCHEMA
+
+type Migration = str | Callable[[apsw.AsyncConnection], Awaitable[None]]
+
+DONATIONS_MARKER = "-- Citizen donations, built on the logistics tables above"
+_ROLE_CHECK_OLD = "CHECK (role IN ('family', 'operator'))"
+_ROLE_CHECK_NEW = "CHECK (role IN ('family', 'operator', 'hub_staff'))"
+
+
+async def add_donations(connection: apsw.AsyncConnection) -> None:
+    """Version 3: citizen donation tables, extra catalog items, and the hub_staff role.
+
+    The tables come from the donations section of schema.sql (all IF NOT EXISTS / OR IGNORE).
+    SQLite can't alter a CHECK constraint and the users table can't be rebuilt here without
+    breaking foreign keys inside the migration transaction, so the role CHECK is widened in place
+    as described in https://www.sqlite.org/lang_altertable.html#otheralter.
+    """
+    schema = await asyncio.to_thread(SCHEMA.read_text, encoding="utf-8")
+    async for _ in await connection.execute(schema[schema.index(DONATIONS_MARKER) :]):
+        pass
+    row = await (
+        await connection.execute(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'users'"
+        )
+    ).fetchone()
+    if row is None or _ROLE_CHECK_NEW in str(row[0]):
+        return
+    if _ROLE_CHECK_OLD not in str(row[0]):
+        raise RuntimeError("Unexpected users table definition; cannot add the hub_staff role.")
+    version = (await (await connection.execute("PRAGMA schema_version")).fetchone() or (0,))[0]
+    await connection.execute("PRAGMA writable_schema = ON")
+    await connection.execute(
+        "UPDATE sqlite_master SET sql = replace(sql, ?, ?) WHERE type = 'table' AND name = 'users'",
+        (_ROLE_CHECK_OLD, _ROLE_CHECK_NEW),
+    )
+    await connection.execute("PRAGMA writable_schema = OFF")
+    await connection.execute(f"PRAGMA schema_version = {int(version) + 1}")  # type: ignore[arg-type]
+
+
+_MIGRATIONS: tuple[tuple[int, Migration], ...] = (
     (
         1,
         """
@@ -58,6 +102,8 @@ CREATE TABLE IF NOT EXISTS broadcast_targets (
     ),
 )
 
+_MIGRATIONS = (*_MIGRATIONS, (3, add_donations))
+
 _LATEST_VERSION = _MIGRATIONS[-1][0]
 
 
@@ -92,8 +138,11 @@ async def migrate_database(connection: apsw.AsyncConnection) -> None:
                 raise RuntimeError(
                     f"No migration is available for schema version {current_version + 1}."
                 )
-            async for _ in await connection.execute(script):
-                pass
+            if isinstance(script, str):
+                async for _ in await connection.execute(script):
+                    pass
+            else:
+                await script(connection)
             await connection.execute(f"PRAGMA user_version = {version}")
             current_version = version
         await connection.execute("COMMIT")

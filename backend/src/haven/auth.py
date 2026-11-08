@@ -36,7 +36,7 @@ class Credentials(msgspec.Struct, forbid_unknown_fields=True):
 
 class AuthenticatedUser(msgspec.Struct, frozen=True):
     id: str
-    role: Literal["family", "operator"]
+    role: Literal["family", "operator", "hub_staff"]
 
 
 def get_authenticated_user(connection: ASGIConnection) -> AuthenticatedUser:
@@ -112,7 +112,15 @@ async def user_info(connection: apsw.AsyncConnection, user: AuthenticatedUser) -
     family = await (
         await connection.execute("SELECT id FROM families WHERE owner_user_id = ?", (user.id,))
     ).fetchone()
-    return User(id=user.id, role=user.role, family_id=family[0] if family else None)
+    hub = await (
+        await connection.execute("SELECT hub_id FROM hub_staff WHERE user_id = ?", (user.id,))
+    ).fetchone()
+    return User(
+        id=user.id,
+        role=user.role,
+        family_id=family[0] if family else None,
+        hub_id=hub[0] if hub else None,
+    )
 
 
 def token_hash(token: str) -> str:

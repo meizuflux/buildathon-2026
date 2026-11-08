@@ -1,0 +1,15 @@
+[
+  { "file": "frontend/src/app/(tabs)/_layout.tsx", "before": "haven.", "after": "Haven", "reason": "Keep the name; remove the decorative accent punctuation." },
+  { "file": "frontend/src/app/(tabs)/_layout.tsx", "before": "A little clarity. A way forward.", "after": "", "reason": "Gate 69: repeated marketing slogan in the application shell." },
+  { "file": "frontend/src/app/(tabs)/_layout.tsx", "before": "YOUR SPACE", "after": "", "reason": "Gates 54 and 67: redundant tracked uppercase navigation label." },
+  { "file": "frontend/src/app/(tabs)/_layout.tsx", "before": "You don’t have to do this alone.", "after": "", "reason": "Gate 69: reassurance panel repeats the app's purpose without adding task information." },
+  { "file": "frontend/src/app/(tabs)/_layout.tsx", "before": "Your household, your needs, your next step. All in one place.", "after": "", "reason": "Gate 69: duplicate description of the navigation destinations." },
+  { "file": "frontend/src/app/(tabs)/_layout.tsx", "before": "Demo household session", "after": "Demo session", "reason": "Shorter session label with the same meaning." },
+  { "file": "frontend/src/app/(tabs)/_layout.tsx", "before": "Household workspace", "after": "Household session", "reason": "Describe the current session consistently." },
+  { "file": "frontend/src/app/(tabs)/_layout.tsx", "before": "Secure token integration", "after": "", "reason": "Implementation detail is not a useful household-facing label." },
+  { "file": "frontend/src/components/common/ui.tsx", "before": "Here for your next step.", "after": "", "reason": "Gate 69: remove filler before the unchanged emergency-services disclaimer." },
+  { "file": "frontend/src/components/common/ui.tsx", "before": "DEMONSTRATION · FICTIONAL ALERTS & ASSIGNMENTS", "after": "Demo data. All alerts and assignments are fictional.", "reason": "Retain the demo warning in readable sentence case without tracked capitals or meta punctuation." },
+  { "file": "frontend/src/components/common/ui.tsx", "before": "Connected · Demo session", "after": "Connected", "reason": "The separate demo warning already identifies the session mode." },
+  { "file": "frontend/src/components/common/ui.tsx", "before": "Verified government · Source name / timestamp / URL", "after": "Source name / Verified government source / Updated timestamp / URL", "reason": "Separate source name, verification, timestamp, and URL onto readable lines. Values remain unchanged." },
+  { "file": "frontend/src/components/common/ui.tsx", "before": "Title Case Status Labels", "after": "Sentence case status labels", "reason": "Resource and request statuses retain their values; presentation uses sentence case." }
+]

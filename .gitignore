@@ -1,0 +1,12 @@
+node_modules/
+.expo/
+dist/
+dist-native/
+.env
+.env.local
+*.tsbuildinfo
+coverage/
+
+.runtime/
+__pycache__/
+*.py[cod]

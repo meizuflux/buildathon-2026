@@ -13,16 +13,55 @@ from haven.demo_households import generate_households
 
 def test_demo_accounts_can_sign_in(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "demo.sqlite3"))
+    monkeypatch.delenv("DEMO_PASSWORD", raising=False)
     created = asyncio.run(seed_demo_data())
     assert set(created) == {email for email, _ in DEMO_ACCOUNTS}
     assert all(created.values())
     with TestClient(app=app) as client:
-        for email, role in DEMO_ACCOUNTS:
+        for email, role, hub_id in DEMO_ACCOUNTS:
             response = client.post(
                 "/api/auth/login", json={"email": email, "password": created[email]}
             )
             assert response.status_code == 200
             assert response.json()["user"]["role"] == role
+            assert response.json()["user"]["hub_id"] == hub_id
+
+
+def test_demo_hubs_seed_idempotently_near_center(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "hubs.sqlite3"))
+    assert asyncio.run(seed_hubs()) == len(DEMO_HUBS)
+    assert asyncio.run(seed_hubs()) == 0
+    with TestClient(app=app) as client:
+        nearby = client.get(
+            "/api/hubs/nearby", params={"lat": DEMO_CENTER[0], "lng": DEMO_CENTER[1]}
+        ).json()
+        assert len(nearby) == len(DEMO_HUBS)
+        assert len(client.get("/api/hubs", params={"min_capacity": 90}).json()) == 3
+
+
+def test_shared_demo_password_and_sample_activity(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "activity.sqlite3"))
+    monkeypatch.setenv("DEMO_PASSWORD", "shared-demo-password")
+    assert set(asyncio.run(seed_demo_data()).values()) == {"shared-demo-password"}
+    asyncio.run(seed_demo_data())
+    with TestClient(app=app) as client:
+        operator = client.post(
+            "/api/auth/login",
+            json={"email": "government@demo.example", "password": "shared-demo-password"},
+        )
+        headers = {"Authorization": f"Bearer {operator.json()['access_token']}"}
+        open_requests = client.get(
+            "/api/requests", params={"status": "matched"}, headers=headers
+        ).json()
+        assert len(open_requests) == len(DEMO_REQUESTS)
+        assert all(r["hub"] and r["match"] for r in open_requests)
+        pending = [
+            p
+            for _, hub_id, _, _ in DEMO_PLEDGES
+            for p in client.get(f"/api/hubs/{hub_id}/pledges", headers=headers).json()
+        ]
+        assert len(pending) == len(DEMO_PLEDGES)
+        assert staff_email("hub_demo_downtown_fire") == "staff.downtown-fire@demo.example"
 
 
 def test_reseeding_recreates_the_entire_demo_database(tmp_path, monkeypatch):

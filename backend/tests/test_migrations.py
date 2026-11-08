@@ -27,7 +27,7 @@ def test_legacy_database_is_migrated_once_without_losing_data():
             await migrate_database(connection)
 
             version = await (await connection.execute("PRAGMA user_version")).fetchone()
-            assert version == (2,)
+            assert version == (3,)
             tables = await (
                 await connection.execute(
                     "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
