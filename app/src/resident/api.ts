@@ -36,6 +36,8 @@ export const updateSchema = z.object({
   severity: z.enum(['info', 'warning', 'critical']), published_at: z.string(),
 });
 export const disasterSchema = z.object({ id: z.string(), type: z.string(), name: z.string(), status: z.string(), affected_area: z.string(), updated_at: z.string() });
+export const hurricaneSchema = z.object({ phase: z.enum(['peace', 'active']), started_at: z.string().nullable() });
+export type ApiHurricane = z.infer<typeof hurricaneSchema>;
 
 export type ApiFamily = z.infer<typeof familySchema>;
 export type ApiShelter = z.infer<typeof shelterSchema>;
@@ -139,27 +141,7 @@ export function recommendationFromPlan(plan: ApiPlan, h: Household, shelters: Sh
     destination,
     alternatives: rest.map((a) => ({ assessment: a, whyNot: whyNot(a) })),
     householdUnknowns: householdUnknowns(h),
-    keptBecauseTravelling: false,
-    advisory: null,
     reserved: !!destination && plan.capacity_reserved,
-  };
-}
-
-/** After the household marked that they left, keep their destination and explain any plan change instead. */
-export function keepDestination(rec: Recommendation, h: Household, shelters: Shelter[], travellingTo: string | null): Recommendation {
-  if (!travellingTo) return rec;
-  const kept = shelters.find((s) => s.id === travellingTo);
-  if (!kept) return rec;
-  if (rec.destination?.shelter.id === travellingTo) return { ...rec, keptBecauseTravelling: true };
-  const current = assess(h, kept);
-  return {
-    ...rec,
-    status: current.verified ? 'recommended' : 'unverified',
-    destination: current,
-    alternatives: rec.alternatives.filter((a) => a.assessment.shelter.id !== travellingTo),
-    keptBecauseTravelling: true,
-    reserved: false,
-    advisory: `The coordinators’ plan now suggests ${rec.destination?.shelter.name ?? 'no shelter'} instead of ${kept.name}. Your destination has not been changed. Message the coordination desk before changing plans.`,
   };
 }
 

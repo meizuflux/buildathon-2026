@@ -1,5 +1,14 @@
 // Preparation steps chosen by household profile. Practical preparation only: no medical treatment advice.
 import type { Household } from './types';
+import type { ApiHurricane } from './api';
+
+/** Remember the last phase on disk so a reset also clears ticks after reopening the app. */
+export function checklistAfterSync(checked: string[], previous: ApiHurricane | undefined, current: ApiHurricane): string[] {
+  if (current.phase === 'peace' && previous?.phase !== 'peace') return [];
+  // A new active cycle means a reset happened while this device was away.
+  if (current.phase === 'active' && previous?.phase === 'active' && previous.started_at !== current.started_at) return [];
+  return checked;
+}
 
 export interface Step {
   id: string;

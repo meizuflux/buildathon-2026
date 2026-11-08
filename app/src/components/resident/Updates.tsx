@@ -50,7 +50,7 @@ export function Thread({ messages, online, onRetry }: { messages: Message[]; onl
   const { s } = useDash();
   return (
     <>
-      <Text style={[s.secondary, { textAlign: 'center' }]}>Messages go to the coordination team as help requests. Replies aren’t shown in the app yet.</Text>
+      <Text style={[s.secondary, { textAlign: 'center' }]}>Messages go to the coordination team as help requests.</Text>
       {messages.length === 0 && <Text style={[s.secondary, { textAlign: 'center' }]}>No messages yet.</Text>}
       <View style={{ gap: 16 }} aria-live="polite">
         {messages.map((m) => <Bubble key={m.id} message={m} onRetry={() => onRetry(m)} />)}

@@ -26,17 +26,17 @@ export function PaneTitle({ title, subtitle }: { title: string; subtitle?: strin
   );
 }
 
-export function PlanPane({ rec, household, now, updating, lastChange, instruction, travelling, online, onReviewJourney, onEditNeeds, onMessage, onLeft }: {
+export function PlanPane({ rec, household, now, updating, lastChange, instruction, onEditNeeds, onMessage }: {
   rec: Rec; household: Household; now: number; updating: boolean; lastChange: string[]; instruction: OfficialInstruction | null;
-  travelling: boolean; online: boolean; onReviewJourney: () => void; onEditNeeds: () => void; onMessage: () => void; onLeft: () => void;
+  onEditNeeds: () => void; onMessage: () => void;
 }) {
   return (
     <View style={{ gap: 24 }}>
-      <PaneTitle title="Your plan" subtitle="Where to go and why" />
+      <PaneTitle title="Your assigned shelter" />
       {instruction && <OfficialInstructionBand instruction={instruction} />}
       <Recommendation rec={rec} household={household} now={now} updating={updating} lastChange={lastChange}
-        onReviewJourney={onReviewJourney} onEditNeeds={onEditNeeds} onMessage={onMessage} />
-      {!updating && <Journey rec={rec} household={household} travelling={travelling} online={online} onLeft={onLeft} />}
+        onEditNeeds={onEditNeeds} onMessage={onMessage} />
+      {!updating && <Journey rec={rec} household={household} />}
       {!updating && <Alternatives rec={rec} household={household} />}
     </View>
   );
@@ -86,7 +86,7 @@ export function UpdatesPane({ broadcasts, notices }: { broadcasts: Broadcast[]; 
 export function MessagesPane({ messages, online, onSend }: { messages: Message[]; online: boolean; onSend: (body: string, retryId?: string) => void }) {
   return (
     <View style={{ gap: 20 }}>
-      <PaneTitle title="Messages" subtitle="Shelter coordination desk" />
+      <PaneTitle title="Messages" />
       <Thread messages={messages} online={online} onRetry={(m) => onSend(m.body, m.id)} />
     </View>
   );
@@ -118,6 +118,19 @@ export function HouseholdPane({ household, rec, online, editing, onEditing, onSa
   return (
     <View style={{ gap: 24 }}>
       <PaneTitle title="Household" subtitle="Who’s with you and what you need" />
+      <View style={[s.panel, { gap: 8 }]}>
+        <Text accessibilityRole="header" aria-level={2} style={s.h3}>Account</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: c.greenLight, alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="user" size={20} color={c.green} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.strong}>Family account</Text>
+            <Text style={s.secondary}>{emergency}</Text>
+          </View>
+        </View>
+        <LinkButton title="Sign out" icon="log-out" tone="neutral" onPress={onSignOut} />
+      </View>
       {saved && !editing && (
         <InlineNotice tone="confirmed" icon="check-circle" title="Saved"
           action={<LinkButton title="View plan" icon="map" onPress={() => { setSaved(false); onViewPlan(); }} />}>
@@ -137,19 +150,6 @@ export function HouseholdPane({ household, rec, online, editing, onEditing, onSa
       ) : (
         <HouseholdFit household={household} rec={rec} onEdit={start} heading="Members and needs" />
       )}
-      <View style={[s.panel, { gap: 8 }]}>
-        <Text accessibilityRole="header" aria-level={2} style={s.h3}>Account</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: c.greenLight, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="user" size={20} color={c.green} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={s.strong}>Family account</Text>
-            <Text style={s.secondary}>{emergency}</Text>
-          </View>
-        </View>
-        <LinkButton title="Sign out" icon="log-out" tone="neutral" onPress={onSignOut} />
-      </View>
     </View>
   );
 }

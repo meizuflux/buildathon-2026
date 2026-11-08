@@ -1,4 +1,4 @@
-// The household: members and needs as icon tiles, matched against the destination, plus the form
+// The household: members and needs as a simple list, matched against the destination, plus the form
 // used to edit them (inline on the Household tab, or in a sheet for first-time setup).
 import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
@@ -27,25 +27,28 @@ export function HouseholdFit({ household, rec, onEdit, heading }: { household: H
         <Heading>{heading}</Heading>
         <LinkButton title="Edit" icon="edit-2" onPress={onEdit} />
       </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="list">
-        {tiles.map((tile) => {
+      <View style={[s.panel, { paddingVertical: 0 }]} accessibilityRole="list">
+        {tiles.map((tile, index) => {
           const check = tile.requirement ? checks.find((x) => x.requirement === tile.requirement) : undefined;
           const tone = !check ? null : check.state === 'confirmed' ? c.confirmed : check.state === 'unknown' ? c.amber : c.red;
           const word = !check ? null : check.state === 'confirmed' ? 'Confirmed' : check.state === 'unknown' ? 'Unconfirmed' : 'Not available';
           return (
             <View key={tile.key} accessible accessibilityLabel={`${tile.label}: ${tile.value}${check ? `. ${check.label}` : ''}`}
-              style={{ flexGrow: 1, flexBasis: 100, padding: 12, borderRadius: 12, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border, gap: 6 }}>
-              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: c.greenLight, alignItems: 'center', justifyContent: 'center' }}>
-                <Glyph name={tile.glyph} size={22} color={c.green} />
-              </View>
-              <Text style={{ fontFamily: type.semibold, fontSize: 18, lineHeight: 24, color: c.ink }}>{tile.value}</Text>
-              <Text style={[s.secondary, { fontSize: 14, lineHeight: 18 }]}>{tile.label}</Text>
-              {check && tone && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Icon name={check.state === 'confirmed' ? 'check-circle' : check.state === 'unknown' ? 'help-circle' : 'x-circle'} size={14} color={tone} />
-                  <Text style={{ fontFamily: type.medium, fontSize: 13, color: tone }}>{word}</Text>
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14,
+                borderTopWidth: index === 0 ? 0 : 1, borderTopColor: c.border }}>
+              <Glyph name={tile.glyph} size={22} color={c.green} />
+              <View style={{ flex: 1, gap: 4 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 12 }}>
+                  <Text style={[s.strong, { flex: 1 }]}>{tile.label}</Text>
+                  <Text style={s.secondary}>{tile.value}</Text>
                 </View>
-              )}
+                {check && tone && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Icon name={check.state === 'confirmed' ? 'check-circle' : check.state === 'unknown' ? 'help-circle' : 'x-circle'} size={14} color={tone} />
+                    <Text style={{ fontFamily: type.family, fontSize: 13, color: tone, flexShrink: 1 }}>{word}</Text>
+                  </View>
+                )}
+              </View>
             </View>
           );
         })}

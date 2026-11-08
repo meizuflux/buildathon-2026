@@ -1,4 +1,4 @@
-// Journey: a map of home and the destination, the straight-line distance, and "We've left".
+// Journey: a map of home and the destination, and the straight-line distance.
 // The service has no road or travel-time data, so no route is drawn or implied.
 import React from 'react';
 import { Text, View } from 'react-native';
@@ -6,11 +6,11 @@ import { type } from '../../constants/theme';
 import type { Household, Recommendation } from '../../resident/types';
 import { Icon } from './Icon';
 import JourneyMap from './JourneyMap';
-import { Action, Heading, StatusLabel, useDash } from './parts';
+import { Heading, useDash } from './parts';
 import { km } from './Recommendation';
 
-export function Journey({ rec, household, travelling, online, onLeft }: {
-  rec: Recommendation; household: Household; travelling: boolean; online: boolean; onLeft: () => void;
+export function Journey({ rec, household }: {
+  rec: Recommendation; household: Household;
 }) {
   const { c, s } = useDash();
   const d = rec.destination;
@@ -25,7 +25,7 @@ export function Journey({ rec, household, travelling, online, onLeft }: {
   const distance = km(household, d);
   return (
     <View style={s.section} nativeID="journey">
-      <Heading>{rec.status === 'recommended' || rec.keptBecauseTravelling ? 'Your journey' : 'Journey to possible option'}</Heading>
+      <Heading>{rec.status === 'recommended' ? 'Your journey' : 'Journey to possible option'}</Heading>
       <View style={[s.panel, { gap: 16 }]}>
         <JourneyMap origin={household.location} destination={{ lat: d.shelter.lat, lng: d.shelter.lng, name: d.shelter.name }} />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 4 }} aria-label="Map legend">
@@ -46,14 +46,6 @@ export function Journey({ rec, household, travelling, online, onLeft }: {
         </View>
         <Text style={s.secondary}>Straight-line distance. Use your maps app for directions and follow official road guidance.</Text>
 
-        {travelling ? (
-          <StatusLabel tone="primary" icon="navigation">You’re on your way. Your destination won’t change automatically.</StatusLabel>
-        ) : rec.status === 'recommended' ? (
-          <View style={{ gap: 6 }}>
-            <Action title="We’ve left" icon="log-out" variant="secondary" onPress={onLeft} disabled={!online} />
-            <Text style={[s.secondary, { textAlign: 'center' }]}>{online ? 'Locks your destination. Doesn’t reserve a space.' : 'Unavailable offline.'}</Text>
-          </View>
-        ) : null}
       </View>
     </View>
   );
