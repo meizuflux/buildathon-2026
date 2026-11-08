@@ -1168,3 +1168,58 @@ def test_arriving_medical_family_can_displace_flexible_incumbent(coordination_cl
     incumbent = client.get("/api/families/family/plan", headers=headers()).json()
     assert incumbent["shelter"]["id"] == "general"
     assert not incumbent["alerts"]
+
+
+def test_operator_can_acknowledge_resolve_and_reopen_reports(coordination_client):
+    client, database = coordination_client
+    created = client.post(
+        "/api/families/family/reports",
+        headers=headers(),
+        json={
+            "type": "need_help",
+            "message": "Water is rising",
+            "location": {"latitude": 28, "longitude": -82},
+            "client_request_id": "status-flow",
+        },
+    ).json()
+    path = f"/api/reports/{created['id']}"
+
+    assert client.patch(path, json={"status": "resolved"}).status_code == 401
+    denied = client.patch(path, headers=headers(), json={"status": "resolved"})
+    assert denied.status_code == 403
+    assert (
+        client.patch(path, headers=headers("operator"), json={"status": "done"}).status_code == 400
+    )
+    assert (
+        client.patch(
+            path, headers=headers("operator"), json={"status": "resolved", "x": 1}
+        ).status_code
+        == 400
+    )
+    missing = client.patch(
+        "/api/reports/missing", headers=headers("operator"), json={"status": "resolved"}
+    )
+    assert missing.status_code == 404
+    assert missing.json()["error"]["code"] == "report_not_found"
+
+    for status in ("acknowledged", "resolved", "resolved", "received"):
+        response = client.patch(path, headers=headers("operator"), json={"status": status})
+        assert response.status_code == 200, response.text
+        assert response.json() == created | {"status": status}
+
+    listed = client.get("/api/disasters/disaster/reports", headers=headers("operator")).json()
+    assert listed["reports"][0]["status"] == "received"
+    events = client.get("/api/disasters/disaster/activity", headers=headers("operator")).json()[
+        "activity"
+    ]
+    # Repeating the same status is a no-op, so only real changes are logged.
+    assert [event["type"] for event in events] == [
+        "report_reopened",
+        "report_resolved",
+        "report_acknowledged",
+        "report_received",
+    ]
+    assert {event["ref"]["id"] for event in events} == {created["id"]}
+    assert events[0]["actor"]["kind"] == "operator"
+    with sqlite3.connect(database) as connection:
+        assert connection.execute("SELECT status FROM reports").fetchone() == ("received",)

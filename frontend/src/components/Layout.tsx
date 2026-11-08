@@ -7,6 +7,7 @@ import { useAuth } from '../auth'
 import { useData } from '../data'
 import { DISASTER_TYPES } from '../lib/constants'
 import { cap, timeAgo } from '../lib/format'
+import { isOpenHelp } from '../lib/ops'
 
 type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean; count?: number; preview?: boolean }
 type NavGroup = { group?: string; items: NavItem[] }
@@ -14,7 +15,7 @@ type NavGroup = { group?: string; items: NavItem[] }
 export default function Layout() {
   const { user, logout } = useAuth()
   const d = useData()
-  const helpOpen = d.reports.filter((r) => r.type === 'need_help' && r.status === 'received').length
+  const helpOpen = d.reports.filter(isOpenHelp).length
   const nav: NavGroup[] = [
     { items: [
       { to: '/', label: 'Command center', icon: LayoutDashboard, end: true },

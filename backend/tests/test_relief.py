@@ -176,6 +176,12 @@ def test_official_updates(relief_client):
     assert update["published_at"].endswith("Z")
     assert client.get(path).json() == {"updates": [update]}
     assert client.get("/api/disasters/other/updates").json() == {"updates": []}
+    events = client.get("/api/disasters/active/activity", headers=headers["operator"]).json()[
+        "activity"
+    ]
+    assert events[0]["type"] == "update_published"
+    assert events[0]["summary"] == "Broadcast sent to all families: Shelter availability changed"
+    assert events[0]["ref"] == {"kind": "update", "id": update["id"]}
     assert client.get("/api/disasters/missing/updates").status_code == 404
     assert (
         client.post(

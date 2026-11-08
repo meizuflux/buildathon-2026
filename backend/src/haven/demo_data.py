@@ -170,6 +170,18 @@ async def _seed_golden_gate_scenario(locations: dict) -> None:
                     stamp,
                 ),
             )
+            await connection.execute(
+                "INSERT INTO activity (id, disaster_id, type, summary, ref_kind, ref_id, "
+                "actor_kind, actor_id, actor_name, created_at) "
+                "VALUES (?, ?, 'update_published', ?, 'update', ?, 'system', 'system', 'System', ?)",
+                (
+                    "act_demo_update",
+                    DEMO_DISASTER_ID,
+                    "Broadcast sent to all families: Demo hurricane update",
+                    "demo_update",
+                    stamp,
+                ),
+            )
             await recompute_disasters(connection, (DEMO_DISASTER_ID,))
             await connection.execute("COMMIT")
         except BaseException:

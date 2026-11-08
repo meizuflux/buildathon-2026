@@ -5,8 +5,9 @@ import type { MapLayers, Shelter } from '../api/types'
 import { useData } from '../data'
 import { RESOURCE_KEYS } from '../lib/constants'
 import { cap, fullTime, timeAgo } from '../lib/format'
-import { LEVEL_TEXT, SEV_TONE, needsAction, occupancy, shelterLevel, shelterTotals } from '../lib/ops'
+import { LEVEL_TEXT, SEV_TONE, isOpenHelp, needsAction, occupancy, shelterLevel, shelterTotals } from '../lib/ops'
 import OpsMap, { LayerPanel } from '../components/OpsMap'
+import ReportActions from '../components/ReportActions'
 import { Empty, Meter, useAllFamilies } from '../components/ui'
 
 const REF_LINK: Record<string, (id: string) => string> = {
@@ -23,11 +24,11 @@ export default function CommandCenter() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const { families, error: familyError } = useAllFamilies(d.disasterId, layers.families)
   const t = shelterTotals(d.shelters)
-  const helpOpen = d.reports.filter((r) => r.type === 'need_help' && r.status === 'received').length
+  const helpOpen = d.reports.filter(isOpenHelp).length
   const queue = useMemo(() => needsAction(d.alerts, d.reports), [d.alerts, d.reports])
   const selected = d.shelters.find((s) => s.id === selectedId)
-  const recent = d.updates
-    .filter((u) => u.status !== 'scheduled')
+  const shelterName = (id: string) => d.shelters.find((s) => s.id === id)?.name ?? 'one shelter'
+  const recent = [...d.updates]
     .sort((a, b) => (b.published_at || '').localeCompare(a.published_at || ''))
     .slice(0, 3)
 
@@ -77,6 +78,7 @@ export default function CommandCenter() {
                             {q.shelterId && <button className="btn btn-sm" onClick={() => setSelectedId(q.shelterId ?? null)}>Show shelter</button>}
                             {q.reportId && <Link className="btn btn-sm" to={`/map?report=${encodeURIComponent(q.reportId)}`}>Show on map</Link>}
                             {q.familyId && <Link className="btn btn-sm" to={`/families/${encodeURIComponent(q.familyId)}`}>View family</Link>}
+                            {q.report && <ReportActions report={q.report} compact />}
                           </span>
                         </div>
                       </div>
@@ -97,9 +99,8 @@ export default function CommandCenter() {
               {recent.map((u) => (
                 <div key={u.id} className="hx-cast">
                   <div className="r1"><span className={`badge ${SEV_TONE[u.severity]}`}>{cap(u.severity)}</span><strong>{u.title}</strong></div>
-                  {u.read_count != null && <Meter value={u.recipient_count ? u.read_count / u.recipient_count : 0} thin />}
                   <div className="r2">
-                    <span>{u.read_count == null ? 'Read count unavailable' : `${u.read_count.toLocaleString()} of ${(u.recipient_count ?? 0).toLocaleString()} read`}</span>
+                    <span>{u.target?.type === 'shelter' ? `Families assigned to ${shelterName(u.target.shelter_id)}` : 'All families'}</span>
                     <span title={fullTime(u.published_at)}>{timeAgo(u.published_at)}</span>
                   </div>
                 </div>

@@ -371,6 +371,11 @@ body { background: #121b25; color-scheme: dark; }
 .hx-report .r1 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .hx-report p { font-size: 15px; line-height: 1.5; }
 .hx-report .r3 { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+.hx-report .r1-meta { display: inline-flex; align-items: center; gap: 8px; }
+.hx-report.is-resolved { border-top-color: var(--line); opacity: 0.7; }
+.hx-report-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; border-top: 1px solid var(--line-soft); padding-top: 10px; }
+.hx .btn-resolve { color: var(--green); border-color: rgb(79 196 141 / 35%); }
+.hx .btn-resolve:hover:not(:disabled) { background: var(--green-soft); }
 
 /* ---------- broadcasts ---------- */
 .hx-bc { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 22px; align-items: start; max-width: 1240px; }

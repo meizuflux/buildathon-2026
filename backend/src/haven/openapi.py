@@ -206,7 +206,7 @@ class Report(TypedDict):
     message: str
     location: LocationResponse | None
     client_request_id: str
-    status: str
+    status: Literal["received", "acknowledged", "resolved"]
     created_at: str
 
 
