@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SetupSheet } from '../components/resident/Household';
+import { HavenLogo } from '../components/resident/HavenLogo';
 import { Icon, type IconName } from '../components/resident/Icon';
 import { ConnectionBanner } from '../components/resident/Notices';
 import { HouseholdPane, MessagesPane, PlanPane, PreparePane, UpdatesPane } from '../components/resident/Panes';
@@ -109,9 +110,7 @@ function TopBar({ online, synced }: { online: boolean; synced: number | null }) 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 10,
       backgroundColor: c.surface, borderBottomWidth: 1, borderBottomColor: c.border }}>
-      <View aria-hidden style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: c.green, alignItems: 'center', justifyContent: 'center' }}>
-        <Icon name="home" size={16} color={c.onPrimary} />
-      </View>
+      <HavenLogo />
       <Text style={{ flex: 1, fontFamily: type.semibold, fontSize: 17, lineHeight: 22, color: c.ink }}>Haven</Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }} accessible accessibilityLabel={online ? `Connected, ${time}` : 'Offline, showing saved information'}>
         <Icon name={online ? 'wifi' : 'wifi-off'} size={14} color={online ? c.muted : c.amber} />
