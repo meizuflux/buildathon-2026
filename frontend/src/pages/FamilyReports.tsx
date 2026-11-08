@@ -23,7 +23,7 @@ export default function FamilyReports() {
 
   return (
     <div className="hx-page">
-      <Head title="Family reports" sub="What families have sent from the Haven app, newest first. Acknowledge a report when someone is on it, and resolve it when it's handled.">
+      <Head title="Family reports" sub="What families have sent from the Haven app, newest first. Resolve a report when it's handled.">
         <Seg<StatusFilter> label="Filter by status" value={status} onChange={setStatus} options={[
           ['open', 'Open', '', open.length],
           ['resolved', 'Resolved', '', reports.length - open.length],

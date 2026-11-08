@@ -4,9 +4,9 @@ import type { Report, ReportStatus } from '../api/types'
 import { useData } from '../data'
 import { errorMessage } from '../lib/ops'
 
-// Acknowledge, resolve or reopen a family report. Resolved reports drop out of
+// Resolve or reopen a family report. Resolved reports drop out of
 // the open help-request counts and the "Needs action" list.
-export default function ReportActions({ report, compact = false }: { report: Report; compact?: boolean }) {
+export default function ReportActions({ report }: { report: Report; compact?: boolean }) {
   const d = useData()
   const [busy, setBusy] = useState<ReportStatus | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -25,11 +25,6 @@ export default function ReportActions({ report, compact = false }: { report: Rep
 
   return (
     <>
-      {report.status === 'received' && !compact && (
-        <button className="btn btn-sm" disabled={!!busy} onClick={() => set('acknowledged')}>
-          {busy === 'acknowledged' ? 'Saving…' : 'Acknowledge'}
-        </button>
-      )}
       {report.status !== 'resolved' ? (
         <button className="btn btn-sm btn-resolve" disabled={!!busy} onClick={() => set('resolved')}>
           <Check size={13} aria-hidden="true" /> {busy === 'resolved' ? 'Saving…' : 'Resolve'}
