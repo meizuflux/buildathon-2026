@@ -50,6 +50,12 @@ def test_shared_demo_password_and_seeded_golden_gate_scenario(tmp_path, monkeypa
             ).json()["total"]
             == 1000
         )
+        plans = client.get(
+            f"/api/disasters/{DEMO_DISASTER_ID}/plans?limit=1000", headers=headers
+        ).json()["plans"]
+        assert len(plans) == 1000
+        assert all(plan["shelter"] is not None and plan["capacity_reserved"] for plan in plans)
+        assert all(not plan["alerts"] for plan in plans)
 
 
 def test_reseeding_recreates_the_entire_demo_database(tmp_path, monkeypatch):
