@@ -57,6 +57,32 @@ CREATE TABLE IF NOT EXISTS broadcast_targets (
 
         """,
     ),
+    (
+        3,
+        """
+        -- Broadcasts written before the activity feed existed (or seeded directly)
+        -- have no timeline entry. Backfill one per broadcast so the feed is complete.
+        CREATE TABLE IF NOT EXISTS disaster_updates (
+            id TEXT PRIMARY KEY,
+            disaster_id TEXT NOT NULL REFERENCES disasters(id),
+            title TEXT NOT NULL,
+            message TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            published_at TEXT NOT NULL
+        );
+        INSERT INTO activity (
+            id, disaster_id, type, summary, ref_kind, ref_id,
+            actor_kind, actor_id, actor_name, created_at
+        )
+        SELECT 'act_backfill_' || u.id, u.disaster_id, 'update_published',
+               'Broadcast sent: ' || u.title, 'update', u.id,
+               'system', 'system', 'System', u.published_at
+        FROM disaster_updates u
+        WHERE NOT EXISTS (
+            SELECT 1 FROM activity a WHERE a.ref_kind = 'update' AND a.ref_id = u.id
+        );
+        """,
+    ),
 )
 
 

@@ -7,7 +7,7 @@ from typing import Annotated, Literal, cast
 from uuid import uuid4
 
 import msgspec
-from litestar import Request, Router, get, post
+from litestar import Request, Router, get, patch, post
 from litestar.openapi import ResponseSpec
 from litestar.params import FromPath, JSONBody, QueryParameter
 from litestar.response import Response
@@ -255,6 +255,72 @@ async def list_reports(disaster_id: FromPath[str]) -> ReportList:
         return {"reports": [report_from_row(row) async for row in cursor]}
 
 
+REPORT_STATUS_EVENTS = {
+    "received": ("report_reopened", "Family report reopened"),
+    "acknowledged": ("report_acknowledged", "Family report acknowledged"),
+    "resolved": ("report_resolved", "Family report resolved"),
+}
+
+
+class ReportStatusUpdate(msgspec.Struct, forbid_unknown_fields=True):
+    status: Literal["received", "acknowledged", "resolved"]
+
+
+@patch(
+    "/reports/{report_id:str}",
+    tags=["Reports"],
+    security=BEARER,
+    guards=[operator_guard],
+    responses=errors(400, 401, 403, 404, 500),
+    description="Operator only. Acknowledge, resolve or reopen a family report.",
+)
+async def update_report(
+    report_id: FromPath[str], data: JSONBody[ReportStatusUpdate], request: Request
+) -> Report:
+    async with connect() as connection:
+        await connection.execute("BEGIN IMMEDIATE")
+        try:
+            row = await (
+                await connection.execute(
+                    f"SELECT {projection(tuple(f'r.{column}' for column in REPORT_COLUMNS))}, "
+                    "f.disaster_id FROM reports r JOIN families f ON f.id = r.family_id "
+                    "WHERE r.id = ?",
+                    (report_id,),
+                )
+            ).fetchone()
+            if row is None:
+                error(404, "report_not_found", "Report not found.")
+            report = report_from_row(row[:-1])
+            if report["status"] != data.status:
+                await connection.execute(
+                    "UPDATE reports SET status = ? WHERE id = ?", (data.status, report_id)
+                )
+                report["status"] = data.status
+                event_type, summary = REPORT_STATUS_EVENTS[data.status]
+                await record_activity(
+                    connection,
+                    disaster_id=row[-1],
+                    event_type=event_type,
+                    summary=summary,
+                    ref_kind="report",
+                    ref_id=report_id,
+                    user=get_authenticated_user(request),
+                )
+            await connection.execute("COMMIT")
+        except BaseException:
+            await connection.execute("ROLLBACK")
+            raise
+    return report
+
+
 router = Router(
-    path="/", route_handlers=[list_plans, generate_plan, get_plan, create_report, list_reports]
+    path="/",
+    route_handlers=[
+        list_plans,
+        generate_plan,
+        get_plan,
+        create_report,
+        list_reports,
+        update_report,
+    ],
 )

@@ -398,7 +398,7 @@ export namespace Haven {
                         longitude: number;
                     };
                     message: string;
-                    status: string;
+                    status: "acknowledged" | "received" | "resolved";
                     type: "need_help" | "other" | "resource_request" | "status_update";
                 } [];
             };
@@ -1173,7 +1173,7 @@ export namespace Haven {
                     longitude: number;
                 };
                 message: string;
-                status: string;
+                status: "acknowledged" | "received" | "resolved";
                 type: "need_help" | "other" | "resource_request" | "status_update";
             };
         };
@@ -1355,6 +1355,77 @@ export namespace Haven {
                     message: string;
                 };
             };
+        };
+    };
+
+    export namespace ApiReportsReportIdUpdateReport {
+        export namespace Http200 {
+            export type ResponseBody = {
+                client_request_id: string;
+                created_at: string;
+                family_id: string;
+                id: string;
+                location: null | {
+                    latitude: number;
+                    longitude: number;
+                };
+                message: string;
+                status: "acknowledged" | "received" | "resolved";
+                type: "need_help" | "other" | "resource_request" | "status_update";
+            };
+        };
+
+        export namespace Http400 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http401 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http403 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http404 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export namespace Http500 {
+            export type ResponseBody = {
+                error: {
+                    code: string;
+                    message: string;
+                };
+            };
+        };
+
+        export interface PathParameters {
+            report_id: string;
+        };
+
+        export type RequestBody = {
+            status: "acknowledged" | "received" | "resolved";
         };
     };
 

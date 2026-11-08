@@ -11,6 +11,7 @@ import type {
   Preview,
   PreviewInput,
   Report,
+  ReportStatusPatch,
   Session,
   Shelter,
   ShelterInput,
@@ -123,13 +124,13 @@ export const liveApi = {
     request<Preview>('POST', `/disasters/${e(disasterId)}/updates/preview`, body),
   publishUpdate: (disasterId: string, update: UpdateInput) =>
     request<Update>('POST', `/disasters/${e(disasterId)}/updates`, update),
-  retractUpdate: (id: string) =>
-    request<Update>('PATCH', `/updates/${e(id)}`, { status: 'retracted' }),
 
   listReports: (disasterId: string) =>
     request<{ reports: Report[] }>('GET', `/disasters/${e(disasterId)}/reports`).then(
       (d) => d.reports,
     ),
+  updateReport: (id: string, patch: ReportStatusPatch) =>
+    request<Report>('PATCH', `/reports/${e(id)}`, patch),
 
   listActivity: (disasterId: string) =>
     request<{ activity: ActivityEntry[] }>(

@@ -27,7 +27,7 @@ def test_legacy_database_is_migrated_once_without_losing_data():
             await migrate_database(connection)
 
             version = await (await connection.execute("PRAGMA user_version")).fetchone()
-            assert version == (2,)
+            assert version == (3,)
             tables = await (
                 await connection.execute(
                     "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
@@ -83,3 +83,45 @@ def test_startup_rejects_newer_schema_before_creating_tables(tmp_path, monkeypat
             "SELECT count(*) FROM sqlite_master WHERE type = 'table'"
         ).fetchone()[0]
     assert table_count == 0
+
+
+def test_broadcasts_without_activity_are_backfilled():
+    async def exercise():
+        connection = await apsw.Connection.as_async(":memory:")
+        try:
+            async for _ in await connection.execute(
+                "CREATE TABLE disasters (id TEXT PRIMARY KEY); "
+                "CREATE TABLE families (id TEXT PRIMARY KEY); "
+                "CREATE TABLE shelters (id TEXT PRIMARY KEY, capacity_json TEXT NOT NULL); "
+                "INSERT INTO disasters VALUES ('disaster');"
+            ):
+                pass
+            await migrate_database(connection)
+            await connection.execute("PRAGMA user_version = 2")
+            await connection.execute(
+                "INSERT INTO disaster_updates VALUES "
+                "('update', 'disaster', 'Boil water', 'Boil it.', 'warning', '2026-11-07T00:00:00Z')"
+            )
+
+            await migrate_database(connection)
+            await migrate_database(connection)
+
+            rows = await (
+                await connection.execute(
+                    "SELECT type, summary, ref_kind, ref_id, actor_name, created_at FROM activity"
+                )
+            ).fetchall()
+            assert rows == [
+                (
+                    "update_published",
+                    "Broadcast sent: Boil water",
+                    "update",
+                    "update",
+                    "System",
+                    "2026-11-07T00:00:00Z",
+                )
+            ]
+        finally:
+            await connection.aclose()
+
+    asyncio.run(exercise())
