@@ -230,7 +230,8 @@ def test_plan_versions_matching_and_snapshot(coordination_client):
     assert changed_resource.status_code == 200
     latest = client.get("/api/families/family/plan", headers=headers()).json()
     assert latest["version"] == 4
-    assert latest["shelter"]["resources"]["water"] == "limited"
+    assert latest["shelter"]["id"] == "farther"
+    assert latest["shelter"]["resources"]["water"] == "available"
     with sqlite3.connect(database) as connection:
         assert (
             json.loads(
@@ -238,7 +239,7 @@ def test_plan_versions_matching_and_snapshot(coordination_client):
                     "SELECT capacity_json FROM shelters WHERE id='nearest'"
                 ).fetchone()[0]
             )["available_people"]
-            == 7
+            == 10
         )
     current_capacity = client.get("/api/shelters?disaster_id=disaster").json()["shelters"]
     nearest_capacity = next(
@@ -246,7 +247,7 @@ def test_plan_versions_matching_and_snapshot(coordination_client):
         for shelter in current_capacity
         if shelter["id"] == "nearest"
     )
-    assert nearest_capacity == 7
+    assert nearest_capacity == 10
     capacity_noop = client.patch(
         "/api/shelters/nearest",
         headers=headers("operator"),
@@ -435,7 +436,7 @@ def test_concurrent_families_are_assigned_with_overflow_alert(coordination_clien
     assert assigned == 6
 
 
-def test_profile_change_preserves_reservation_and_shelter_close_releases_capacity(
+def test_profile_change_reoptimizes_and_shelter_close_releases_capacity(
     coordination_client,
 ):
     client, database = coordination_client
@@ -451,7 +452,7 @@ def test_profile_change_preserves_reservation_and_shelter_close_releases_capacit
     assert moved.status_code == 200, moved.text
     reassigned = client.get("/api/families/family/plan", headers=headers()).json()
     assert reassigned["version"] == first["version"] + 1
-    assert reassigned["shelter"]["id"] == "near"
+    assert reassigned["shelter"]["id"] == "far"
     with sqlite3.connect(database) as connection:
         capacities = {
             identity: json.loads(raw)["available_people"]
@@ -459,7 +460,7 @@ def test_profile_change_preserves_reservation_and_shelter_close_releases_capacit
                 "SELECT id, capacity_json FROM shelters WHERE id IN ('near', 'far')"
             )
         }
-    assert capacities == {"near": 7, "far": 10}
+    assert capacities == {"near": 10, "far": 7}
 
     closed = client.patch(
         "/api/shelters/far", headers=headers("operator"), json={"status": "closed"}
@@ -487,7 +488,7 @@ def test_profile_change_preserves_reservation_and_shelter_close_releases_capacit
             == 10
         )
     moved_back = client.get("/api/families/family/plan", headers=headers()).json()
-    assert moved_back["version"] == reassigned["version"]
+    assert moved_back["version"] == reassigned["version"] + 1
     assert moved_back["status"] == "recommended"
     assert moved_back["shelter"]["id"] == "near"
     assert moved_back["capacity_reserved"] is True
@@ -585,7 +586,7 @@ def test_family_disaster_move_releases_source_and_reserves_target(coordination_c
     assert assignment == ("other", "target", 3)
 
 
-def test_shelter_disaster_move_preserves_other_pool_reservations(coordination_client):
+def test_shelter_disaster_move_reoptimizes_both_pools(coordination_client):
     client, database = coordination_client
     seed_family(
         database,
@@ -617,8 +618,8 @@ def test_shelter_disaster_move_preserves_other_pool_reservations(coordination_cl
     other_plan = client.get("/api/families/other-family/plan", headers=headers("operator")).json()
     assert active_plan["version"] == active_initial["version"] + 1
     assert active_plan["status"] == "no_match"
-    assert other_plan["version"] == other_initial["version"]
-    assert other_plan["shelter"]["id"] == "other-shelter"
+    assert other_plan["version"] == other_initial["version"] + 1
+    assert other_plan["shelter"]["id"] == "moving-shelter"
     with sqlite3.connect(database) as connection:
         assignments = dict(
             connection.execute("SELECT family_id, shelter_id FROM current_assignments").fetchall()
@@ -627,8 +628,8 @@ def test_shelter_disaster_move_preserves_other_pool_reservations(coordination_cl
             identity: json.loads(raw)["available_people"]
             for identity, raw in connection.execute("SELECT id, capacity_json FROM shelters")
         }
-    assert assignments == {"family": None, "other-family": "other-shelter"}
-    assert capacities == {"moving-shelter": 3, "other-shelter": 0}
+    assert assignments == {"family": None, "other-family": "moving-shelter"}
+    assert capacities == {"moving-shelter": 0, "other-shelter": 3}
 
 
 def test_bounded_relocation_uses_fragmented_shelter_capacity(coordination_client):
@@ -668,10 +669,7 @@ def test_bounded_relocation_uses_fragmented_shelter_capacity(coordination_client
     assert free == {"near": 0, "far": 0}
 
 
-def test_allocator_moves_incumbent_to_place_waiting_household(coordination_client, monkeypatch):
-    import haven.allocation_policy as allocation_policy
-
-    monkeypatch.setattr(allocation_policy, "_MAX_REFINEMENT_FAMILIES", 0)
+def test_allocator_moves_incumbent_to_place_waiting_household(coordination_client):
     client, database = coordination_client
     no_needs = {
         "pets": False,
@@ -709,12 +707,7 @@ def test_allocator_moves_incumbent_to_place_waiting_household(coordination_clien
     assert free == {"near": 2, "far": 0}
 
 
-def test_allocator_uses_two_shelter_exchange_to_place_waiting_household(
-    coordination_client, monkeypatch
-):
-    import haven.allocation_policy as allocation_policy
-
-    monkeypatch.setattr(allocation_policy, "_MAX_REFINEMENT_FAMILIES", 0)
+def test_allocator_uses_two_shelter_exchange_to_place_waiting_household(coordination_client):
     client, database = coordination_client
     no_needs = {
         "pets": False,
@@ -840,6 +833,8 @@ def test_global_allocator_preserves_scarce_capability_for_constrained_family(coo
 
 def test_shared_scarcity_prefers_closer_shelter_for_family_without_car(coordination_client):
     client, database = coordination_client
+    with sqlite3.connect(database) as connection:
+        connection.execute("UPDATE families SET disaster_id='other' WHERE id='family'")
     seed_family(database, "car-family", adults=2, children=1, has_car=True)
     seed_family(database, "no-car-family", adults=2, children=1, has_car=False)
     seed_shelter(database, "near", latitude=28.01, available=3, pets=False)
@@ -1114,3 +1109,62 @@ def test_alert_feed_uses_only_latest_plan(coordination_client):
     assert schema["paths"]["/api/disasters/{disaster_id}/alerts"]["get"]["security"] == [
         {"BearerAuth": []}
     ]
+
+
+def test_adding_closer_shelter_moves_existing_family_and_releases_capacity(coordination_client):
+    client, database = coordination_client
+    seed_shelter(database, "far", latitude=29)
+    initial = generate(client).json()
+    assert initial["shelter"]["id"] == "far"
+
+    response = client.post(
+        "/api/shelters",
+        headers=headers("operator"),
+        json=api_shelter("New nearby shelter", location={"latitude": 28.001, "longitude": -82}),
+    )
+    assert response.status_code == 201, response.text
+    new_id = response.json()["id"]
+    current = client.get("/api/families/family/plan", headers=headers()).json()
+    assert current["shelter"]["id"] == new_id
+    assert current["version"] == initial["version"] + 1
+    assert not current["alerts"]
+    with sqlite3.connect(database) as connection:
+        assert dict(
+            connection.execute("SELECT family_id, shelter_id FROM current_assignments")
+        ) == {"family": new_id}
+        free = {
+            identity: json.loads(raw)["available_people"]
+            for identity, raw in connection.execute("SELECT id, capacity_json FROM shelters")
+        }
+    assert free["far"] == 10
+    assert free[new_id] == response.json()["capacity"]["available_people"]
+    assert generate(client).json() == current
+
+
+def test_arriving_medical_family_can_displace_flexible_incumbent(coordination_client):
+    client, database = coordination_client
+    no_needs = {
+        "pets": False,
+        "immediate_medication": False,
+        "medical_notes": None,
+        "accessibility_notes": None,
+        "other_special_care": None,
+    }
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            "UPDATE families SET needs_json=? WHERE id='family'", (json.dumps(no_needs),)
+        )
+    seed_shelter(database, "medical", latitude=28.001, available=3)
+    seed_shelter(database, "general", latitude=29, available=3, staff=[])
+    assert generate(client).json()["shelter"]["id"] == "medical"
+
+    seed_family(
+        database, "arriving", adults=3, children=0, needs={**no_needs, "immediate_medication": True}
+    )
+    result = client.post("/api/families/arriving/plan/generate", headers=headers("operator"))
+    assert result.status_code == 200, result.text
+    assert result.json()["shelter"]["id"] == "medical"
+    assert not result.json()["alerts"]
+    incumbent = client.get("/api/families/family/plan", headers=headers()).json()
+    assert incumbent["shelter"]["id"] == "general"
+    assert not incumbent["alerts"]
