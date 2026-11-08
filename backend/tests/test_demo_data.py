@@ -8,6 +8,7 @@ from litestar.testing import TestClient
 from haven.app import app
 from haven.db import database_path
 from haven.demo_data import DEMO_ACCOUNTS, DEMO_DISASTER_ID, DEMO_LOCATIONS, seed_demo_data
+from haven.demo_households import generate_households
 
 
 def test_demo_accounts_can_sign_in(tmp_path, monkeypatch):
@@ -50,6 +51,27 @@ def test_reseeding_recreates_the_entire_demo_database(tmp_path, monkeypatch):
         assert connection.execute("SELECT count(*) FROM families").fetchone()[0] == 1000
         assert connection.execute("SELECT count(*) FROM current_assignments").fetchone()[0] == 1000
         assert connection.execute("SELECT count(*) FROM plans").fetchone()[0] == 1000
+        assert connection.execute(
+            "SELECT min(adults + children), max(adults + children) FROM families"
+        ).fetchone() == (1, 8)
+        assert (
+            connection.execute(
+                "SELECT count(*) FROM families WHERE adults = 1 AND children = 0 "
+                "AND json_extract(needs_json, '$.immediate_medication') = 1 "
+                "AND json_extract(needs_json, '$.accessibility_notes') IS NOT NULL "
+                "AND json_extract(resources_json, '$.has_car') = 0"
+            ).fetchone()[0]
+            > 0
+        )
+        assert (
+            connection.execute(
+                "SELECT count(*) FROM families WHERE adults + children = 4 "
+                "AND json_extract(resources_json, '$.has_car') = 1 "
+                "AND json_extract(needs_json, '$.pets') = 1 "
+                "AND json_extract(needs_json, '$.other_special_care') LIKE '%dog%'"
+            ).fetchone()[0]
+            > 0
+        )
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
         assert (
             connection.execute(
@@ -83,6 +105,33 @@ def test_reseeding_recreates_the_entire_demo_database(tmp_path, monkeypatch):
             )
             assert response.status_code == 200
             assert response.json()["user"]["role"] == role
+
+
+def test_household_generation_is_repeatable_and_varied():
+    profiles = generate_households(1000)
+    assert len(profiles) == 1000
+    assert profiles == generate_households(1000)
+    assert profiles != generate_households(1000, seed=43)
+    assert {p["adults"] + p["children"] for p in profiles} == set(range(1, 9))
+    combinations = {
+        (
+            p["resources"]["has_car"],
+            p["needs"]["pets"],
+            p["needs"]["immediate_medication"],
+            bool(p["needs"]["accessibility_notes"]),
+        )
+        for p in profiles
+    }
+    assert len(combinations) == 16
+    for profile in profiles:
+        assert profile["adults"] >= 1 and profile["children"] >= 0
+        needs = profile["needs"]
+        if needs["immediate_medication"]:
+            assert needs["medical_notes"]
+        if needs["pets"]:
+            assert needs["other_special_care"]
+        if "infant" in (needs["other_special_care"] or "").lower():
+            assert profile["children"] > 0
 
 
 def test_household_locations_are_distinct_verified_estates_homes():

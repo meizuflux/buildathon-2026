@@ -9,6 +9,7 @@ from uuid import uuid4
 from haven.allocation import recompute_disasters
 from haven.auth import hash_password, now, timestamp
 from haven.db import connect, database_path
+from haven.demo_households import generate_households
 from haven.startup import initialize_database
 
 DEMO_ACCOUNTS = (
@@ -100,7 +101,10 @@ async def _seed_golden_gate_scenario(locations: dict) -> None:
                         stamp,
                     ),
                 )
-            for i, home in enumerate(locations["households"]):
+            households = generate_households(len(locations["households"]))
+            for i, (home, profile) in enumerate(
+                zip(locations["households"], households, strict=True)
+            ):
                 family_id = f"demo_family_{i + 1:04d}"
                 user_id = f"demo_user_{i + 1:04d}"
                 await connection.execute(
@@ -108,13 +112,6 @@ async def _seed_golden_gate_scenario(locations: dict) -> None:
                     "VALUES (?, ?, ?, ?, ?)",
                     (user_id, f"synthetic-family-{i + 1:04d}@demo.invalid", "!", "family", stamp),
                 )
-                needs = {
-                    "pets": i % 5 == 0,
-                    "immediate_medication": i % 17 == 0,
-                    "medical_notes": None,
-                    "accessibility_notes": "Mobility assistance" if i % 13 == 0 else None,
-                    "other_special_care": None,
-                }
                 await connection.execute(
                     "INSERT INTO families (id, owner_user_id, disaster_id, adults, children, latitude, longitude, "
                     "needs_json, resources_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -122,12 +119,12 @@ async def _seed_golden_gate_scenario(locations: dict) -> None:
                         family_id,
                         user_id,
                         DEMO_DISASTER_ID,
-                        1 + i % 2,
-                        i % 3,
+                        profile["adults"],
+                        profile["children"],
                         home["latitude"],
                         home["longitude"],
-                        json.dumps(needs),
-                        json.dumps({"has_car": i % 4 != 0}),
+                        json.dumps(profile["needs"]),
+                        json.dumps(profile["resources"]),
                         stamp,
                         stamp,
                     ),
