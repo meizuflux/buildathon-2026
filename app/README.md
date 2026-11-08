@@ -1,6 +1,57 @@
-﻿# Haven mobile app
+# Haven mobile app
 
 React Native / Expo SDK 54 household app connected to the Litestar API in `backend/`.
+
+## Resident dashboard demo
+
+A deterministic, offline demo of the resident-facing "Your household plan" dashboard. It needs no backend and no sign-in.
+
+```sh
+npm run demo            # Expo web dev server with simulated data
+npm run demo -- export  # static build in dist-demo/
+```
+
+- **Scenario:** the fictional Alvarez household (2 adults, 2 children, 1 dog, a wheelchair-accessible entrance need, a vehicle) and three fictional shelters near Seminole Heights, Tampa Bay. Lakeview Recreation Center is recommended at the start.
+- **Layout:** a mobile app with five bottom tabs:
+  - **Plan:** official instruction, recommendation, journey and other options.
+  - **Prepare:** the checklist.
+  - **Updates:** official broadcasts and plan changes.
+  - **Messages:** the coordinator chat.
+  - **Household:** members and needs, edited in place, plus the account.
+
+  On a wide browser window the app renders inside a phone frame.
+- **Presenter controls:** open them from the dark "Demo — simulated conditions" button. They let you:
+  - change the wheelchair requirement
+  - trigger road closures, broadcasts and availability updates
+  - go offline, advance time (stale data), or make the next message fail
+  - reset
+- **What the dashboard never does:** it does not reserve a space or claim a placement, does not claim messages were delivered or read, and does not invent emergency numbers. Coordinator replies are labelled as simulated.
+- **Where the code lives:**
+  - Rules and state: `src/demo/`. `recommend.ts` is a pure rule function with no scores; tests are in `tests/resident-demo.test.ts`.
+  - UI: `src/components/dashboard/` and `src/screens/PlanDashboard.tsx`.
+- **Mode:** the dashboard replaces the app shell only when `EXPO_PUBLIC_DATA_MODE=mock`. The default `api` mode is unchanged.
+
+### Live mode (backend on master)
+
+```sh
+# from the repository root, once: seed fictional demo data with a known password
+cd backend && DATABASE_PATH=../.runtime/live-demo.sqlite3 DEMO_PASSWORD=demo-password-2026 uv run --locked python -c "import asyncio; from haven.demo_data import main; asyncio.run(main())"
+DATABASE_PATH=../.runtime/live-demo.sqlite3 uv run --locked litestar --app haven.app:app run --port 8000
+# then, in app/
+npm run demo:live        # sign in as family@demo.example
+```
+
+The same dashboard reads the signed-in family's profile, plan, shelters and official updates from the API:
+
+- **Who decides:** the backend's allocation plan picks the destination, so the resident app and the government dashboard agree. The local rules only explain why the other shelters weren't chosen.
+- **Edits:** editing household needs sends `PATCH /api/families/{id}`, then `POST /plan/generate`.
+- **Messages:** they go to coordinators as `need_help` reports.
+- **"Space counted for you":** this label comes from the plan's `capacity_reserved` flag. It is still not shown as a confirmed placement.
+- **Not provided by the backend, so not shown:** road closures, routes and travel times. The journey shows a labelled straight-line distance instead.
+- **Messages one way only:** the backend has no coordinator replies.
+- **Needs stored as text:** wheelchair and powered-equipment needs live in the backend's free-text notes. Any accessibility note means the backend requires a wheelchair-accessible shelter.
+- **New accounts:** a household is placed at the centre of the listed shelters, because demo accounts have no address.
+- **Kept on the device:** checklist ticks and "We've left".
 
 ## Start the app with the real backend
 

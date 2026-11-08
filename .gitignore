@@ -10,3 +10,5 @@ coverage/
 .runtime/
 __pycache__/
 *.py[cod]
+app/dist-demo/
+app/dist-live/
