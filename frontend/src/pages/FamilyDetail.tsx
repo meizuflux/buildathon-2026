@@ -2,21 +2,15 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { api, ApiError } from '../api'
+import type { Family, Plan } from '../api/types'
 import { useData } from '../data'
-import { Empty, Modal } from '../components/ui'
 import { cap, fullTime } from '../lib/format'
-import type { Family, Location, Plan } from '../api/types'
-
-type FamilyDraft = {
-  adults: number
-  children: number
-  location: Location
-  needs: Family['needs']
-  resources: Family['resources']
-}
+import { SEV_TONE, errorMessage } from '../lib/ops'
+import OpsMap from '../components/OpsMap'
+import { Empty, Modal } from '../components/ui'
 
 export default function FamilyDetail() {
-  const { id } = useParams<{ id: string }>()
+  const { id = '' } = useParams()
   const d = useData()
   const [family, setFamily] = useState<Family | null>(null)
   const [plan, setPlan] = useState<Plan | null>(null)
@@ -24,64 +18,151 @@ export default function FamilyDetail() {
   const [planError, setPlanError] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [revision, setRevision] = useState(0)
+
   useEffect(() => {
-    setFamily(null); setPlan(null); setError(null); setPlanError(null)
-    if (!id) { setError('Family not found.'); return }
     let active = true
-    api.getFamily(id).then((value) => { if (active) setFamily(value) }).catch((err) => { if (active) setError(err instanceof Error ? err.message : 'Unknown error') })
-    api.getPlan(id).then((value) => { if (active) setPlan(value) }).catch((err) => { if (active) setPlanError(err instanceof ApiError && err.status === 404 ? 'No plan has been generated.' : err instanceof Error ? err.message : 'Unknown error') })
+    setFamily(null); setPlan(null); setError(null); setPlanError(null)
+    api.getFamily(id).then((v) => { if (active) setFamily(v) }).catch((e) => { if (active) setError(errorMessage(e)) })
+    api.getPlan(id)
+      .then((v) => { if (active) v ? setPlan(v) : setPlanError('No plan has been generated yet.') })
+      .catch((e) => { if (active) setPlanError(e instanceof ApiError && e.status === 404 ? 'No plan has been generated yet.' : errorMessage(e)) })
     return () => { active = false }
   }, [id, revision])
   const close = useCallback(() => setEditing(false), [])
-  return <div className="page">
-    <Link className="back" to="/families"><ArrowLeft size={14} /> Families</Link>
-    {error && <p className="error" role="alert">{error}</p>}
-    {!family ? !error && <Empty>Loading family…</Empty> : <>
-      <div className="page-head"><div><h1>Family profile</h1><p className="muted mono">{family.id}</p></div><button className="btn" onClick={() => setEditing(true)}><Pencil size={15} /> Edit profile</button></div>
-      <div className="detail-grid">
-        <section className="card-panel">
-          <h2>Household</h2>
-          <p>{family.adults} adults · {family.children} children</p>
-          <p className="muted small">Location: {family.location.latitude}, {family.location.longitude}</p>
-          <p>Car: {family.resources.has_car ? 'Yes' : 'No'} · Pets: {family.needs.pets ? 'Yes' : 'No'} · Immediate medication: {family.needs.immediate_medication ? 'Yes' : 'No'}</p>
-          <h2>Care notes</h2>
-          <p><strong>Medical:</strong> {family.needs.medical_notes || '—'}</p><p><strong>Accessibility:</strong> {family.needs.accessibility_notes || '—'}</p><p><strong>Other special care:</strong> {family.needs.other_special_care || '—'}</p>
-        </section>
-        <section className="card-panel">
-          <h2>Current plan</h2>
-          {planError ? <p className="muted">{planError}</p> : !plan ? <Empty>Loading plan…</Empty> : <>
-            <p><strong>{plan.shelter ? <Link to={`/map?shelter=${encodeURIComponent(plan.shelter.id)}`}>{plan.shelter.name}</Link> : 'No shelter assigned'}</strong></p>
-            {plan.shelter && <p className="muted">{plan.shelter.address} · {cap(plan.shelter.status)}</p>}
-            <p>{plan.reason}</p><p className="muted small">Version {plan.version} · Updated {fullTime(plan.updated_at)} · Capacity {plan.capacity_reserved ? 'reserved' : 'not reserved'}</p>
-            {plan.shelter && <details><summary>Shelter details in this plan</summary><p>Listed capacity: {plan.shelter.capacity.total_people} people</p><p>Pets: {plan.shelter.capabilities.pets_allowed ? 'Yes' : 'No'} · Child friendly: {plan.shelter.capabilities.child_friendly ? 'Yes' : 'No'} · Wheelchair accessible: {plan.shelter.capabilities.wheelchair_accessible ? 'Yes' : 'No'}</p><p>Medical staff: {plan.shelter.capabilities.medical_staff?.join(', ') || 'None listed'}</p><p>Special care: {plan.shelter.capabilities.special_care_notes || 'None listed'}</p><p>Supplies: {Object.entries(plan.shelter.resources).map(([name, value]) => `${cap(name)}: ${value}`).join(' · ')}</p></details>}
-            {plan.instructions.length > 0 && <><h2>Instructions</h2><ul>{plan.instructions.map((item, i) => <li key={i}>{item}</li>)}</ul></>}
-            <h2>Plan alerts</h2>{plan.alerts.length === 0 ? <p className="muted">No plan alerts.</p> : <ul>{plan.alerts.map((alert, i) => <li key={`${alert.code}-${i}`}><strong>{cap(alert.severity)}:</strong> {alert.message}</li>)}</ul>}
-          </>}
-        </section>
-      </div>
-      {editing && <EditFamily family={family} onClose={close} onSaved={() => { close(); setRevision((v) => v + 1); d.refresh() }} />}
-    </>}
-  </div>
+
+  const shelter = plan?.shelter ?? null
+  const liveShelter = shelter ? d.shelters.find((s) => s.id === shelter.id) : undefined
+  const home = family?.location ?? null
+  const line: [number, number][] | null = home && shelter
+    ? [[home.latitude, home.longitude], [shelter.location.latitude, shelter.location.longitude]]
+    : null
+
+  return (
+    <div className="hx-page">
+      <Link className="hx-back" to="/families"><ArrowLeft size={14} /> Families</Link>
+      {error && <p className="notice notice-error" role="alert">{error}</p>}
+      {!family ? !error && <Empty>Loading family…</Empty> : <>
+        <div className="hx-head">
+          <div>
+            <h1>Family {family.id}</h1>
+            <p>{family.adults} {family.adults === 1 ? 'adult' : 'adults'} and {family.children} {family.children === 1 ? 'child' : 'children'}{shelter ? `, assigned to ${shelter.name}` : ''}</p>
+          </div>
+          <div className="actions"><button className="btn" onClick={() => setEditing(true)}><Pencil size={14} /> Edit profile</button></div>
+        </div>
+
+        <div className="hx-family">
+          <div style={{ display: 'grid', gap: 18 }}>
+            <section className="hx-panel hx-panel-pad" style={{ display: 'grid', gap: 14 }}>
+              <h2>Household</h2>
+              <div className="hx-facts">
+                <div className="hx-fact"><b>{family.adults}</b><span>Adults</span></div>
+                <div className="hx-fact"><b>{family.children}</b><span>Children</span></div>
+                <div className={`hx-fact ${family.resources.has_car ? '' : 'on'}`}><b>{family.resources.has_car ? 'Yes' : 'No'}</b><span>Has a car</span></div>
+                <div className="hx-fact"><b>{family.needs.pets ? 'Yes' : 'No'}</b><span>Pets</span></div>
+                <div className={`hx-fact ${family.needs.immediate_medication ? 'on' : ''}`}><b>{family.needs.immediate_medication ? 'Yes' : 'No'}</b><span>Needs medication now</span></div>
+              </div>
+              <dl className="hx-dl">
+                <dt>Medical notes</dt><dd>{family.needs.medical_notes || <span className="muted">None</span>}</dd>
+                <dt>Accessibility</dt><dd>{family.needs.accessibility_notes || <span className="muted">None</span>}</dd>
+                <dt>Other special care</dt><dd>{family.needs.other_special_care || <span className="muted">None</span>}</dd>
+                <dt>Location</dt><dd className="mono">{family.location.latitude}, {family.location.longitude}</dd>
+              </dl>
+            </section>
+            <div className="hx-minimap">
+              <OpsMap shelters={liveShelter ? [liveShelter] : []} home={home} line={line} fitKey={`${family.id}-${shelter?.id || 'none'}`} popups={false} zoomControl={false} />
+            </div>
+          </div>
+
+          <section className="hx-panel hx-panel-pad" style={{ display: 'grid', gap: 14 }}>
+            <div className="hx-panel-title" style={{ margin: 0 }}><h2>Current plan</h2>{plan && <span className={`badge ${plan.status === 'no_match' ? 't-red' : 't-blue'}`}>{plan.status === 'no_match' ? 'No match' : 'Recommended'}</span>}</div>
+            {planError ? <p className="muted">{planError}</p> : !plan ? <Empty>Loading plan…</Empty> : <>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 700 }}>{shelter ? <Link to={`/map?shelter=${encodeURIComponent(shelter.id)}`}>{shelter.name}</Link> : 'No shelter assigned'}</div>
+                {shelter && <div className="muted small">{shelter.address}, {cap(shelter.status)}</div>}
+              </div>
+              <p>{plan.reason}</p>
+              <div className="small muted">Version {plan.version}, updated {fullTime(plan.updated_at)}. Capacity {plan.capacity_reserved ? 'reserved' : 'not reserved'}.</div>
+              {plan.instructions.length > 0 && <div><h3 style={{ marginBottom: 6 }}>Instructions sent to the family</h3><ul className="hx-list">{plan.instructions.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
+              <div>
+                <h3 style={{ marginBottom: 6 }}>Plan alerts</h3>
+                {plan.alerts.length === 0 ? <p className="muted">No plan alerts.</p> : (
+                  <ul className="hx-list">{plan.alerts.map((a, i) => <li key={`${a.code}-${i}`}><span className={`badge ${SEV_TONE[a.severity] || 't-muted'}`}>{cap(a.severity)}</span> {a.message}</li>)}</ul>
+                )}
+              </div>
+              {shelter && (
+                <details>
+                  <summary>Shelter details in this plan</summary>
+                  <dl className="hx-dl">
+                    <dt>Listed capacity</dt><dd>{shelter.capacity.total_people} people</dd>
+                    <dt>Pets</dt><dd>{shelter.capabilities.pets_allowed ? 'Yes' : 'No'}</dd>
+                    <dt>Child friendly</dt><dd>{shelter.capabilities.child_friendly ? 'Yes' : 'No'}</dd>
+                    <dt>Wheelchair accessible</dt><dd>{shelter.capabilities.wheelchair_accessible ? 'Yes' : 'No'}</dd>
+                    <dt>Medical staff</dt><dd>{shelter.capabilities.medical_staff.join(', ') || 'None listed'}</dd>
+                    <dt>Special care</dt><dd>{shelter.capabilities.special_care_notes || 'None listed'}</dd>
+                    <dt>Supplies</dt><dd>{Object.entries(shelter.resources).map(([k, v]) => `${cap(k)}: ${v}`).join(', ')}</dd>
+                  </dl>
+                </details>
+              )}
+            </>}
+          </section>
+        </div>
+        {editing && <EditFamily family={family} onClose={close} onSaved={() => { close(); setRevision((v) => v + 1); d.refresh() }} />}
+      </>}
+    </div>
+  )
 }
 
+type Draft = Pick<Family, 'adults' | 'children' | 'location' | 'needs' | 'resources'>
+type NoteKey = 'medical_notes' | 'accessibility_notes' | 'other_special_care'
+const NOTES: [NoteKey, string][] = [['medical_notes', 'Medical notes'], ['accessibility_notes', 'Accessibility notes'], ['other_special_care', 'Other special care']]
+
 function EditFamily({ family, onClose, onSaved }: { family: Family; onClose: () => void; onSaved: () => void }) {
-  const [draft, setDraft] = useState<FamilyDraft>(() => structuredClone({ adults: family.adults, children: family.children, location: family.location, needs: family.needs, resources: family.resources }))
+  const [draft, setDraft] = useState<Draft>(() => structuredClone({ adults: family.adults, children: family.children, location: family.location, needs: family.needs, resources: family.resources }))
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const set = <K extends keyof FamilyDraft>(key: K, value: FamilyDraft[K]) => setDraft((v) => ({ ...v, [key]: value }) as FamilyDraft)
-  const nested = <K extends 'location' | 'needs' | 'resources'>(key: K, field: keyof FamilyDraft[K], value: FamilyDraft[K][keyof FamilyDraft[K]]) => setDraft((v) => ({ ...v, [key]: { ...v[key], [field]: value } } as FamilyDraft))
+  const needs = (patch: Partial<Draft['needs']>) => setDraft((x) => ({ ...x, needs: { ...x.needs, ...patch } }))
+  const location = (patch: Partial<Draft['location']>) => setDraft((x) => ({ ...x, location: { ...x.location, ...patch } }))
+
   async function save(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault(); setError(null)
-    if (draft.adults + draft.children < 1) return setError('A household must include at least one person.')
+    e.preventDefault()
+    setError(null)
+    if (draft.adults + draft.children < 1) return setError('A household needs at least one person.')
     setBusy(true)
-    try { await api.updateFamily(family.id, draft); onSaved() } catch (err) { setError(err instanceof Error ? err.message : 'Unknown error'); setBusy(false) }
+    try {
+      await api.updateFamily(family.id, draft)
+      onSaved()
+    } catch (err) {
+      setError(errorMessage(err))
+      setBusy(false)
+    }
   }
-  return <Modal title="Edit family profile" onClose={onClose} wide><form className="form" onSubmit={save}>
-    <div className="row"><label className="field"><span>Adults</span><input type="number" min="0" step="1" required value={draft.adults} onChange={(e) => set('adults', e.target.valueAsNumber)} /></label><label className="field"><span>Children</span><input type="number" min="0" step="1" required value={draft.children} onChange={(e) => set('children', e.target.valueAsNumber)} /></label></div>
-    <div className="row"><label className="field"><span>Latitude</span><input type="number" min="-90" max="90" step="any" required value={draft.location.latitude} onChange={(e) => nested('location', 'latitude', e.target.valueAsNumber)} /></label><label className="field"><span>Longitude</span><input type="number" min="-180" max="180" step="any" required value={draft.location.longitude} onChange={(e) => nested('location', 'longitude', e.target.valueAsNumber)} /></label></div>
-    <div className="checks"><label className="check"><input type="checkbox" checked={draft.resources.has_car} onChange={(e) => nested('resources', 'has_car', e.target.checked)} /> Has a car</label><label className="check"><input type="checkbox" checked={draft.needs.pets} onChange={(e) => nested('needs', 'pets', e.target.checked)} /> Has pets</label><label className="check"><input type="checkbox" checked={draft.needs.immediate_medication} onChange={(e) => nested('needs', 'immediate_medication', e.target.checked)} /> Immediate medication</label></div>
-    {([['medical_notes', 'Medical notes'], ['accessibility_notes', 'Accessibility notes'], ['other_special_care', 'Other special care']] as const).map(([key, label]) => <label className="field" key={key}><span>{label}</span><textarea rows={2} value={draft.needs[key] || ''} onChange={(e) => nested('needs', key, e.target.value || null)} /></label>)}
-    <p className="muted small">Saving relevant changes automatically recomputes plans for the disaster.</p>
-    {error && <p className="error" role="alert">{error}</p>}<div className="form-actions"><button type="button" className="btn" onClick={onClose}>Cancel</button><button className="btn btn-primary" disabled={busy}>{busy ? 'Saving…' : 'Save changes'}</button></div>
-  </form></Modal>
+
+  return (
+    <Modal title="Edit family profile" onClose={onClose} wide>
+      <form className="hx-form" onSubmit={save}>
+        <div className="hx-row">
+          <label className="hx-field"><span>Adults</span><input type="number" min="0" step="1" required value={draft.adults} onChange={(e) => setDraft((x) => ({ ...x, adults: e.target.valueAsNumber }))} /></label>
+          <label className="hx-field"><span>Children</span><input type="number" min="0" step="1" required value={draft.children} onChange={(e) => setDraft((x) => ({ ...x, children: e.target.valueAsNumber }))} /></label>
+        </div>
+        <div className="hx-row">
+          <label className="hx-field"><span>Latitude</span><input type="number" min="-90" max="90" step="any" required value={draft.location.latitude} onChange={(e) => location({ latitude: e.target.valueAsNumber })} /></label>
+          <label className="hx-field"><span>Longitude</span><input type="number" min="-180" max="180" step="any" required value={draft.location.longitude} onChange={(e) => location({ longitude: e.target.valueAsNumber })} /></label>
+        </div>
+        <div className="hx-checks">
+          <label><input type="checkbox" checked={draft.resources.has_car} onChange={(e) => setDraft((x) => ({ ...x, resources: { ...x.resources, has_car: e.target.checked } }))} /> Has a car</label>
+          <label><input type="checkbox" checked={draft.needs.pets} onChange={(e) => needs({ pets: e.target.checked })} /> Has pets</label>
+          <label><input type="checkbox" checked={draft.needs.immediate_medication} onChange={(e) => needs({ immediate_medication: e.target.checked })} /> Needs medication now</label>
+        </div>
+        {NOTES.map(([k, label]) => (
+          <label className="hx-field" key={k}><span>{label}</span><textarea rows={2} value={draft.needs[k] || ''} onChange={(e) => needs({ [k]: e.target.value || null })} /></label>
+        ))}
+        <p className="small muted">Saving relevant changes recomputes plans for the disaster.</p>
+        {error && <p className="notice notice-error" role="alert">{error}</p>}
+        <div className="hx-form-actions">
+          <button type="button" className="btn" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" disabled={busy}>{busy ? 'Saving…' : 'Save changes'}</button>
+        </div>
+      </form>
+    </Modal>
+  )
 }

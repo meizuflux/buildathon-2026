@@ -6,6 +6,12 @@ generate the dashboard's API types. The dashboard covers family operations,
 shelter management, allocation plans, operational alerts, official updates, and
 reports.
 
+The interface is a dark, map-first design. The Command center opens on a live
+map of shelters (each ring shows how full a shelter is), households and family
+reports, with a "Needs action" list of critical alerts and help requests beside
+it. Map tiles come from OpenStreetMap and are darkened in CSS, so no tile API key
+is needed. Styles live in `src/styles.css`, scoped under the `.hx` root.
+
 The Logistics section contains preview-only WIP screens for Needs, Dispatch,
 and Inventory. Shelter names, reserved capacity, resource availability, and update
 times use the shelters already loaded from the API. Example requests and delivery

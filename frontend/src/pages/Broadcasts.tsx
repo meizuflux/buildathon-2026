@@ -1,38 +1,56 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { MapPin, Users } from 'lucide-react'
-import { useData } from '../data'
+import { useSearchParams } from 'react-router-dom'
+import { Send, Users } from 'lucide-react'
 import { api } from '../api'
-import { PageHeader, Segmented, Empty } from '../components/ui'
-import TargetPicker from '../components/TargetPicker'
+import type { BroadcastTarget, Severity, Update } from '../api/types'
+import { useData } from '../data'
 import { AUDIENCE_NEEDS, BROADCAST_TEMPLATES, SEVERITIES } from '../lib/constants'
 import { cap, fullTime, timeAgo } from '../lib/format'
-import type { BroadcastTarget, Severity, Update } from '../api/types'
+import { SEV_TONE, errorMessage } from '../lib/ops'
+import { Empty, Head, Meter, Seg } from '../components/ui'
 
-type BroadcastForm = { title: string; message: string; severity: Severity; target: BroadcastTarget }
+type Draft = { title: string; message: string; severity: Severity; target: BroadcastTarget }
+type HistoryFilter = 'all' | 'published' | 'critical'
 
-const blank: BroadcastForm = { title: '', message: '', severity: 'info', target: { type: 'all' } }
+const blank: Draft = { title: '', message: '', severity: 'info', target: { type: 'all' } }
+const SEVERITY_HELP: Record<Severity, string> = {
+  info: 'General guidance and updates.',
+  warning: 'Families should act soon to stay safe.',
+  critical: 'Families must act now. You will be asked to confirm before it sends.',
+}
+const SEND_CLASS: Record<Severity, string> = { info: 'btn-primary', warning: 'btn-amber', critical: 'btn-danger' }
 
 export default function Broadcasts() {
   const d = useData()
-  const [f, setF] = useState<BroadcastForm>(blank)
+  const [params, setParams] = useSearchParams()
+  const [f, setF] = useState<Draft>(blank)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState<Update | null>(null)
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState<HistoryFilter>('all')
   const [templateId, setTemplateId] = useState('')
   const [reach, setReach] = useState<number | null>(null)
   const [reachError, setReachError] = useState(false)
-  const set = <K extends keyof BroadcastForm>(k: K, v: BroadcastForm[K]) => setF((x) => ({ ...x, [k]: v }) as BroadcastForm)
-
+  const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setF((x) => ({ ...x, [k]: v }))
   const target = f.target
+
+  // ?to=<shelter id> preselects families assigned to that shelter.
+  useEffect(() => {
+    const to = params.get('to')
+    if (to && d.shelters.some((s) => s.id === to)) {
+      setF((x) => ({ ...x, target: { type: 'shelter', shelter_id: to } }))
+      setParams({}, { replace: true })
+    }
+  }, [params, d.shelters, setParams])
 
   useEffect(() => {
     let current = true
     setReach(null)
     setReachError(false)
-    if (d.disasterId) api.previewUpdate(d.disasterId, { target })
-      .then((result) => { if (current) setReach(result.recipient_count) })
-      .catch(() => { if (current) setReachError(true) })
+    if (d.disasterId)
+      api.previewUpdate(d.disasterId, { target })
+        .then((r) => { if (current) setReach(r.recipient_count) })
+        .catch(() => { if (current) setReachError(true) })
     return () => { current = false }
   }, [d.disasterId, target])
 
@@ -45,127 +63,107 @@ export default function Broadcasts() {
     e.preventDefault()
     setError(null)
     const where = target.type === 'shelter' ? 'families assigned to the selected shelter' : 'every family in this disaster'
-    if (f.severity === 'critical' && !confirm(`Publish a CRITICAL alert to ${where}?`)) return
+    if (f.severity === 'critical' && !confirm(`Send a critical alert to ${where}?`)) return
     setBusy(true)
     try {
-      const created = await d.mutate((api, disasterId) => api.publishUpdate(disasterId, {
-        title: f.title.trim(), message: f.message.trim(), severity: f.severity, target,
-      }))
+      const created = await d.mutate((client, disasterId) =>
+        client.publishUpdate(disasterId, { title: f.title.trim(), message: f.message.trim(), severity: f.severity, target }),
+      )
       setSent(created)
       setF(blank)
       setTemplateId('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      setError(errorMessage(err))
     } finally {
       setBusy(false)
     }
   }
 
+  const shelterName = (id: string) => d.shelters.find((s) => s.id === id)?.name || id
   const history = [...d.updates]
-    .filter((u) => filter === 'all' || (filter === 'published' && !u.status) || u.status === filter || u.severity === filter)
+    .filter((u) => filter === 'all' || (filter === 'published' && (!u.status || u.status === 'published')) || u.severity === filter)
     .sort((a, b) => (b.published_at || b.scheduled_for || '').localeCompare(a.published_at || a.scheduled_for || ''))
-  const totals = { sent: d.updates.length }
 
   return (
-    <div className="page">
-      <PageHeader title="Broadcasts" subtitle="Publish official updates for all families or those currently assigned to a shelter." />
-
-      <div className="broadcast-grid">
-        <form className="card-panel compose" onSubmit={submit}>
-          <div className="broadcast-compose-header">
+    <div className="hx-page">
+      <Head title="Broadcasts" sub="Publish official updates to every family in this disaster or to families assigned to one shelter." />
+      <div className="hx-bc">
+        <form className={`hx-panel hx-compose hx-sev-${f.severity}`} onSubmit={submit}>
+          <div className="hx-compose-head">
             <h2>New broadcast</h2>
-            <div className="broadcast-template">
-              <div className="broadcast-template-controls">
-                <label className="field">
-                  <span className="sr-only">Broadcast template</span>
-                  <select value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
-                    <option value="">Choose a template…</option>
-                    {BROADCAST_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-                  </select>
-                </label>
-                <button type="button" className="btn" disabled={!templateId} onClick={() => applyTemplate(templateId)}>Apply</button>
-              </div>
+            <div className="tpl">
+              <label className="sr-only" htmlFor="hx-tpl">Template</label>
+              <select id="hx-tpl" value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+                <option value="">Start from a template</option>
+                {BROADCAST_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+              <button type="button" className="btn" disabled={!templateId} onClick={() => applyTemplate(templateId)}>Apply</button>
             </div>
           </div>
-
-          <div className="field">
-            <span>Severity</span>
-            <Segmented value={f.severity} onChange={(v) => set('severity', v)} label="Severity" options={SEVERITIES.map((s) => [s, cap(s), `sev-${s}`] as const)} />
+          <div className="hx-field"><span>Severity</span>
+            <Seg label="Severity" className="seg-block" value={f.severity} onChange={(v) => set('severity', v)} options={SEVERITIES.map((s) => [s, cap(s), `sev-${s}`] as const)} />
+            <span className="hint">{SEVERITY_HELP[f.severity]}</span>
           </div>
-          <label className="field">
-            <span>Title</span>
-            <input value={f.title} onChange={(e) => set('title', e.target.value)} maxLength={120} required placeholder="Evacuation order: Zone A" />
+          <label className="hx-field"><span>Title</span><input value={f.title} onChange={(e) => set('title', e.target.value)} maxLength={120} required placeholder="Evacuation order: Zone A" /></label>
+          <label className="hx-field">
+            <span className="hx-field-row">Message <span className="hint">{f.message.length} of 600</span></span>
+            <textarea rows={6} maxLength={600} value={f.message} onChange={(e) => set('message', e.target.value)} required placeholder="What should families do, and by when?" />
           </label>
-          <label className="field">
-            <span>Message <span className="muted">({f.message.length}/600)</span></span>
-            <textarea rows={4} maxLength={600} value={f.message} onChange={(e) => set('message', e.target.value)} required placeholder="What should families do, and by when?" />
+          <label className="hx-field"><span>Who receives it</span>
+            <select value={target.type === 'shelter' ? target.shelter_id : ''} onChange={(e) => set('target', e.target.value ? { type: 'shelter', shelter_id: e.target.value } : { type: 'all' })}>
+              <option value="">All families in this disaster</option>
+              {d.shelters.map((s) => <option key={s.id} value={s.id}>Families assigned to {s.name}</option>)}
+            </select>
           </label>
-
-          <fieldset>
-            <legend><MapPin size={12} /> Where</legend>
-            <TargetPicker target={f.target} setTarget={(t) => set('target', t)} shelters={d.shelters} />
-          </fieldset>
-
-          <div className={`preview sev-border-${f.severity}`}>
-            <div className="preview-label muted small">Family app preview</div>
-            <div><span className={`badge sev-${f.severity}`}>{cap(f.severity)}</span> <strong>{f.title || 'Title'}</strong></div>
-            <p>{f.message || 'Your message will appear here.'}</p>
-          </div>
-
-          {error && <p className="error" role="alert">{error}</p>}
-          {sent && <p className="success" role="status">Published "{sent.title}".</p>}
-          <div className="form-actions">
-            <span className="reach-est"><Users size={15} /> {reach === null ? (reachError ? 'Recipient count unavailable' : 'Counting families…') : <><strong>{reach.toLocaleString()}</strong> {reach === 1 ? 'family' : 'families'} currently match</>}</span>
-            <button className={`btn ${f.severity === 'critical' ? 'btn-danger' : 'btn-primary'}`} disabled={busy || !f.title.trim() || !f.message.trim()}>
-              {busy ? 'Sending…' : `Send ${f.severity} broadcast`}
+          {error && <p className="notice notice-error" role="alert">{error}</p>}
+          {sent && <p className="notice notice-ok" role="status">Sent “{sent.title}”.</p>}
+          <div className="hx-sendbar">
+            <span className="hx-reach">
+              <Users size={16} aria-hidden="true" />
+              {reach === null ? (reachError ? 'Recipient count unavailable' : 'Counting families…') : <span><b>{reach.toLocaleString()}</b> {reach === 1 ? 'family' : 'families'} will receive this</span>}
+            </span>
+            <button className={`btn ${SEND_CLASS[f.severity]}`} disabled={busy || !f.title.trim() || !f.message.trim()}>
+              <Send size={14} aria-hidden="true" /> {busy ? 'Sending…' : `Send ${f.severity} broadcast`}
             </button>
           </div>
         </form>
 
-        <section className="card-panel">
-          <div className="panel-title">
-            <h2>History</h2>
-            <select className="select-sm" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter history">
+        <section className="hx-panel hx-history">
+          <div className="hx-panel-title" style={{ margin: 0 }}>
+            <h2>Sent broadcasts <span className="muted" style={{ fontWeight: 400 }}>{d.updates.length}</span></h2>
+            <select style={{ width: 'auto' }} value={filter} onChange={(e) => setFilter(e.target.value as HistoryFilter)} aria-label="Filter sent broadcasts">
               <option value="all">All</option>
               <option value="published">Live</option>
               <option value="critical">Critical only</option>
             </select>
           </div>
-          <div className="mini-stats">
-            <div><strong>{totals.sent}</strong><span>sent</span></div>
-            <div><strong>—</strong><span>deliveries</span></div>
-            <div><strong>—</strong><span>read rate</span></div>
-          </div>
-          <ul className="list">
-            {history.length === 0 && <Empty>No broadcasts match.</Empty>}
-            {history.map((u) => {
-              const pct = u.recipient_count ? Math.round(((u.read_count ?? 0) / u.recipient_count) * 100) : 0
-              return (
-                <li key={u.id} className={`card update sev-border-${u.severity} ${u.status === 'retracted' ? 'is-retracted' : ''}`}>
-                  <div className="card-head">
-                    <span className={`badge sev-${u.severity}`}>{cap(u.severity)}</span>
-                    <span className="card-title">{u.title}</span>
-                    <span className={`badge st-${u.status}`}>{u.status ? (u.status === 'published' ? 'Live' : cap(u.status)) : 'Published'}</span>
-                  </div>
-                  <p className="report-msg">{u.message}</p>
-                  <div className="tags">
-                    <span className="tag"><MapPin size={11} /> {u.target?.type === 'shelter' ? `Families assigned to ${d.shelters.find((s) => s.id === u.target?.shelter_id)?.name || u.target?.shelter_id}` : 'All families in this disaster'}</span>
-                    {(u.audience?.needs || []).map((n) => <span key={n} className="tag">{AUDIENCE_NEEDS[n]}</span>)}
-                  </div>
-                  <div className="reach">
-                    {u.read_count != null && <div className="meter meter-sm"><span style={{ width: `${pct}%` }} /></div>}
-                    <span className="muted small nowrap">{u.read_count == null ? 'Read count unavailable' : `${u.read_count}/${u.recipient_count} read (${pct}%)`}</span>
-                  </div>
-                  <div className="card-foot flush">
-                    <span className="muted small" title={fullTime(u.published_at || u.scheduled_for)}>
-                      {u.status === 'scheduled' ? `Sends ${timeAgo(u.scheduled_for)}` : `Sent ${timeAgo(u.published_at)}`}
-                      {u.expires_at && ` · expires ${timeAgo(u.expires_at)}`}
-                    </span>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
+          {history.length === 0 && <Empty>No broadcasts match.</Empty>}
+          {history.map((u) => {
+            const read = u.read_count ?? 0
+            const pct = u.recipient_count ? Math.round((read / u.recipient_count) * 100) : 0
+            return (
+              <article key={u.id} className={`hx-sev-${u.severity}`} style={u.status === 'retracted' ? { opacity: 0.55 } : undefined}>
+                <div className="r1">
+                  <span className={`badge ${SEV_TONE[u.severity]}`}>{cap(u.severity)}</span>
+                  <strong>{u.title}</strong>
+                  {u.status && u.status !== 'published' && <span className="badge t-muted">{cap(u.status)}</span>}
+                </div>
+                <p>{u.message}</p>
+                <div className="hx-tags">
+                  <span className="hx-tag">{u.target?.type === 'shelter' ? `Families assigned to ${shelterName(u.target.shelter_id)}` : 'All families in this disaster'}</span>
+                  {(u.audience?.needs ?? []).map((n) => <span key={n} className="hx-tag">{AUDIENCE_NEEDS[n] ?? n}</span>)}
+                </div>
+                {u.read_count != null && <Meter value={pct / 100} thin />}
+                <div className="r3">
+                  <span>{u.read_count == null ? 'Read count unavailable' : `${read.toLocaleString()} of ${(u.recipient_count ?? 0).toLocaleString()} read (${pct}%)`}</span>
+                  <span title={fullTime(u.published_at || u.scheduled_for)}>
+                    {u.status === 'scheduled' ? `Sends ${timeAgo(u.scheduled_for)}` : `Sent ${timeAgo(u.published_at)}`}
+                    {u.expires_at && `, expires ${timeAgo(u.expires_at)}`}
+                  </span>
+                </div>
+              </article>
+            )
+          })}
         </section>
       </div>
     </div>

@@ -1,116 +1,160 @@
-import { Link } from 'react-router-dom'
-import { AlertTriangle, ArrowRight, Info, Siren, type LucideIcon } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, X } from 'lucide-react'
+import type { MapLayers, Shelter } from '../api/types'
 import { useData } from '../data'
-import { PageHeader, Empty } from '../components/ui'
+import { RESOURCE_KEYS } from '../lib/constants'
 import { cap, fullTime, timeAgo } from '../lib/format'
-import type { Severity } from '../api/types'
+import { LEVEL_TEXT, SEV_TONE, needsAction, occupancy, shelterLevel, shelterTotals } from '../lib/ops'
+import OpsMap, { LayerPanel } from '../components/OpsMap'
+import { Empty, Meter, useAllFamilies } from '../components/ui'
 
-const LEVEL_ICON: Record<Severity, LucideIcon> = { critical: Siren, warning: AlertTriangle, info: Info }
 const REF_LINK: Record<string, (id: string) => string> = {
-  shelter: (id) => `/map?shelter=${id}`,
+  shelter: (id) => `/map?shelter=${encodeURIComponent(id)}`,
   update: () => '/comms/broadcasts',
-  report: (id) => `/map?report=${id}`,
+  report: (id) => `/map?report=${encodeURIComponent(id)}`,
+  family: (id) => `/families/${encodeURIComponent(id)}`,
 }
 
 export default function CommandCenter() {
   const d = useData()
-  const sheltersActive = d.shelters.filter((s) => s.status !== 'closed')
-  const total = sheltersActive.reduce((n, s) => n + (s.capacity.total_people || 0), 0)
-  const free = sheltersActive.reduce((n, s) => n + Math.max(0, s.capacity.available_people || 0), 0)
-  const help = d.reports.filter((r) => r.type === 'need_help' && r.status === 'received').length
-
-  const recentBroadcasts = d.updates.filter((u) => u.status !== 'scheduled').sort((a, b) => (b.published_at || '').localeCompare(a.published_at || '')).slice(0, 3)
+  const navigate = useNavigate()
+  const [layers, setLayers] = useState<MapLayers>({ shelters: true, families: true, reports: true })
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const { families, error: familyError } = useAllFamilies(d.disasterId, layers.families)
+  const t = shelterTotals(d.shelters)
+  const helpOpen = d.reports.filter((r) => r.type === 'need_help' && r.status === 'received').length
+  const queue = useMemo(() => needsAction(d.alerts, d.reports), [d.alerts, d.reports])
+  const selected = d.shelters.find((s) => s.id === selectedId)
+  const recent = d.updates
+    .filter((u) => u.status !== 'scheduled')
+    .sort((a, b) => (b.published_at || '').localeCompare(a.published_at || ''))
+    .slice(0, 3)
 
   return (
-    <div className="page">
-      <PageHeader title="Command Center" subtitle={d.disaster ? `${d.disaster.name} · ${d.disaster.affected_area}` : 'Loading…'}>
-        <Link to="/comms/broadcasts" className="btn btn-primary">Send broadcast</Link>
-      </PageHeader>
+    <div className="hx-overview">
+      <div className="hx-mapcol">
+        <OpsMap shelters={d.shelters} families={families} reports={d.reports} layers={layers} fitKey={d.disasterId}
+          selectedId={selectedId} onSelect={setSelectedId} />
 
-      <section className="kpis" aria-label="Key figures">
-        <Kpi label="People sheltered" value={(total - free).toLocaleString()} sub={`${sheltersActive.length} active sites`} to="/map" />
-        <Kpi label="Spaces free" value={free.toLocaleString()} sub={total ? `${Math.round(((total - free) / total) * 100)}% occupied` : '—'} meter={total ? (total - free) / total : 0} to="/map" />
-        <Kpi label="Open help requests" value={help} tone={help ? 'alert' : ''} sub={`${d.reports.length} reports total`} to="/comms/reports" />
-      </section>
-
-      <section className="card-panel operational-alerts">
-        <div className="panel-title">
-          <h2>Operational alerts</h2>
-          <Link to="/alerts" className="link-sm">View all <ArrowRight size={13} /></Link>
+        <div className="hx-float hx-figures" aria-label="Key figures">
+          <Link to="/map">
+            <b>{t.sheltered.toLocaleString()}</b>
+            <span>people sheltered in {t.active.length} {t.active.length === 1 ? 'site' : 'sites'}</span>
+          </Link>
+          <Link to="/map">
+            <b>{t.free.toLocaleString()}</b>
+            <Meter value={t.occupancy} level={t.occupancy > 0.9 ? 'full' : t.occupancy > 0.8 ? 'low' : 'ok'} thin />
+            <span>spaces free, {Math.round(t.occupancy * 100)}% occupied</span>
+          </Link>
+          <Link to="/comms/reports" className={helpOpen ? 'alert' : ''}>
+            <b>{helpOpen}</b>
+            <span>open help {helpOpen === 1 ? 'request' : 'requests'} of {d.reports.length} reports</span>
+          </Link>
         </div>
-        {d.errors.alerts ? <p className="muted">Alerts could not be loaded.</p> : !d.alerts ? <p className="muted">Loading alerts…</p> : d.alerts.total === 0 ? <p className="muted">No current operational alerts.</p> : (
-          <>
-            <p className="muted small">{d.alerts.total} current alerts · Showing the highest priority</p>
-            <ul className="attention">
-              {d.alerts.alerts.slice(0, 3).map((alert) => {
-                const Icon = LEVEL_ICON[alert.severity] || Info
-                return <li key={alert.id} className={`att att-${alert.severity}`}>
-                  <Icon size={16} className="att-icon" aria-hidden="true" />
-                  <div className="att-body"><div className="att-title">{alert.message}</div><span className="muted small">{cap(alert.severity)}</span></div>
-                  <span className="muted small nowrap" title={fullTime(alert.updated_at)}>{timeAgo(alert.updated_at)}</span>
-                </li>
-              })}
-            </ul>
-          </>
-        )}
-      </section>
 
-      <div className="operational-alerts">
-        <section className="card-panel">
-          <div className="panel-title"><h2>Activity</h2><span className="muted">live</span></div>
-          <ol className="timeline">
-            {d.activity.length === 0 && <Empty>No activity yet.</Empty>}
-            {d.activity.slice(0, 18).map((a) => {
-              const ref = a.ref
-              const link = ref ? REF_LINK[ref.kind] : undefined
-              return (
-                <li key={a.id} className={`tl tl-${a.type.split('_')[0]}`}>
-                  <span className="tl-dot" aria-hidden="true" />
-                  <div>
-                    {ref && link ? <Link to={link(ref.id)}>{a.summary}</Link> : a.summary}
-                    <div className="muted small" title={fullTime(a.created_at)}>{timeAgo(a.created_at)} · {a.actor?.name || 'System'}</div>
-                  </div>
-                </li>
-              )
-            })}
-          </ol>
-        </section>
+        {selected && <ShelterCard s={selected} onClose={() => setSelectedId(null)} onMessage={() => navigate(`/comms/broadcasts?to=${encodeURIComponent(selected.id)}`)} />}
+        <LayerPanel layers={layers} setLayers={setLayers} familyError={familyError} />
       </div>
 
-      <div className="cc-grid cc-grid-even">
-        <section className="card-panel">
-          <div className="panel-title">
-            <h2>Recent broadcasts</h2>
-            <Link to="/comms/broadcasts" className="link-sm">All broadcasts <ArrowRight size={13} /></Link>
+      <aside className="hx-side">
+        <section>
+          <div className="hx-panel-title">
+            <h2>Needs action</h2>
+            <Link to="/alerts">All alerts <ArrowRight size={13} /></Link>
           </div>
-          {recentBroadcasts.length === 0 && <Empty>No broadcasts sent yet.</Empty>}
-          <ul className="list">
-            {recentBroadcasts.map((u) => (
-              <li key={u.id} className="mini-broadcast">
-                <div className="row-between">
-                  <span><span className={`badge sev-${u.severity}`}>{cap(u.severity)}</span> <strong>{u.title}</strong></span>
-                  <span className="muted small">{timeAgo(u.published_at)}</span>
-                </div>
-                <div className="reach">
-                  {u.read_count != null && <div className="meter meter-sm"><span style={{ width: `${u.recipient_count ? (u.read_count / u.recipient_count) * 100 : 0}%` }} /></div>}
-                  <span className="muted small">{u.read_count == null ? 'Read count unavailable' : `${u.read_count}/${u.recipient_count} read`}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
+          {d.errors.alerts ? <p className="muted">Alerts could not be loaded.</p>
+            : !d.alerts ? <p className="muted">Loading alerts…</p>
+              : queue.length === 0 ? <Empty>Nothing needs action right now.</Empty> : (
+                <ul className="hx-queue">
+                  {queue.slice(0, 7).map((q) => (
+                    <li key={q.key} className={`k-${q.kind}`}>
+                      <div>
+                        <div className="t">{q.title}</div>
+                        <div className="m">
+                          <span title={fullTime(q.when)}>{q.label}{q.when ? `, ${timeAgo(q.when)}` : ''}</span>
+                          <span className="acts">
+                            {q.shelterId && <button className="btn btn-sm" onClick={() => setSelectedId(q.shelterId ?? null)}>Show shelter</button>}
+                            {q.reportId && <Link className="btn btn-sm" to={`/map?report=${encodeURIComponent(q.reportId)}`}>Show on map</Link>}
+                            {q.familyId && <Link className="btn btn-sm" to={`/families/${encodeURIComponent(q.familyId)}`}>View family</Link>}
+                          </span>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+          {queue.length > 7 && <p className="small muted" style={{ marginTop: 8 }}>{queue.length - 7} more in Alerts and Family reports.</p>}
         </section>
-      </div>
+
+        <section>
+          <div className="hx-panel-title">
+            <h2>Recent broadcasts</h2>
+            <Link to="/comms/broadcasts">All broadcasts <ArrowRight size={13} /></Link>
+          </div>
+          {recent.length === 0 ? <Empty>No broadcasts sent yet.</Empty> : (
+            <div className="hx-casts">
+              {recent.map((u) => (
+                <div key={u.id} className="hx-cast">
+                  <div className="r1"><span className={`badge ${SEV_TONE[u.severity]}`}>{cap(u.severity)}</span><strong>{u.title}</strong></div>
+                  {u.read_count != null && <Meter value={u.recipient_count ? u.read_count / u.recipient_count : 0} thin />}
+                  <div className="r2">
+                    <span>{u.read_count == null ? 'Read count unavailable' : `${u.read_count.toLocaleString()} of ${(u.recipient_count ?? 0).toLocaleString()} read`}</span>
+                    <span title={fullTime(u.published_at)}>{timeAgo(u.published_at)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section>
+          <div className="hx-panel-title"><h2>Activity</h2><span className="small muted">Live</span></div>
+          {d.activity.length === 0 ? <Empty>No activity yet.</Empty> : (
+            <ol className="hx-timeline">
+              {d.activity.slice(0, 14).map((a) => {
+                const link = REF_LINK[a.ref?.kind]
+                return (
+                  <li key={a.id}>
+                    <span className={`dot c-${a.type.split('_')[0]}`} aria-hidden="true" />
+                    <div>
+                      {link ? <Link to={link(a.ref.id)}>{a.summary}</Link> : a.summary}
+                      <div className="meta" title={fullTime(a.created_at)}>{timeAgo(a.created_at)}, {a.actor?.name || 'System'}</div>
+                    </div>
+                  </li>
+                )
+              })}
+            </ol>
+          )}
+        </section>
+      </aside>
     </div>
   )
 }
 
-function Kpi({ label, value, sub, tone, meter, to }: { label: string; value: string | number; sub: string; tone?: string; meter?: number; to: string }) {
+function ShelterCard({ s, onClose, onMessage }: { s: Shelter; onClose: () => void; onMessage: () => void }) {
+  const level = shelterLevel(s)
+  const free = Math.max(0, s.capacity.available_people)
   return (
-    <Link to={to} className={`kpi ${tone ? `kpi-${tone}` : ''}`}>
-      <div className="kpi-label">{label}</div>
-      <div className="kpi-value">{value}</div>
-      {meter !== undefined && <div className="meter" aria-hidden="true"><span style={{ width: `${Math.min(100, meter * 100)}%` }} /></div>}
-      <div className="kpi-sub">{sub}</div>
-    </Link>
+    <div className="hx-float hx-shelter-card" aria-label={`${s.name} details`}>
+      <div className="hd">
+        <div>
+          <h2>{s.name}</h2>
+          <div className="small muted">{s.address}</div>
+        </div>
+        <button className="icon-btn" onClick={onClose} aria-label="Close shelter details"><X size={16} /></button>
+      </div>
+      <div className="stats">
+        <div><b className={`lvl-text-${level}`}>{level === 'full' ? 'Full' : free.toLocaleString()}</b><span>{level === 'full' ? 'no spaces free' : 'spaces free'}</span></div>
+        <div><b>{(s.capacity.total_people - free).toLocaleString()}</b><span>of {s.capacity.total_people.toLocaleString()} sheltered</span></div>
+      </div>
+      <Meter value={occupancy(s)} level={level} thin />
+      <div className="hx-res">{RESOURCE_KEYS.map((k) => <span key={k} className={`r-${s.resources[k] || 'unknown'}`}>{cap(k)}</span>)}</div>
+      <div className="small muted">{LEVEL_TEXT[level]}, updated {timeAgo(s.updated_at)}</div>
+      <div className="acts">
+        <button className="btn btn-sm btn-primary" onClick={onMessage}>Message families here</button>
+        <Link className="btn btn-sm" to={`/map?shelter=${encodeURIComponent(s.id)}&edit=1`}>Edit shelter</Link>
+      </div>
+    </div>
   )
 }
