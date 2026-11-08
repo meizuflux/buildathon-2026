@@ -5,6 +5,7 @@ import json
 import os
 import secrets
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 from haven.allocation import recompute_disasters
@@ -44,7 +45,52 @@ DEMO_LOCATIONS = Path(__file__).with_name("data") / "golden_gate_estates.json"
 DEMO_NAME = "Demo Hurricane — Golden Gate Estates"
 DEMO_AREA = "Golden Gate Estates, Naples, Florida (fictional demo)"
 # Simulated shelter capacities for this exercise.
-SHELTER_CAPACITIES = (800, 600, 600, 600, 500, 500, 400)
+DEMO_SHELTER_OPERATIONS = {
+    # Capacity, medical staff, pets, special care, clothes availability.
+    "demo_shelter_01": (1800, True, True, True, "available"),
+    "demo_shelter_04": (1200, True, True, True, "available"),
+    "demo_shelter_05": (500, True, True, True, "available"),
+    "demo_shelter_06": (500, True, True, True, "limited"),
+    "demo_shelter_08": (500, False, True, False, "limited"),
+    "demo_shelter_09": (250, True, False, True, "available"),
+    "demo_shelter_10": (500, True, True, True, "available"),
+    "demo_shelter_11": (500, False, False, True, "limited"),
+    "demo_shelter_12": (250, True, False, True, "limited"),
+}
+
+
+def demo_shelter_snapshots(locations: dict[str, Any]) -> list[dict[str, Any]]:
+    """Build the same fictional shelter inputs for seeding and offline analysis."""
+    result = []
+    for i, site in enumerate(locations["shelters"]):
+        identity = site.get("id", f"demo_shelter_{i + 1:02d}")
+        total, medical, pets, special_care, clothes = DEMO_SHELTER_OPERATIONS[identity]
+        result.append(
+            {
+                "id": identity,
+                "disaster_id": DEMO_DISASTER_ID,
+                "name": f"Demo — {site['name']}",
+                "address": site["address"],
+                "status": "open",
+                "location": {"latitude": site["latitude"], "longitude": site["longitude"]},
+                "allocation_budget": total,
+                "capacity": {"total_people": total, "available_people": total},
+                "capabilities": {
+                    "pets_allowed": pets,
+                    "child_friendly": True,
+                    "wheelchair_accessible": True,
+                    "medical_staff": ["General medical staff"] if medical else [],
+                    "special_care_notes": "General special care" if special_care else None,
+                },
+                "resources": {
+                    "food": "available",
+                    "water": "available",
+                    "medication": "available" if medical else "unavailable",
+                    "clothes": clothes,
+                },
+            }
+        )
+    return result
 
 
 async def _seed_golden_gate_scenario(locations: dict) -> None:
@@ -65,37 +111,22 @@ async def _seed_golden_gate_scenario(locations: dict) -> None:
                     stamp,
                 ),
             )
-            for i, site in enumerate(locations["shelters"]):
-                total = SHELTER_CAPACITIES[i]
-                capacity = {"total_people": total, "available_people": total}
-                capabilities = {
-                    "pets_allowed": i % 3 != 0,
-                    "child_friendly": True,
-                    "wheelchair_accessible": i % 4 != 0,
-                    "medical_staff": ["General medical staff"] if i % 3 != 0 else [],
-                    "special_care_notes": "General special care" if i % 4 != 0 else None,
-                }
-                resources = {
-                    "food": "available",
-                    "water": "available",
-                    "medication": "available" if i % 3 != 0 else "unavailable",
-                    "clothes": "limited" if i % 2 else "available",
-                }
+            for shelter in demo_shelter_snapshots(locations):
                 await connection.execute(
                     "INSERT INTO shelters (id, disaster_id, name, address, latitude, longitude, status, "
                     "capacity_json, capabilities_json, resources_json, updated_at) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
-                        f"demo_shelter_{i + 1:02d}",
+                        shelter["id"],
                         DEMO_DISASTER_ID,
-                        f"Demo — {site['name']}",
-                        site["address"],
-                        site["latitude"],
-                        site["longitude"],
+                        shelter["name"],
+                        shelter["address"],
+                        shelter["location"]["latitude"],
+                        shelter["location"]["longitude"],
                         "open",
-                        json.dumps(capacity),
-                        json.dumps(capabilities),
-                        json.dumps(resources),
+                        json.dumps(shelter["capacity"]),
+                        json.dumps(shelter["capabilities"]),
+                        json.dumps(shelter["resources"]),
                         stamp,
                     ),
                 )
@@ -150,7 +181,9 @@ async def main() -> None:
     print(f"Recreating disposable demo database: {database_path()}")
     for email, password in (await seed_demo_data()).items():
         print(f"{email}: password: {password}")
-    print("Golden Gate Estates ready: 7 simulated shelters and 1,000 synthetic households.")
+    print(
+        f"Golden Gate Estates ready: {len(DEMO_SHELTER_OPERATIONS)} simulated hubs and 1,000 synthetic households."
+    )
 
 
 if __name__ == "__main__":

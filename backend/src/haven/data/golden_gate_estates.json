@@ -3,7 +3,11 @@
   "retrieved_at": "2026-11-08T02:45:41.468231+00:00",
   "sources": {
     "addresses": "https://services2.arcgis.com/SlIq32SqARUHIhSx/arcgis/rest/services/Site_Address_Points_b/FeatureServer/3",
-    "building_footprints_2025": "https://services2.arcgis.com/SlIq32SqARUHIhSx/arcgis/rest/services/Buildings/FeatureServer/1"
+    "building_footprints_2025": "https://services2.arcgis.com/SlIq32SqARUHIhSx/arcgis/rest/services/Buildings/FeatureServer/1",
+    "official_school_directory": "https://www.collierschools.com/schools",
+    "collier_county_parks": "https://www.collierparks.com/",
+    "collier_county_public_library": "https://library.collier.gov/About-Us/Locations",
+    "greater_naples_fire_rescue": "https://greaternaplesfire.org/locations/"
   },
   "bounds": [
     -81.68,
@@ -7016,53 +7020,178 @@
   ],
   "shelters": [
     {
-      "name": "Palmetto Ridge High School",
+      "id": "demo_shelter_01",
+      "name": "Palmetto Ridge / Corkscrew School Hub",
       "address": "1655 Victory LN, Naples, FL 34120",
-      "latitude": 26.29563041,
-      "longitude": -81.57760027,
-      "address_point_id": 167790
+      "latitude": 26.2946508,
+      "longitude": -81.58366748,
+      "address_point_ids": [
+        167790,
+        5561,
+        5562
+      ],
+      "members": [
+        "Palmetto Ridge High School",
+        "Corkscrew Middle School",
+        "Corkscrew Elementary School"
+      ],
+      "replaces": [
+        "demo_shelter_02",
+        "demo_shelter_07"
+      ],
+      "sources": [
+        "https://www.collierschools.com/schools"
+      ]
     },
     {
-      "name": "Corkscrew Middle School",
-      "address": "1165 Oil Well RD, Naples, FL 34120",
-      "latitude": 26.29426152,
-      "longitude": -81.58547118,
-      "address_point_id": 5561
-    },
-    {
-      "name": "Cypress Palm Middle School",
+      "id": "demo_shelter_04",
+      "name": "Cypress Palm / Sabal Palm School Hub",
       "address": "4255 18th AVE NE, Naples, FL 34120",
-      "latitude": 26.26497157,
-      "longitude": -81.5239576,
-      "address_point_id": 197536
+      "latitude": 26.26544086,
+      "longitude": -81.52510283,
+      "address_point_ids": [
+        197536,
+        278043,
+        143360
+      ],
+      "members": [
+        "Cypress Palm Middle School",
+        "Sabal Palm Elementary School"
+      ],
+      "replaces": [
+        "demo_shelter_03"
+      ],
+      "sources": [
+        "https://www.collierschools.com/schools"
+      ]
     },
     {
-      "name": "Sabal Palm Elementary School",
-      "address": "4095 18th AVE NE, Naples, FL 34120",
-      "latitude": 26.26501193,
-      "longitude": -81.52583098,
-      "address_point_id": 143360
-    },
-    {
-      "name": "Big Cypress Elementary School",
+      "id": "demo_shelter_05",
+      "name": "Big Cypress / Max Hasse Community Hub",
       "address": "3250 Golden Gate BLVD W, Naples, FL 34120",
-      "latitude": 26.2278956,
-      "longitude": -81.67212302,
-      "address_point_id": 33074
+      "latitude": 26.22708765,
+      "longitude": -81.67393355,
+      "address_point_ids": [
+        33074,
+        197491
+      ],
+      "members": [
+        "Big Cypress Elementary School",
+        "Max A. Hasse Jr. Community Park"
+      ],
+      "replaces": [],
+      "sources": [
+        "https://www.collierschools.com/schools",
+        "https://www.collierparks.com/Parks-and-Beaches/Community-Parks/Max-A-Hasse-Jr-Community-Park"
+      ]
     },
     {
+      "id": "demo_shelter_06",
       "name": "Estates Elementary School",
       "address": "5945 Everglades BLVD N, Naples, FL 34120",
       "latitude": 26.34055866,
       "longitude": -81.54836369,
-      "address_point_id": 27339
+      "address_point_ids": [
+        27339
+      ],
+      "members": [
+        "Estates Elementary School"
+      ],
+      "replaces": [],
+      "sources": [
+        "https://www.collierschools.com/schools"
+      ]
     },
     {
-      "name": "Corkscrew Elementary School",
-      "address": "1065 Oil Well RD, Naples, FL 34120",
-      "latitude": 26.29406046,
-      "longitude": -81.58793098,
-      "address_point_id": 5562
+      "id": "demo_shelter_08",
+      "name": "Big Corkscrew Island Regional Park",
+      "address": "810 39th AVE NE, Naples, FL 34120",
+      "latitude": 26.30460817,
+      "longitude": -81.58299783,
+      "address_point_ids": [
+        269412,
+        269414,
+        269416,
+        269417,
+        269490,
+        296331
+      ],
+      "members": [
+        "Big Corkscrew Island Regional Park"
+      ],
+      "replaces": [],
+      "sources": [
+        "https://www.collierparks.com/Parks-and-Beaches/Regional-Parks/Big-Corkscrew-Island-Regional-Park",
+        "https://apps.sfwmd.gov/entsb/docdownload?object_id=0900eeea8a9341dc"
+      ]
+    },
+    {
+      "id": "demo_shelter_09",
+      "name": "Estates Branch Library",
+      "address": "1266 Golden Gate BLVD W, Naples, FL 34120",
+      "latitude": 26.22883162,
+      "longitude": -81.63239438,
+      "address_point_ids": [
+        95362
+      ],
+      "members": [
+        "Estates Branch Library"
+      ],
+      "replaces": [],
+      "sources": [
+        "https://library.collier.gov/About-Us/Locations/Estates-Branch"
+      ]
+    },
+    {
+      "id": "demo_shelter_10",
+      "name": "Palmetto Elementary School",
+      "address": "3000 10th AVE SE, Naples, FL 34117",
+      "latitude": 26.21009519,
+      "longitude": -81.54695396,
+      "address_point_ids": [
+        201366
+      ],
+      "members": [
+        "Palmetto Elementary School"
+      ],
+      "replaces": [],
+      "sources": [
+        "https://www.collierschools.com/schools"
+      ]
+    },
+    {
+      "id": "demo_shelter_11",
+      "name": "Bear Creek Elementary School",
+      "address": "2400 Cub CT, Naples, FL 34120",
+      "latitude": 26.27311388,
+      "longitude": -81.64338531,
+      "address_point_ids": [
+        209006
+      ],
+      "members": [
+        "Bear Creek Elementary School"
+      ],
+      "replaces": [],
+      "sources": [
+        "https://www.collierschools.com/schools"
+      ]
+    },
+    {
+      "id": "demo_shelter_12",
+      "name": "Greater Naples Fire Rescue Station 74",
+      "address": "99 Desoto BLVD S, Naples, FL 34117",
+      "latitude": 26.22987791,
+      "longitude": -81.51556563,
+      "address_point_ids": [
+        280976
+      ],
+      "members": [
+        "Greater Naples Fire Rescue Station 74"
+      ],
+      "replaces": [],
+      "sources": [
+        "https://greaternaplesfire.org/locations/"
+      ]
     }
   ]
 }

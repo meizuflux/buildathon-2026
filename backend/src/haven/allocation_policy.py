@@ -1,7 +1,8 @@
 """Coordinated household allocation with Google OR-Tools CP-SAT.
 
 Every household gets one open/full destination whenever one exists. Requirements
-outrank capacity, supplies, travel without a car, all travel, and finally moves.
+outrank capacity, balanced utilization, supplies, travel without a car, all travel,
+and finally moves.
 Capacity is soft: shortages produce overflow rather than dropped households.
 The bounded solver starts from complete assignments and never returns a result
 worse than its seed under the same lexicographic objective.
@@ -10,14 +11,72 @@ worse than its seed under the same lexicographic objective.
 import logging
 import math
 import time
+from dataclasses import dataclass, field
 from typing import Any
 
 from ortools.sat.python import cp_model
 
 logger = logging.getLogger(__name__)
-_MAX_SOLVE_SECONDS = 2.0
+DEFAULT_SOLVE_SECONDS = 5.0
 _CLINICAL_REQUIREMENTS = {"medical_staff", "medication", "wheelchair_accessible", "special_care"}
 _SUPPLY_PENALTY = {"available": 0, "limited": 1, "unknown": 2, "unavailable": 3}
+
+
+# Care and other required needs are protected before every profile below.
+PRIORITY_PROFILES = {
+    "needs_first": (
+        "physical_overflow",
+        "budget_overflow",
+        "peak_overflow",
+        "supplies",
+        "no_car_distance",
+        "distance",
+        "moves",
+    ),
+    "headroom": (
+        "physical_overflow",
+        "budget_overflow",
+        "peak_overflow",
+        "headroom",
+        "supplies",
+        "no_car_distance",
+        "distance",
+        "moves",
+    ),
+    "balanced": (
+        "physical_overflow",
+        "budget_overflow",
+        "peak_overflow",
+        "utilization",
+        "supplies",
+        "no_car_distance",
+        "distance",
+        "moves",
+    ),
+    "travel_then_balance": (
+        "physical_overflow",
+        "budget_overflow",
+        "peak_overflow",
+        "supplies",
+        "no_car_distance",
+        "distance",
+        "utilization",
+        "moves",
+    ),
+}
+DEFAULT_PRIORITY_PROFILE = "balanced"
+
+
+@dataclass
+class AllocationDiagnostics:
+    """Optional search evidence for evaluation tools; never part of a family plan."""
+
+    profile: str = ""
+    status: str = "NOT_RUN"
+    elapsed_seconds: float = 0.0
+    stages: list[dict[str, Any]] = field(default_factory=list)
+    initial_score: dict[str, int] = field(default_factory=dict)
+    final_score: dict[str, int] = field(default_factory=dict)
 
 
 def household_size(family: dict[str, Any]) -> int:
@@ -87,6 +146,8 @@ def allocate_disaster(
     prior_shelter: dict[str, str | None],
     *,
     max_solve_seconds: float | None = None,
+    priority_profile: str | None = None,
+    diagnostics: AllocationDiagnostics | None = None,
 ) -> tuple[dict[str, dict[str, Any] | None], dict[str, int]]:
     """Return complete choices and remaining budgets without mutating inputs.
 
@@ -100,11 +161,24 @@ def allocate_disaster(
     preferences weighted by household size, never invented inventory quantities.
     Closed/absent shelters are the only reason a destination can be None.
     """
+    started = time.monotonic()
+    profile = DEFAULT_PRIORITY_PROFILE if priority_profile is None else priority_profile
+    if profile not in PRIORITY_PROFILES:
+        raise ValueError(f"Unknown allocation priority profile: {profile}")
+    objective_names = PRIORITY_PROFILES[profile]
+    if diagnostics is not None:
+        diagnostics.profile = profile
+        diagnostics.stages.clear()
+        diagnostics.initial_score.clear()
+        diagnostics.final_score.clear()
     remaining = {s["id"]: s["allocation_budget"] for s in shelters}
     destinations = sorted(
         (s for s in shelters if s["status"] in {"open", "full"}), key=lambda s: s["id"]
     )
     if not families or not destinations:
+        if diagnostics is not None:
+            diagnostics.status = "EMPTY" if not families else "NO_DESTINATION"
+            diagnostics.elapsed_seconds = time.monotonic() - started
         return {f["id"]: None for f in families}, remaining
 
     ordered = sorted(families, key=lambda f: (f["created_at"], f["id"]))
@@ -113,6 +187,7 @@ def allocate_disaster(
     totals = [int(s["capacity"]["total_people"]) for s in destinations]
     # A full shelter offers no new budget even if its stored count is positive.
     budgets = [s["allocation_budget"] if s["status"] == "open" else 0 for s in destinations]
+    effective_capacity = [max(0, min(totals[j], budgets[j])) for j in range(len(destinations))]
     options: list[list[int]] = []
     trips: list[dict[int, int]] = []
     supplies: list[dict[int, int]] = []
@@ -138,7 +213,7 @@ def allocate_disaster(
     def score(selection: list[int]) -> tuple[int, ...]:
         loads = loads_for(selection)
         physical = [max(0, loads[j] - totals[j]) for j in range(len(destinations))]
-        return (
+        values = (
             sum(physical),
             sum(max(0, loads[j] - budgets[j]) for j in range(len(destinations))),
             max(
@@ -154,6 +229,16 @@ def allocate_disaster(
             sum(trips[i][j] for i, j in enumerate(selection)),
             sum(moves[i][j] for i, j in enumerate(selection)),
         )
+        by_name = dict(zip(PRIORITY_PROFILES["needs_first"], values, strict=True))
+        by_name["utilization"] = sum(
+            max(0, 20 * loads[j] - step * effective_capacity[j])
+            for j in range(len(destinations))
+            for step in range(1, 20)
+        )
+        by_name["headroom"] = sum(
+            max(0, 20 * loads[j] - 17 * effective_capacity[j]) for j in range(len(destinations))
+        )
+        return tuple(by_name[name] for name in objective_names)
 
     # Always have a complete, needs-respecting placement before calling CP-SAT.
     best = [0] * len(ordered)
@@ -171,15 +256,24 @@ def allocate_disaster(
 
         def seed_key(j: int) -> tuple[int, ...]:
             projected = loads[j] + sizes[i]
-            return (
-                max(0, projected - totals[j]) - max(0, loads[j] - totals[j]),
-                max(0, projected - budgets[j]) - max(0, loads[j] - budgets[j]),
-                (1000 * max(0, projected - totals[j]) + max(1, totals[j]) - 1) // max(1, totals[j]),
-                supplies[i][j],
-                trips[i][j],
-                moves[i][j],
-                j,
-            )
+            marginal = {
+                "physical_overflow": max(0, projected - totals[j]) - max(0, loads[j] - totals[j]),
+                "budget_overflow": max(0, projected - budgets[j]) - max(0, loads[j] - budgets[j]),
+                "peak_overflow": (1000 * max(0, projected - totals[j]) + max(1, totals[j]) - 1)
+                // max(1, totals[j]),
+                "utilization": sum(
+                    max(0, 20 * projected - step * effective_capacity[j])
+                    - max(0, 20 * loads[j] - step * effective_capacity[j])
+                    for step in range(1, 20)
+                ),
+                "headroom": max(0, 20 * projected - 17 * effective_capacity[j])
+                - max(0, 20 * loads[j] - 17 * effective_capacity[j]),
+                "supplies": supplies[i][j],
+                "no_car_distance": trips[i][j] if not ordered[i]["resources"].get("has_car") else 0,
+                "distance": trips[i][j],
+                "moves": moves[i][j],
+            }
+            return tuple(marginal[name] for name in objective_names) + (j,)
 
         best[i] = min(options[i], key=seed_key)
         loads[best[i]] += sizes[i]
@@ -196,6 +290,23 @@ def allocate_disaster(
         best = previous
     best_score = score(best)
 
+    if diagnostics is not None:
+        diagnostics.initial_score = dict(zip(objective_names, best_score, strict=True))
+        diagnostics.status = "OPTIMAL"
+
+    global_utilization_bound = sum(
+        max(0, 20 * total_people - step * sum(effective_capacity)) for step in range(1, 20)
+    )
+    # Jensen's lower bound is attainable when every site lies in the same 5%
+    # utilization band. Then plain per-site bounds express the optimum exactly,
+    # avoiding 19 auxiliary congestion variables per site in the common case.
+    band_optimum = (
+        profile == "balanced"
+        and best_score[:3] == (0, 0, 0)
+        and best_score[3] == global_utilization_bound
+        and sum(effective_capacity) > 0
+    )
+    band = min(19, 20 * total_people // max(1, sum(effective_capacity)))
     model = cp_model.CpModel()
     choices = [
         {j: model.new_bool_var(f"assign_{i}_{j}") for j in eligible}
@@ -204,6 +315,8 @@ def allocate_disaster(
     for row in choices:
         model.add_exactly_one(row.values())
     physical_overflow = []
+    utilization = []
+    headroom = []
     budget_overflow = []
     peak_overflow = model.new_int_var(0, total_people * 1000, "peak_overflow_per_thousand")
     for j in range(len(destinations)):
@@ -215,6 +328,19 @@ def allocate_disaster(
         model.add_max_equality(physical, [0, load - totals[j]])
         model.add_max_equality(budget, [0, load - budgets[j]])
         model.add(peak_overflow * max(1, totals[j]) >= physical * 1000)
+        if "headroom" in objective_names:
+            excess = model.new_int_var(0, total_people * 20, f"headroom_{j}")
+            model.add(excess >= 20 * load - 17 * effective_capacity[j])
+            headroom.append(excess)
+        if band_optimum:
+            model.add(20 * load >= band * effective_capacity[j])
+            if band < 19:
+                model.add(20 * load <= (band + 1) * effective_capacity[j])
+        elif "utilization" in objective_names:
+            for step in range(1, 20):
+                excess = model.new_int_var(0, total_people * 20, f"utilization_{j}_{step}")
+                model.add(excess >= 20 * load - step * effective_capacity[j])
+                utilization.append(excess)
         physical_overflow.append(physical)
         budget_overflow.append(budget)
 
@@ -230,7 +356,7 @@ def allocate_disaster(
             ]
         )
 
-    objectives = [
+    baseline_objectives = [
         cp_model.LinearExpr.sum(physical_overflow),
         cp_model.LinearExpr.sum(budget_overflow),
         peak_overflow,
@@ -239,18 +365,56 @@ def allocate_disaster(
         assignment_cost(trips),
         assignment_cost(moves),
     ]
+    objective_map = dict(zip(PRIORITY_PROFILES["needs_first"], baseline_objectives, strict=True))
+    objective_map["utilization"] = (
+        cp_model.LinearExpr.constant(global_utilization_bound)
+        if band_optimum
+        else cp_model.LinearExpr.sum(utilization)
+    )
+    objective_map["headroom"] = cp_model.LinearExpr.sum(headroom)
+    lower_bounds = {
+        "physical_overflow": max(0, total_people - sum(totals)),
+        "budget_overflow": max(0, total_people - sum(budgets)),
+        "peak_overflow": (
+            1000 * max(0, total_people - sum(totals)) + sum(max(1, total) for total in totals) - 1
+        )
+        // sum(max(1, total) for total in totals),
+        "utilization": global_utilization_bound,
+        "headroom": max(0, 20 * total_people - 17 * sum(effective_capacity)),
+        "supplies": sum(min(row.values()) for row in supplies),
+        "distance": sum(min(row.values()) for row in trips),
+        "no_car_distance": sum(
+            min(trips[i].values())
+            for i, family in enumerate(ordered)
+            if not family["resources"].get("has_car")
+        ),
+    }
+    objectives = [objective_map[name] for name in objective_names]
     solver = cp_model.CpSolver()
     solver.parameters.num_search_workers = 1
     solver.parameters.random_seed = 0
-    seconds = _MAX_SOLVE_SECONDS if max_solve_seconds is None else max_solve_seconds
+    seconds = DEFAULT_SOLVE_SECONDS if max_solve_seconds is None else max_solve_seconds
     deadline = time.monotonic() + max(0.0, seconds)
     for index, objective in enumerate(objectives):
-        # All objectives are nonnegative; zero already proves optimality.
-        if best_score[index] == 0:
-            model.add(objective == 0)
+        # An attained valid lower bound proves optimality without search.
+        lower_bound = lower_bounds.get(objective_names[index], 0)
+        if best_score[index] == lower_bound:
+            model.add(objective == lower_bound)
+            if diagnostics is not None:
+                diagnostics.stages.append(
+                    {
+                        "objective": objective_names[index],
+                        "status": "OPTIMAL",
+                        "value": lower_bound,
+                        "bound": lower_bound,
+                        "seconds": 0.0,
+                    }
+                )
             continue
         time_left = deadline - time.monotonic()
         if time_left <= 0:
+            if diagnostics is not None:
+                diagnostics.status = "TIME_LIMIT"
             logger.info("Allocation search budget exhausted; retaining complete best placement.")
             break
         model.clear_hints()
@@ -260,7 +424,21 @@ def allocate_disaster(
         model.add(objective <= best_score[index])
         model.minimize(objective)
         solver.parameters.max_time_in_seconds = time_left
+        stage_started = time.monotonic()
         status = solver.solve(model)
+        if diagnostics is not None:
+            diagnostics.status = solver.status_name(status)
+            diagnostics.stages.append(
+                {
+                    "objective": objective_names[index],
+                    "status": solver.status_name(status),
+                    "value": solver.objective_value
+                    if status in {cp_model.OPTIMAL, cp_model.FEASIBLE}
+                    else None,
+                    "bound": solver.best_objective_bound,
+                    "seconds": round(time.monotonic() - stage_started, 6),
+                }
+            )
         if status == cp_model.MODEL_INVALID or status == cp_model.INFEASIBLE:
             raise RuntimeError(f"Invalid allocation model: {solver.status_name(status)}")
         if status not in {cp_model.OPTIMAL, cp_model.FEASIBLE}:
@@ -283,4 +461,7 @@ def allocate_disaster(
         selected = destinations[best[i]]
         assigned[family["id"]] = selected
         remaining[selected["id"]] -= sizes[i]
+    if diagnostics is not None:
+        diagnostics.final_score = dict(zip(objective_names, best_score, strict=True))
+        diagnostics.elapsed_seconds = time.monotonic() - started
     return assigned, remaining

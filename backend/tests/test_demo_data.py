@@ -80,7 +80,7 @@ def test_reseeding_recreates_the_entire_demo_database(tmp_path, monkeypatch):
     second_credentials = asyncio.run(seed_demo_data())
     assert first_credentials != second_credentials
     with closing(sqlite3.connect(database_path())) as connection:
-        assert connection.execute("SELECT count(*) FROM shelters").fetchone()[0] == 7
+        assert connection.execute("SELECT count(*) FROM shelters").fetchone()[0] == 9
         assert connection.execute("SELECT count(*) FROM families").fetchone()[0] == 1000
         assert connection.execute("SELECT count(*) FROM current_assignments").fetchone()[0] == 1000
         assert connection.execute("SELECT count(*) FROM plans").fetchone()[0] == 1000
@@ -180,5 +180,5 @@ def test_household_locations_are_distinct_verified_estates_homes():
     assert len({h["longitude"] for h in homes}) > 990
     west, south, east, north = data["bounds"]
     assert all(south <= h["latitude"] <= north and west <= h["longitude"] <= east for h in homes)
-    assert len(data["shelters"]) == 7
+    assert len(data["shelters"]) == 9
     assert all("Naples, FL" in s["address"] for s in data["shelters"])

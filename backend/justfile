@@ -46,3 +46,11 @@ create-operator:
 # Recreate the disposable SQLite database with fresh demo accounts and the Estates scenario.
 demo-data:
     uv run --locked python -m haven.demo_data
+
+# Compare allocation profiles without editing the app database.
+analyze-allocation *args:
+    uv run --locked python scripts/analyze_allocation.py {{args}}
+
+# Preview updating only the curated demo shelter network (add --apply to change it).
+refresh-demo-shelters *args:
+    uv run --locked python -m haven.refresh_demo_shelters {{args}}
