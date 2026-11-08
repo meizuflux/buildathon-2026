@@ -1,43 +1,48 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useData } from '../data.jsx'
-import { api } from '../api/index.js'
-import { emptyShelter } from '../lib/constants.js'
-import ShelterMap from '../components/ShelterMap.jsx'
-import ShelterList from '../components/ShelterList.jsx'
-import ShelterForm from '../components/ShelterForm.jsx'
+import { useData } from '../data'
+import { api } from '../api'
+import { emptyShelter } from '../lib/constants'
+import ShelterMap from '../components/ShelterMap'
+import ShelterList from '../components/ShelterList'
+import ShelterForm from '../components/ShelterForm'
+import type { Family, FamilyPage, MapLayers, Shelter, ShelterInput } from '../api/types'
+
+type ShelterFormState = { id: string | null; draft: ShelterInput }
 
 export default function MapPage() {
   const d = useData()
   const [params, setParams] = useSearchParams()
-  const [selectedId, setSelectedId] = useState(params.get('shelter'))
-  const [focus, setFocus] = useState(null)
-  const [layers, setLayers] = useState({ shelters: true, families: true, reports: true })
-  const [families, setFamilies] = useState([])
-  const [familyError, setFamilyError] = useState(null)
-  const [form, setForm] = useState(null) // { id|null, draft }
+  const [selectedId, setSelectedId] = useState<string | null>(params.get('shelter'))
+  const [focus, setFocus] = useState<[number, number] | null>(null)
+  const [layers, setLayers] = useState<MapLayers>({ shelters: true, families: true, reports: true })
+  const [families, setFamilies] = useState<Family[]>([])
+  const [familyError, setFamilyError] = useState<string | null>(null)
+  const [form, setForm] = useState<ShelterFormState | null>(null)
 
   useEffect(() => {
     let active = true
     let loading = false
     setFamilies([])
     setFamilyError(null)
-    if (!d.disasterId || !layers.families) return () => { active = false }
+    const disasterId = d.disasterId
+    if (!disasterId || !layers.families) return () => { active = false }
+    const id: string = disasterId
     async function loadFamilies() {
       if (loading) return
       loading = true
       try {
         let offset = 0
-        let page
-        const all = []
+        let page: FamilyPage
+        const all: Family[] = []
         do {
-          page = await api.listFamilies(d.disasterId, 1000, offset)
+          page = await api.listFamilies(id, 1000, offset)
           all.push(...page.families)
           offset += page.families.length
         } while (page.families.length && offset < page.total)
         if (active) { setFamilies(all); setFamilyError(null) }
       } catch (error) {
-        if (active) setFamilyError(error.message)
+        if (active) setFamilyError(error instanceof Error ? error.message : 'Unknown error')
       } finally { loading = false }
     }
     loadFamilies()
@@ -66,31 +71,42 @@ export default function MapPage() {
     }
   }, [params, d.shelters, d.reports, setParams])
 
-  const selectShelter = (id) => {
+  const selectShelter = (id: string) => {
     setSelectedId(id)
     const s = d.shelters.find((x) => x.id === id)
     if (s) setFocus([s.location.latitude, s.location.longitude])
   }
 
-  const openForm = (shelter) => {
+  const openForm = (shelter: Shelter | null) => {
     if (shelter) {
-      const { id, updated_at, ...draft } = shelter // eslint-disable-line no-unused-vars
+      const draft: ShelterInput = {
+        disaster_id: shelter.disaster_id,
+        name: shelter.name,
+        address: shelter.address,
+        location: shelter.location,
+        status: shelter.status,
+        capacity: shelter.capacity,
+        capabilities: shelter.capabilities,
+        resources: shelter.resources,
+      }
       setForm({ id: shelter.id, draft: structuredClone(draft) })
       setSelectedId(shelter.id)
       setFocus([shelter.location.latitude, shelter.location.longitude])
     } else {
-      setForm({ id: null, draft: emptyShelter(d.disasterId) })
+      setForm({ id: null, draft: emptyShelter(d.disasterId as string) })
       setSelectedId(null)
     }
   }
-  const setDraft = (fn) => setForm((f) => ({ ...f, draft: fn(f.draft) }))
+  const setDraft = (fn: (draft: ShelterInput) => ShelterInput) => setForm((f) => (f ? { ...f, draft: fn(f.draft) } : f))
 
-  const saveShelter = async (draft) => {
+  const saveShelter = async (draft: ShelterInput) => {
+    if (!form) return
+    const currentForm = form
     const { name, address, location, status, capacity, resources } = draft
     const capabilities = { ...draft.capabilities, special_care_notes: draft.capabilities.special_care_notes?.trim() || null }
     const saved = await d.mutate((api, disasterId) =>
-      form.id
-        ? api.updateShelter(form.id, { name, address, location, status, capacity, capabilities, resources })
+      currentForm.id
+        ? api.updateShelter(currentForm.id, { name, address, location, status, capacity, capabilities, resources })
         : api.createShelter({ ...draft, capabilities, disaster_id: disasterId }),
     )
     setForm(null)

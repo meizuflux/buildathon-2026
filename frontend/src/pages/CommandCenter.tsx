@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
-import { AlertTriangle, ArrowRight, Info, Siren } from 'lucide-react'
-import { useData } from '../data.jsx'
-import { PageHeader, Empty } from '../components/ui.jsx'
-import { cap, fullTime, timeAgo } from '../lib/format.js'
+import { AlertTriangle, ArrowRight, Info, Siren, type LucideIcon } from 'lucide-react'
+import { useData } from '../data'
+import { PageHeader, Empty } from '../components/ui'
+import { cap, fullTime, timeAgo } from '../lib/format'
+import type { Severity } from '../api/types'
 
-const LEVEL_ICON = { critical: Siren, warning: AlertTriangle, info: Info }
-const REF_LINK = {
+const LEVEL_ICON: Record<Severity, LucideIcon> = { critical: Siren, warning: AlertTriangle, info: Info }
+const REF_LINK: Record<string, (id: string) => string> = {
   shelter: (id) => `/map?shelter=${id}`,
   update: () => '/comms/broadcasts',
   report: (id) => `/map?report=${id}`,
@@ -59,15 +60,19 @@ export default function CommandCenter() {
           <div className="panel-title"><h2>Activity</h2><span className="muted">live</span></div>
           <ol className="timeline">
             {d.activity.length === 0 && <Empty>No activity yet.</Empty>}
-            {d.activity.slice(0, 18).map((a) => (
-              <li key={a.id} className={`tl tl-${a.type.split('_')[0]}`}>
-                <span className="tl-dot" aria-hidden="true" />
-                <div>
-                  {REF_LINK[a.ref?.kind] ? <Link to={REF_LINK[a.ref.kind](a.ref.id)}>{a.summary}</Link> : a.summary}
-                  <div className="muted small" title={fullTime(a.created_at)}>{timeAgo(a.created_at)} · {a.actor?.name || 'System'}</div>
-                </div>
-              </li>
-            ))}
+            {d.activity.slice(0, 18).map((a) => {
+              const ref = a.ref
+              const link = ref ? REF_LINK[ref.kind] : undefined
+              return (
+                <li key={a.id} className={`tl tl-${a.type.split('_')[0]}`}>
+                  <span className="tl-dot" aria-hidden="true" />
+                  <div>
+                    {ref && link ? <Link to={link(ref.id)}>{a.summary}</Link> : a.summary}
+                    <div className="muted small" title={fullTime(a.created_at)}>{timeAgo(a.created_at)} · {a.actor?.name || 'System'}</div>
+                  </div>
+                </li>
+              )
+            })}
           </ol>
         </section>
       </div>
@@ -99,7 +104,7 @@ export default function CommandCenter() {
   )
 }
 
-function Kpi({ label, value, sub, tone, meter, to }) {
+function Kpi({ label, value, sub, tone, meter, to }: { label: string; value: string | number; sub: string; tone?: string; meter?: number; to: string }) {
   return (
     <Link to={to} className={`kpi ${tone ? `kpi-${tone}` : ''}`}>
       <div className="kpi-label">{label}</div>

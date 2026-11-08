@@ -1,5 +1,11 @@
+import type { BroadcastTarget, Shelter } from '../api/types'
+
 // The backend supports all families or families assigned to one shelter.
-export default function TargetPicker({ target, setTarget, shelters }) {
+export default function TargetPicker({ target, setTarget, shelters }: {
+  target: BroadcastTarget
+  setTarget: (target: BroadcastTarget) => void
+  shelters: Shelter[]
+}) {
   return (
     <div className="target">
       <label className="field">

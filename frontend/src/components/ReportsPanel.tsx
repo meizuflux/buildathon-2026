@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { REPORT_TYPES } from '../lib/constants.js'
-import { fullTime, timeAgo } from '../lib/format.js'
+import { REPORT_TYPES } from '../lib/constants'
+import { fullTime, timeAgo } from '../lib/format'
+import type { Report } from '../api/types'
 
-export default function ReportsPanel({ reports }) {
+export default function ReportsPanel({ reports }: { reports: Report[] }) {
   const [type, setType] = useState('all')
   const shown = type === 'all' ? reports : reports.filter((r) => r.type === type)
 

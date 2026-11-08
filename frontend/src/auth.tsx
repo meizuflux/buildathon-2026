@@ -1,19 +1,28 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { api, setToken, ApiError } from './api/index.js'
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { api, setToken, ApiError } from './api'
+import type { Session, User } from './api/types'
 
-const AuthContext = createContext(null)
+type AuthContextValue = {
+  user: User | null
+  login: (email: string, password: string) => Promise<void>
+  logout: () => Promise<void>
+  expire: () => void
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null)
 const KEY = 'haven-operator-session'
 
-function readSession() {
+function readSession(): Session | null {
   try {
-    return JSON.parse(sessionStorage.getItem(KEY))
+    const raw = sessionStorage.getItem(KEY)
+    return raw ? (JSON.parse(raw) as Session) : null
   } catch {
     return null
   }
 }
 
-export function AuthProvider({ children }) {
-  const [session, setSession] = useState(() => {
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(() => {
     const s = readSession()
     if (s && new Date(s.expires_at) > new Date()) {
       setToken(s.access_token)
@@ -41,13 +50,17 @@ export function AuthProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (email: string, password: string) => {
     const res = await api.login(email, password)
     setToken(res.access_token)
     if (res.user.role !== 'operator') {
       await api.logout().catch(() => {})
       setToken(null)
-      throw new ApiError(403, 'not_operator', 'This dashboard is for government operators. Family accounts use the Haven mobile app.')
+      throw new ApiError(
+        403,
+        'not_operator',
+        'This dashboard is for government operators. Family accounts use the Haven mobile app.',
+      )
     }
     try {
       sessionStorage.setItem(KEY, JSON.stringify(res))
@@ -69,4 +82,8 @@ export function AuthProvider({ children }) {
   )
 }
 
-export const useAuth = () => useContext(AuthContext)
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (!context) throw new Error('useAuth must be used within an AuthProvider')
+  return context
+}

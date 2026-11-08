@@ -1,21 +1,21 @@
-import { useState } from 'react'
-import { useAuth } from '../auth.jsx'
+import { useState, type FormEvent } from 'react'
+import { useAuth } from '../auth'
 
 export default function Login() {
   const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  async function submit(e) {
+  async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setBusy(true)
     setError(null)
     try {
       await login(email, password)
     } catch (err) {
-      setError(err.message)
+      setError(err instanceof Error ? err.message : 'Unable to sign in.')
       setBusy(false)
     }
   }

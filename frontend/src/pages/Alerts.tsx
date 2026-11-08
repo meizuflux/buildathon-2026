@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertTriangle, Info, Siren } from 'lucide-react'
-import { useData } from '../data.jsx'
-import { Empty, PageHeader } from '../components/ui.jsx'
-import { cap, fullTime, timeAgo } from '../lib/format.js'
+import { AlertTriangle, Info, Siren, type LucideIcon } from 'lucide-react'
+import { useData } from '../data'
+import { Empty, PageHeader } from '../components/ui'
+import { cap, fullTime, timeAgo } from '../lib/format'
+import type { Severity } from '../api/types'
 
-const ICONS = { critical: Siren, warning: AlertTriangle, info: Info }
+const ICONS: Record<Severity, LucideIcon> = { critical: Siren, warning: AlertTriangle, info: Info }
 const PAGE_SIZE = 50
 
 export default function Alerts() {
   const d = useData()
-  const [severity, setSeverity] = useState('all')
+  const [severity, setSeverity] = useState<'all' | Severity>('all')
   const [page, setPage] = useState(0)
   useEffect(() => { setPage(0) }, [severity, d.disasterId])
   const alerts = (d.alerts?.alerts || []).filter((a) => severity === 'all' || a.severity === severity)
@@ -22,7 +23,7 @@ export default function Alerts() {
     <section className="card-panel">
       <div className="panel-title">
         <span className="muted">{d.alerts ? `${d.alerts.total} current alerts` : '—'}</span>
-        <select className="select-sm" aria-label="Filter alerts by severity" value={severity} onChange={(e) => setSeverity(e.target.value)}>
+        <select className="select-sm" aria-label="Filter alerts by severity" value={severity} onChange={(e) => setSeverity(e.target.value as 'all' | Severity)}>
           <option value="all">All severities</option><option value="critical">Critical</option><option value="warning">Warning</option><option value="info">Info</option>
         </select>
       </div>

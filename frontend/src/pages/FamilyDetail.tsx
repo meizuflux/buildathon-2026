@@ -1,25 +1,35 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Pencil } from 'lucide-react'
-import { api } from '../api/index.js'
-import { useData } from '../data.jsx'
-import { Empty, Modal } from '../components/ui.jsx'
-import { cap, fullTime } from '../lib/format.js'
+import { api, ApiError } from '../api'
+import { useData } from '../data'
+import { Empty, Modal } from '../components/ui'
+import { cap, fullTime } from '../lib/format'
+import type { Family, Location, Plan } from '../api/types'
+
+type FamilyDraft = {
+  adults: number
+  children: number
+  location: Location
+  needs: Family['needs']
+  resources: Family['resources']
+}
 
 export default function FamilyDetail() {
-  const { id } = useParams()
+  const { id } = useParams<{ id: string }>()
   const d = useData()
-  const [family, setFamily] = useState(null)
-  const [plan, setPlan] = useState(null)
-  const [error, setError] = useState(null)
-  const [planError, setPlanError] = useState(null)
+  const [family, setFamily] = useState<Family | null>(null)
+  const [plan, setPlan] = useState<Plan | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [planError, setPlanError] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [revision, setRevision] = useState(0)
   useEffect(() => {
-    let active = true
     setFamily(null); setPlan(null); setError(null); setPlanError(null)
-    api.getFamily(id).then((value) => { if (active) setFamily(value) }).catch((err) => { if (active) setError(err.message) })
-    api.getPlan(id).then((value) => { if (active) setPlan(value) }).catch((err) => { if (active) setPlanError(err.status === 404 ? 'No plan has been generated.' : err.message) })
+    if (!id) { setError('Family not found.'); return }
+    let active = true
+    api.getFamily(id).then((value) => { if (active) setFamily(value) }).catch((err) => { if (active) setError(err instanceof Error ? err.message : 'Unknown error') })
+    api.getPlan(id).then((value) => { if (active) setPlan(value) }).catch((err) => { if (active) setPlanError(err instanceof ApiError && err.status === 404 ? 'No plan has been generated.' : err instanceof Error ? err.message : 'Unknown error') })
     return () => { active = false }
   }, [id, revision])
   const close = useCallback(() => setEditing(false), [])
@@ -54,23 +64,23 @@ export default function FamilyDetail() {
   </div>
 }
 
-function EditFamily({ family, onClose, onSaved }) {
-  const [draft, setDraft] = useState(() => structuredClone({ adults: family.adults, children: family.children, location: family.location, needs: family.needs, resources: family.resources }))
-  const [error, setError] = useState(null)
+function EditFamily({ family, onClose, onSaved }: { family: Family; onClose: () => void; onSaved: () => void }) {
+  const [draft, setDraft] = useState<FamilyDraft>(() => structuredClone({ adults: family.adults, children: family.children, location: family.location, needs: family.needs, resources: family.resources }))
+  const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const set = (key, value) => setDraft((v) => ({ ...v, [key]: value }))
-  const nested = (key, field, value) => setDraft((v) => ({ ...v, [key]: { ...v[key], [field]: value } }))
-  async function save(e) {
+  const set = <K extends keyof FamilyDraft>(key: K, value: FamilyDraft[K]) => setDraft((v) => ({ ...v, [key]: value }) as FamilyDraft)
+  const nested = <K extends 'location' | 'needs' | 'resources'>(key: K, field: keyof FamilyDraft[K], value: FamilyDraft[K][keyof FamilyDraft[K]]) => setDraft((v) => ({ ...v, [key]: { ...v[key], [field]: value } } as FamilyDraft))
+  async function save(e: FormEvent<HTMLFormElement>) {
     e.preventDefault(); setError(null)
     if (draft.adults + draft.children < 1) return setError('A household must include at least one person.')
     setBusy(true)
-    try { await api.updateFamily(family.id, draft); onSaved() } catch (err) { setError(err.message); setBusy(false) }
+    try { await api.updateFamily(family.id, draft); onSaved() } catch (err) { setError(err instanceof Error ? err.message : 'Unknown error'); setBusy(false) }
   }
   return <Modal title="Edit family profile" onClose={onClose} wide><form className="form" onSubmit={save}>
     <div className="row"><label className="field"><span>Adults</span><input type="number" min="0" step="1" required value={draft.adults} onChange={(e) => set('adults', e.target.valueAsNumber)} /></label><label className="field"><span>Children</span><input type="number" min="0" step="1" required value={draft.children} onChange={(e) => set('children', e.target.valueAsNumber)} /></label></div>
     <div className="row"><label className="field"><span>Latitude</span><input type="number" min="-90" max="90" step="any" required value={draft.location.latitude} onChange={(e) => nested('location', 'latitude', e.target.valueAsNumber)} /></label><label className="field"><span>Longitude</span><input type="number" min="-180" max="180" step="any" required value={draft.location.longitude} onChange={(e) => nested('location', 'longitude', e.target.valueAsNumber)} /></label></div>
     <div className="checks"><label className="check"><input type="checkbox" checked={draft.resources.has_car} onChange={(e) => nested('resources', 'has_car', e.target.checked)} /> Has a car</label><label className="check"><input type="checkbox" checked={draft.needs.pets} onChange={(e) => nested('needs', 'pets', e.target.checked)} /> Has pets</label><label className="check"><input type="checkbox" checked={draft.needs.immediate_medication} onChange={(e) => nested('needs', 'immediate_medication', e.target.checked)} /> Immediate medication</label></div>
-    {[['medical_notes', 'Medical notes'], ['accessibility_notes', 'Accessibility notes'], ['other_special_care', 'Other special care']].map(([key, label]) => <label className="field" key={key}><span>{label}</span><textarea rows={2} value={draft.needs[key] || ''} onChange={(e) => nested('needs', key, e.target.value || null)} /></label>)}
+    {([['medical_notes', 'Medical notes'], ['accessibility_notes', 'Accessibility notes'], ['other_special_care', 'Other special care']] as const).map(([key, label]) => <label className="field" key={key}><span>{label}</span><textarea rows={2} value={draft.needs[key] || ''} onChange={(e) => nested('needs', key, e.target.value || null)} /></label>)}
     <p className="muted small">Saving relevant changes automatically recomputes plans for the disaster.</p>
     {error && <p className="error" role="alert">{error}</p>}<div className="form-actions"><button type="button" className="btn" onClick={onClose}>Cancel</button><button className="btn btn-primary" disabled={busy}>{busy ? 'Saving…' : 'Save changes'}</button></div>
   </form></Modal>

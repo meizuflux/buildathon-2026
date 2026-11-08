@@ -1,6 +1,6 @@
-import { useData } from '../data.jsx'
-import { PageHeader } from '../components/ui.jsx'
-import ReportsPanel from '../components/ReportsPanel.jsx'
+import { useData } from '../data'
+import { PageHeader } from '../components/ui'
+import ReportsPanel from '../components/ReportsPanel'
 
 export default function FamilyReports() {
   const d = useData()

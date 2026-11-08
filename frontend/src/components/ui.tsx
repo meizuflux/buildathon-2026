@@ -1,12 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 
-export function Modal({ title, onClose, children, wide }) {
-  const ref = useRef(null)
+export function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
+  const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose()
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)
-    ref.current?.querySelector('input, select, textarea, button')?.focus()
+    ref.current?.querySelector<HTMLElement>('input, select, textarea, button')?.focus()
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
   return (
@@ -22,7 +22,7 @@ export function Modal({ title, onClose, children, wide }) {
   )
 }
 
-export function PageHeader({ title, subtitle, children }) {
+export function PageHeader({ title, subtitle, children }: { title: string; subtitle?: ReactNode; children?: ReactNode }) {
   return (
     <div className="page-head">
       <div>
@@ -34,7 +34,13 @@ export function PageHeader({ title, subtitle, children }) {
   )
 }
 
-export function Segmented({ value, options, onChange, size, label }) {
+export function Segmented<T extends string>({ value, options, onChange, size, label }: {
+  value: T
+  options: readonly (readonly [T, string, string?])[]
+  onChange: (value: T) => void
+  size?: 'sm'
+  label?: string
+}) {
   return (
     <div className={`segmented ${size === 'sm' ? 'segmented-sm' : ''}`} role="radiogroup" aria-label={label}>
       {options.map(([v, text, cls = '']) => (
@@ -46,6 +52,6 @@ export function Segmented({ value, options, onChange, size, label }) {
   )
 }
 
-export function Empty({ children }) {
+export function Empty({ children }: { children: ReactNode }) {
   return <div className="empty">{children}</div>
 }

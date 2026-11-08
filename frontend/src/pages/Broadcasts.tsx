@@ -1,25 +1,28 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { MapPin, Users } from 'lucide-react'
-import { useData } from '../data.jsx'
-import { api } from '../api/index.js'
-import { PageHeader, Segmented, Empty } from '../components/ui.jsx'
-import TargetPicker from '../components/TargetPicker.jsx'
-import { AUDIENCE_NEEDS, BROADCAST_TEMPLATES, SEVERITIES } from '../lib/constants.js'
-import { cap, fullTime, timeAgo } from '../lib/format.js'
+import { useData } from '../data'
+import { api } from '../api'
+import { PageHeader, Segmented, Empty } from '../components/ui'
+import TargetPicker from '../components/TargetPicker'
+import { AUDIENCE_NEEDS, BROADCAST_TEMPLATES, SEVERITIES } from '../lib/constants'
+import { cap, fullTime, timeAgo } from '../lib/format'
+import type { BroadcastTarget, Severity, Update } from '../api/types'
 
-const blank = { title: '', message: '', severity: 'info', target: { type: 'all' } }
+type BroadcastForm = { title: string; message: string; severity: Severity; target: BroadcastTarget }
+
+const blank: BroadcastForm = { title: '', message: '', severity: 'info', target: { type: 'all' } }
 
 export default function Broadcasts() {
   const d = useData()
-  const [f, setF] = useState(blank)
+  const [f, setF] = useState<BroadcastForm>(blank)
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState(null)
-  const [sent, setSent] = useState(null)
+  const [error, setError] = useState<string | null>(null)
+  const [sent, setSent] = useState<Update | null>(null)
   const [filter, setFilter] = useState('all')
   const [templateId, setTemplateId] = useState('')
-  const [reach, setReach] = useState(null)
+  const [reach, setReach] = useState<number | null>(null)
   const [reachError, setReachError] = useState(false)
-  const set = (k, v) => setF((x) => ({ ...x, [k]: v }))
+  const set = <K extends keyof BroadcastForm>(k: K, v: BroadcastForm[K]) => setF((x) => ({ ...x, [k]: v }) as BroadcastForm)
 
   const target = f.target
 
@@ -33,12 +36,12 @@ export default function Broadcasts() {
     return () => { current = false }
   }, [d.disasterId, target])
 
-  const applyTemplate = (id) => {
+  const applyTemplate = (id: string) => {
     const t = BROADCAST_TEMPLATES.find((x) => x.id === id)
     if (t) setF((x) => ({ ...x, title: t.title, message: t.message, severity: t.severity }))
   }
 
-  async function submit(e) {
+  async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
     const where = target.type === 'shelter' ? 'families assigned to the selected shelter' : 'every family in this disaster'
@@ -52,7 +55,7 @@ export default function Broadcasts() {
       setF(blank)
       setTemplateId('')
     } catch (err) {
-      setError(err.message)
+      setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setBusy(false)
     }
@@ -87,7 +90,7 @@ export default function Broadcasts() {
 
           <div className="field">
             <span>Severity</span>
-            <Segmented value={f.severity} onChange={(v) => set('severity', v)} label="Severity" options={SEVERITIES.map((s) => [s, cap(s), `sev-${s}`])} />
+            <Segmented value={f.severity} onChange={(v) => set('severity', v)} label="Severity" options={SEVERITIES.map((s) => [s, cap(s), `sev-${s}`] as const)} />
           </div>
           <label className="field">
             <span>Title</span>
@@ -136,7 +139,7 @@ export default function Broadcasts() {
           <ul className="list">
             {history.length === 0 && <Empty>No broadcasts match.</Empty>}
             {history.map((u) => {
-              const pct = u.recipient_count ? Math.round((u.read_count / u.recipient_count) * 100) : 0
+              const pct = u.recipient_count ? Math.round(((u.read_count ?? 0) / u.recipient_count) * 100) : 0
               return (
                 <li key={u.id} className={`card update sev-border-${u.severity} ${u.status === 'retracted' ? 'is-retracted' : ''}`}>
                   <div className="card-head">
@@ -146,7 +149,7 @@ export default function Broadcasts() {
                   </div>
                   <p className="report-msg">{u.message}</p>
                   <div className="tags">
-                    <span className="tag"><MapPin size={11} /> {u.target?.type === 'shelter' ? `Families assigned to ${d.shelters.find((s) => s.id === u.target.shelter_id)?.name || u.target.shelter_id}` : 'All families in this disaster'}</span>
+                    <span className="tag"><MapPin size={11} /> {u.target?.type === 'shelter' ? `Families assigned to ${d.shelters.find((s) => s.id === u.target?.shelter_id)?.name || u.target?.shelter_id}` : 'All families in this disaster'}</span>
                     {(u.audience?.needs || []).map((n) => <span key={n} className="tag">{AUDIENCE_NEEDS[n]}</span>)}
                   </div>
                   <div className="reach">

@@ -1,21 +1,23 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowDownToLine, ArrowRight, Boxes, CircleHelp, ClipboardList, Clock3, PackageCheck, Plus, Search, Truck } from 'lucide-react'
-import { PageHeader } from '../components/ui.jsx'
-import { useData } from '../data.jsx'
-import { buildLogisticsPreview } from '../lib/logisticsPreview.js'
+import { ArrowDownToLine, ArrowRight, Boxes, CircleHelp, ClipboardList, Clock3, PackageCheck, Plus, Search, Truck, type LucideIcon } from 'lucide-react'
+import { PageHeader } from '../components/ui'
+import { useData } from '../data'
+import { buildLogisticsPreview, type DispatchGroup, type LogisticsPreview, type LogisticsRequest, type StockRow } from '../lib/logisticsPreview'
 
-const SECTIONS = {
+type Section = 'needs' | 'dispatch' | 'inventory'
+
+const SECTIONS: Record<Section, { title: string; subtitle: string; icon: LucideIcon; action: string }> = {
   needs: { title: 'Needs', subtitle: 'Requests for supplies and support across the response.', icon: ClipboardList, action: 'Add need' },
   dispatch: { title: 'Dispatch', subtitle: 'A preview of how deliveries could move from request to arrival.', icon: Truck, action: 'Create dispatch' },
   inventory: { title: 'Inventory', subtitle: 'A preview of supplies and quantities at local staging sites.', icon: Boxes, action: 'Add inventory' },
 }
 
-export default function Logistics({ section = 'needs' }) {
+export default function Logistics({ section = 'needs' }: { section?: Section }) {
   const d = useData()
-  const current = SECTIONS[section] ? section : 'needs'
+  const current: Section = SECTIONS[section] ? section : 'needs'
   const config = SECTIONS[current]
-  const preview = useMemo(() => {
+  const preview = useMemo<LogisticsPreview | null>(() => {
     if (!d.loaded || !d.disasterId || d.errors.shelters) return null
     return buildLogisticsPreview(d.shelters)
   }, [d.loaded, d.disasterId, d.errors.shelters, d.shelters])
@@ -46,32 +48,33 @@ export default function Logistics({ section = 'needs' }) {
       </div>
 
       <div className="logistics-live-summary" aria-label="Live shelter summary">
-        <div><span>Live shelters</span><strong>{liveReady ? preview.shelterCount : '—'}</strong></div>
-        <div><span>Reserved spaces</span><strong>{liveReady ? preview.occupiedPeople.toLocaleString() : '—'}</strong></div>
+        <div><span>Live shelters</span><strong>{liveReady && preview ? preview.shelterCount : '—'}</strong></div>
+        <div><span>Reserved spaces</span><strong>{liveReady && preview ? preview.occupiedPeople.toLocaleString() : '—'}</strong></div>
         <span className="logistics-live-indicator"><i />From current shelter details</span>
       </div>
 
       {d.errors.shelters ? <PreviewState title="Shelter details unavailable" message="Shelter details could not be loaded. Try refreshing the page." />
         : !d.disasterId ? <PreviewState title="Choose a response area" message="Select a disaster area to view its shelter details and request examples." />
           : !d.loaded ? <PreviewState title="Loading shelter details" message="This preview will appear when shelter details are ready." loading />
-            : preview.shelterCount === 0 ? <PreviewState title="No active shelters yet" message="Active shelter details will appear here when they are available." />
-              : <>
-                {current === 'needs' && <NeedsPreview needs={preview.needs} />}
-                {current === 'dispatch' && <DispatchPreview groups={preview.dispatchGroups} />}
-                {current === 'inventory' && <InventoryPreview stock={preview.stock} />}
-              </>}
+            : !preview ? <PreviewState title="Loading shelter details" message="This preview will appear when shelter details are ready." loading />
+              : preview.shelterCount === 0 ? <PreviewState title="No active shelters yet" message="Active shelter details will appear here when they are available." />
+                : <>
+                  {current === 'needs' && <NeedsPreview needs={preview.needs} />}
+                  {current === 'dispatch' && <DispatchPreview groups={preview.dispatchGroups} />}
+                  {current === 'inventory' && <InventoryPreview stock={preview.stock} />}
+                </>}
     </div>
   )
 }
 
-function PreviewState({ title, message, loading = false }) {
+function PreviewState({ title, message, loading = false }: { title: string; message: string; loading?: boolean }) {
   return <section className="card-panel logistics-state" aria-live="polite">
     <div className={`logistics-state-mark ${loading ? 'is-loading' : ''}`}><Boxes size={20} /></div>
     <div><h2>{title}</h2><p className="muted">{message}</p></div>
   </section>
 }
 
-function PlaceholderStats({ items }) {
+function PlaceholderStats({ items }: { items: [string, string][] }) {
   return <section className="logistics-stats" aria-label="Example summary">
     {items.map(([label, note]) => <div className="logistics-stat" key={label}>
       <span className="logistics-stat-label">{label}</span><strong>—</strong><span className="muted small">{note}</span>
@@ -79,7 +82,7 @@ function PlaceholderStats({ items }) {
   </section>
 }
 
-function PreviewTools({ placeholder, filters = ['All statuses', 'All locations'] }) {
+function PreviewTools({ placeholder, filters = ['All statuses', 'All locations'] }: { placeholder: string; filters?: string[] }) {
   return <div className="toolbar logistics-tools">
     <label className="logistics-search"><Search size={15} /><input type="search" placeholder={placeholder} disabled aria-label={placeholder} /></label>
     {filters.map((filter) => <select key={filter} disabled aria-label={filter}><option>{filter}</option></select>)}
@@ -87,7 +90,7 @@ function PreviewTools({ placeholder, filters = ['All statuses', 'All locations']
   </div>
 }
 
-function NeedsPreview({ needs }) {
+function NeedsPreview({ needs }: { needs: LogisticsRequest[] }) {
   return <>
     <PlaceholderStats items={[[ 'Open requests', 'Example count' ], [ 'Urgent', 'Example count' ], [ 'Awaiting review', 'Example count' ], [ 'Recently updated', 'Example time' ]]} />
     <section className="card-panel logistics-panel">
@@ -109,7 +112,7 @@ function NeedsPreview({ needs }) {
   </>
 }
 
-function DispatchPreview({ groups }) {
+function DispatchPreview({ groups }: { groups: DispatchGroup[] }) {
   return <>
     <PlaceholderStats items={[[ 'Planned deliveries', 'Example count' ], [ 'In transit', 'Example count' ], [ 'Arriving today', 'Example count' ], [ 'Completed', 'Example count' ]]} />
     <section className="logistics-panel">
@@ -130,7 +133,7 @@ function DispatchPreview({ groups }) {
   </>
 }
 
-function InventoryPreview({ stock }) {
+function InventoryPreview({ stock }: { stock: StockRow[] }) {
   return <>
     <PlaceholderStats items={[[ 'Supply types', 'Example count' ], [ 'Items available', 'Example total' ], [ 'Held for requests', 'Example total' ], [ 'Low stock', 'Example count' ]]} />
     <section className="card-panel logistics-panel">
