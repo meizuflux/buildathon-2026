@@ -11,14 +11,14 @@ app's reaction. It extends the existing API; no existing endpoint changes shape.
    on standby, households are registered, and Haven keeps their personalized plans pre-computed.
    The household app shows "All clear" and the needs Haven has on file, but no shelter yet.
 2. **Preview evacuation.** The operator opens the preview. Every household animates from home to its
-   destination (a simulation, straight-line paths). A toggle switches between **Nearest shelter (old)**
+   destination (a simulation, straight-line paths). A toggle switches between **Nearest shelter**
    and **Haven personalized**. Side-by-side metrics show unmet needs (medication, medical staff,
    wheelchair access, pets, special care), people over capacity, overcrowded and idle shelters,
    utilization and travel. Clicking a need highlights the affected households.
 3. **Initiate hurricane.** One click: the status becomes active, a critical evacuation broadcast goes to
    all households, and the personalized assignments are published. The dashboard turns to operations
    mode with a needs monitor. The household app switches to the evacuation order and its shelter.
-4. **Reset to peace.** Returns to peace and removes the demo run's broadcast and activity, so the demo
+4. **Stop disaster.** Returns to peace and removes the demo run's broadcast and activity, so the demo
    can be rehearsed again. Household profiles and shelters are kept.
 
 The comparison reports measured trade-offs. Personalized allocation can increase travel while
@@ -137,9 +137,9 @@ cd ../app && npm run demo:live                 # household app on http://localho
 
 Sign in to the dashboard as `gov@gov.com` (password `gov`) and to the household app as
 `family@family.com` (password `family`). Then: show the green peace dashboard and the phone's "All clear" →
-**Preview evacuation**, play "Nearest shelter (old)" and point at the red households and the
+**Preview evacuation**, play "Nearest shelter" and point at the red households and the
 over-capacity shelters → switch to "Haven personalized" → **Initiate hurricane** (the phone switches to
-the evacuation order within about 5 seconds) → **Reset to peace** to rehearse again. Keep the
+the evacuation order within about 5 seconds) → **Stop disaster** to rehearse again. Keep the
 dashboard tab in front while the animation plays; browsers pause animation in background tabs.
 
 The initiate broadcast is stored with an explicit `{"type": "all"}` target so reset can find and

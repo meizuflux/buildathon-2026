@@ -41,7 +41,7 @@ DATABASE_PATH=../.runtime/live-demo.sqlite3 uv run --locked litestar --app haven
 npm run demo:live        # sign in as family@family.com (password: family)
 ```
 
-`family@family.com` has a seeded household (the backend seeds it; see [../docs/hurricane-demo.md](../docs/hurricane-demo.md)). The app follows the hurricane status, polled every 5 seconds: in peace the Plan tab shows "All clear" and the needs on file, with no shelter. When an operator initiates the hurricane from the government dashboard, the app switches within about 5 seconds to the evacuation order, jumps to the Plan tab and shows the shelter assignment; resetting returns it to All clear. If the status request fails, the app keeps the last known phase.
+`family@family.com` has a seeded household (the backend seeds it; see [../docs/hurricane-demo.md](../docs/hurricane-demo.md)). The app follows the hurricane status, polled every 5 seconds: in peace the Plan tab shows "All clear" and the needs on file, with no shelter. When an operator initiates the hurricane from the government dashboard, the app switches within about 5 seconds to the evacuation order, jumps to the Plan tab and shows the shelter assignment; stopping the disaster returns it to All clear. If the status request fails, the app keeps the last known phase.
 
 The same dashboard reads the signed-in family's profile, plan, shelters and official updates from the API:
 

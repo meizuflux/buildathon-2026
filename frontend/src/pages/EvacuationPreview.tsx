@@ -117,7 +117,7 @@ export default function EvacuationPreview() {
         <div className="hx-float hx-evac-controls">
           <div className="row">
             <Seg label="Routing method" value={algo} onChange={pick}
-              options={[['naive', 'Nearest shelter (old)'], ['personalized', 'Haven personalized']]} />
+              options={[['naive', 'Nearest shelter'], ['personalized', 'Haven personalized']]} />
             {run === 'done'
               ? <button className="btn" onClick={() => setRun('ready')}><RotateCcw size={13} /> Reset</button>
               : <button className="btn btn-primary" onClick={() => setRun('running')} disabled={!preview || run === 'running'}><Play size={13} /> {run === 'running' ? 'Running…' : 'Run preview'}</button>}

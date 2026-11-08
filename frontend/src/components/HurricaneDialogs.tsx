@@ -77,13 +77,13 @@ export function ResetHurricaneDialog({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Modal title="Reset to peace" onClose={() => !pending && onClose()}>
+    <Modal title="Stop disaster" onClose={() => !pending && onClose()}>
       <div className="hx-form">
-        <p>This removes the demo's evacuation broadcast and its activity, and returns the dashboard to peace. Household profiles and shelters are kept.</p>
+        <p>This ends the hurricane, removes the demo's evacuation broadcast and its activity, and returns the dashboard to peace. Household profiles and shelters are kept.</p>
         {error && <p className="notice notice-error" role="alert">{error}</p>}
         <div className="hx-form-actions">
           <button type="button" className="btn" onClick={onClose} disabled={pending}>Cancel</button>
-          <button type="button" className="btn btn-primary" onClick={confirm} disabled={pending}>{pending ? 'Resetting…' : 'Reset to peace'}</button>
+          <button type="button" className="btn btn-primary" onClick={confirm} disabled={pending}>{pending ? 'Stopping…' : 'Stop disaster'}</button>
         </div>
       </div>
     </Modal>
