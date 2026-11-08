@@ -2,9 +2,8 @@
 // phone-width column; on a device it fills the screen.
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { SetupSheet } from '../components/resident/Household';
-import { HavenLogo } from '../components/resident/HavenLogo';
+import { Frame, TopBar } from '../components/resident/TopBar';
 import { Icon, type IconName } from '../components/resident/Icon';
 import { ConnectionBanner } from '../components/resident/Notices';
 import { HouseholdPane, MessagesPane, PlanPane, PreparePane, UpdatesPane } from '../components/resident/Panes';
@@ -13,7 +12,6 @@ import { Composer } from '../components/resident/Updates';
 import { type } from '../constants/theme';
 import { useResident } from '../resident/provider';
 import { STALE_AFTER_MINUTES } from '../resident/rules';
-import { clock, localMinute } from '../resident/time';
 import type { Household } from '../resident/types';
 
 type Tab = 'plan' | 'prepare' | 'updates' | 'messages' | 'household';
@@ -25,16 +23,6 @@ const TABS: { id: Tab; label: string; icon: IconName }[] = [
   { id: 'messages', label: 'Messages', icon: 'message-circle' },
   { id: 'household', label: 'Household', icon: 'users' },
 ];
-
-/** Phone-width column on the web; full screen on a device. */
-function Frame({ children }: { children: React.ReactNode }) {
-  const { c } = useDash();
-  return (
-    <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: c.surface }}>
-      <View style={{ flex: 1, width: '100%', maxWidth: 480, alignSelf: 'center', backgroundColor: c.cream }}>{children}</View>
-    </SafeAreaView>
-  );
-}
 
 export default function ResidentApp() {
   const ctx = useResident();
@@ -100,22 +88,6 @@ function Main() {
         ))}
       </View>
       <TabBar tab={tab} onTab={setTab} badges={badges} />
-    </View>
-  );
-}
-
-function TopBar({ online, synced }: { online: boolean; synced: number | null }) {
-  const { c } = useDash();
-  const time = synced ? `updated ${clock(localMinute(synced))}` : 'not updated yet';
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 10,
-      backgroundColor: c.surface, borderBottomWidth: 1, borderBottomColor: c.border }}>
-      <HavenLogo />
-      <Text style={{ flex: 1, fontFamily: type.semibold, fontSize: 17, lineHeight: 22, color: c.ink }}>Haven</Text>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }} accessible accessibilityLabel={online ? `Connected, ${time}` : 'Offline, showing saved information'}>
-        <Icon name={online ? 'wifi' : 'wifi-off'} size={14} color={online ? c.muted : c.amber} />
-        <Text style={{ fontFamily: type.monoRegular, fontSize: 12, color: online ? c.muted : c.amber, fontVariant: ['tabular-nums'] }}>{online ? time : 'offline'}</Text>
-      </View>
     </View>
   );
 }
