@@ -1,0 +1,40 @@
+[
+  {
+    "date": "2026-11-07",
+    "mode": "redesign",
+    "depth": "polish",
+    "scope": "app",
+    "theme": "existing Haven green and cream",
+    "shape": "app screen",
+    "entry": "frontend/src/app/(tabs)/index.tsx",
+    "prompt": "audit this design and strip out the slop",
+    "signature": "The household response plan with explicit assignment statuses, version changes, and sources",
+    "sections": ["Existing five-tab shell", "Dashboard", "Plan", "Assistance", "Updates", "Household", "Onboarding", "Request creation/details", "Situation reporting"],
+    "imagery": "None. The existing application is the material; no stock images or image slots were introduced.",
+    "waived": [{ "gate": "39b", "reason": "Two-line Quick actions list rows retain descriptions and generous touch targets. Single-line buttons are 44px." }],
+    "before": { "fail": 17, "reflex": 11, "warn": 1 },
+    "after": { "fail": 0, "reflex": 0, "warn": 0, "waived": 1, "rejected": 0 },
+    "kept": {
+      "links": "17/17",
+      "handlers": "48/48",
+      "formFields": "All actual inputs preserved. Hallmark's parser classified two removed decorative icons (heart and inbox) as fields; both are acknowledged in the CSS stamp.",
+      "headings": "Figurative onboarding heading replaced by Set up household, on record.",
+      "figures": "Dynamic last-refresh timestamp retained; the clock value changed between captures.",
+      "routes": "All routes and destinations retained.",
+      "logic": "No changes to services, API, synchronization, storage, models, or existing service tests."
+    },
+    "changed": ["Task-based headings", "No tracked uppercase labels or eyebrows", "No decorative status dots or icon coins", "Compact neutral panels with no shadows", "No nested colored plan-change box", "Centralized native colors and typography", "Stronger form edges", "Instant web keyboard-focus rings and hover/active/disabled states", "Mobile plan-summary wrapping"],
+    "copyRecords": [".hallmark/copy-changes.json", ".hallmark/manual-copy-changes.json"],
+    "verification": {
+      "typescript": "pass",
+      "serviceTests": "8 pass",
+      "exports": "web, Android, iOS pass",
+      "renderedHallmark": "16 source files, 2 URLs, 10 final screenshots, 0 FAIL, 0 WARN, 1 WAIVED",
+      "designSmoke": "18 screen/viewport combinations; assistance submission and report receipt pass; no runtime errors or horizontal heading/control overflow",
+      "finishReview": "subagent: ship; 0 open findings; gap: none",
+      "nativeDeviceVisualQA": "Not performed; native JavaScript bundles verified."
+    },
+    "compare": ".hallmark/compare.html",
+    "screens": ".hallmark/screens/"
+  }
+]

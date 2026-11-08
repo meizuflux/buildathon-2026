@@ -1,0 +1,457 @@
+[
+  {
+    "file": "frontend\\src\\app\\(onboarding)\\index.tsx",
+    "before": "/\\s+eyebrow=\"[^\"]*\"/g",
+    "after": ""
+  },
+  {
+    "file": "frontend\\src\\app\\(onboarding)\\index.tsx",
+    "before": "title={query.data ? 'Update your household.' : 'A place for your whole household.'}",
+    "after": "title={query.data ? 'Edit household' : 'Set up household'}"
+  },
+  {
+    "file": "frontend\\src\\app\\(onboarding)\\index.tsx",
+    "before": "A few details help your coordination team understand what you need.",
+    "after": "Add household members, support needs, resources, and location."
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\assistance.tsx",
+    "before": "/\\s+eyebrow=\"[^\"]*\"/g",
+    "after": ""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\assistance.tsx",
+    "before": "title=\"You can ask for help.\"",
+    "after": "title=\"Assistance\""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\assistance.tsx",
+    "before": "Tell us what would make a difference.",
+    "after": "Available support"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\assistance.tsx",
+    "before": "'#205D4E'",
+    "after": "c.green"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\assistance.tsx",
+    "before": "fontSize: 12",
+    "after": "fontSize: 13"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\assistance.tsx",
+    "before": "/ · /g",
+    "after": ", "
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "/\\s+eyebrow=\"[^\"]*\"/g",
+    "after": ""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "title=\"A little clarity. A way forward.\"",
+    "after": "title=\"Overview\""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "subtitle=\"Your family’s next steps, together in one place.\"",
+    "after": "subtitle=\"Current alerts, your plan, and assistance requests.\""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "Let’s make room for your household.",
+    "after": "Set up your household"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "Tell us who you’re caring for and what you need, so the coordination team can support you.",
+    "after": "Add household members, available resources, and support needs."
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "CURRENT DISASTER STATUS · {alert.disasterType.toUpperCase()}",
+    "after": "{alert.disasterType}"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "YOUR RESPONSE PLAN",
+    "after": "Response plan"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "VERSION {plan.data.version}",
+    "after": "Version {plan.data.version}"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "SHELTER ASSIGNMENT",
+    "after": "Shelter assignment"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "TRANSPORTATION",
+    "after": "Transportation"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "ONE STEP AT A TIME",
+    "after": "Quick actions"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "<Title>What do you need?</Title>{([",
+    "after": "<Title>Quick actions</Title>{(["
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "<Eyebrow>Quick actions</Eyebrow>",
+    "after": ""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "Tell us how we can support you",
+    "after": "Submit a support request"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "Keep your coordination team informed",
+    "after": "Send a situation report"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "The latest from your community",
+    "after": "Government and organization updates"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "From your community",
+    "after": "Recent updates"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "'#EAD9BA'",
+    "after": "c.amberBorder"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "'#F9E3BB'",
+    "after": "c.amberLight"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "'#D2E7D6'",
+    "after": "c.muted"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "'#FFFFFF'",
+    "after": "c.ink"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "\"#C7DFCC\"",
+    "after": "{c.muted}"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "fontSize: 11",
+    "after": "fontSize: 13"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "fontSize: 12",
+    "after": "fontSize: 13"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "fontSize: 27",
+    "after": "fontSize: 22"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "borderColor: c.green }}><View style={{ backgroundColor: c.green",
+    "after": "borderColor: c.border }}><View style={{ backgroundColor: c.white"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "<Eyebrow light>Response plan</Eyebrow>",
+    "after": "<Title>Response plan</Title>"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "<Eyebrow>",
+    "after": "<Metadata>"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "</Eyebrow>",
+    "after": "</Metadata>"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "Eyebrow,",
+    "after": "Metadata,"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\index.tsx",
+    "before": "/ · /g",
+    "after": ", "
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\plan.tsx",
+    "before": "/\\s+eyebrow=\"[^\"]*\"/g",
+    "after": ""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\plan.tsx",
+    "before": "title=\"Your next steps, made clearer.\"",
+    "after": "title=\"My plan\""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\plan.tsx",
+    "before": "subtitle=\"Arrangements and instructions provided by your coordination team.\"",
+    "after": "subtitle=\"Instructions and resource assignments from your coordination team.\""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\plan.tsx",
+    "before": "<Eyebrow>FROM OFFICIAL SOURCES</Eyebrow>",
+    "after": ""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\plan.tsx",
+    "before": "<Title>One step at a time</Title>",
+    "after": "<Title>Preparation checklist</Title>"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\plan.tsx",
+    "before": " · PLAN VERSION {plan.version}",
+    "after": ", version {plan.version}"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\plan.tsx",
+    "before": "<Eyebrow>",
+    "after": "<Metadata>"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\plan.tsx",
+    "before": "</Eyebrow>",
+    "after": "</Metadata>"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\plan.tsx",
+    "before": "Eyebrow,",
+    "after": "Metadata,"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\plan.tsx",
+    "before": ".join(' · ')",
+    "after": ".join(', ')"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\plan.tsx",
+    "before": "/ · /g",
+    "after": ", "
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\profile.tsx",
+    "before": "/\\s+eyebrow=\"[^\"]*\"/g",
+    "after": ""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\profile.tsx",
+    "before": "title=\"Your household.\"",
+    "after": "title=\"Household\""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\profile.tsx",
+    "before": "<Eyebrow>ESSENTIAL NEEDS</Eyebrow><Title small>Support that fits your family</Title>",
+    "after": "<Title small>Essential needs</Title>"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\profile.tsx",
+    "before": "<Eyebrow>YOUR RESOURCES</Eyebrow>",
+    "after": "<Title small>Available resources</Title>"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\profile.tsx",
+    "before": "<Eyebrow>YOUR LOCATION</Eyebrow>",
+    "after": "<Title small>Location</Title>"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\profile.tsx",
+    "before": "title=\"Let’s get to know your household\"",
+    "after": "title=\"No household profile\""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\profile.tsx",
+    "before": "<Eyebrow>DEVELOPMENT ONLY</Eyebrow><Title>Demo playground</Title>",
+    "after": "<Title>Demo controls</Title>"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\profile.tsx",
+    "before": "Demo event received. The shared app data has been refreshed.",
+    "after": "Demo data refreshed."
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\profile.tsx",
+    "before": "'#205D4E'",
+    "after": "c.green"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\profile.tsx",
+    "before": "Eyebrow,",
+    "after": "Metadata,"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\profile.tsx",
+    "before": ".join(' · ')",
+    "after": ".join(', ')"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\profile.tsx",
+    "before": "/ · /g",
+    "after": ", "
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\updates.tsx",
+    "before": "/\\s+eyebrow=\"[^\"]*\"/g",
+    "after": ""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\updates.tsx",
+    "before": "title=\"A connected community.\"",
+    "after": "title=\"Updates\""
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\updates.tsx",
+    "before": "{update.category.toUpperCase()} · {update.source.kind.toUpperCase()}",
+    "after": "{label(update.category)}"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\updates.tsx",
+    "before": "<Eyebrow>",
+    "after": "<Metadata>"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\updates.tsx",
+    "before": "</Eyebrow>",
+    "after": "</Metadata>"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\updates.tsx",
+    "before": "Eyebrow,",
+    "after": "Metadata,"
+  },
+  {
+    "file": "frontend\\src\\app\\(tabs)\\_layout.tsx",
+    "before": "fontSize: 12",
+    "after": "fontSize: 13"
+  },
+  {
+    "file": "frontend\\src\\app\\assistance\\new.tsx",
+    "before": "/\\s+eyebrow=\"[^\"]*\"/g",
+    "after": ""
+  },
+  {
+    "file": "frontend\\src\\app\\assistance\\new.tsx",
+    "before": "title=\"Request assistance.\"",
+    "after": "title=\"Request assistance\""
+  },
+  {
+    "file": "frontend\\src\\app\\assistance\\new.tsx",
+    "before": ".join(' · ')",
+    "after": ".join(', ')"
+  },
+  {
+    "file": "frontend\\src\\app\\assistance\\[id].tsx",
+    "before": "/\\s+eyebrow=\"[^\"]*\"/g",
+    "after": ""
+  },
+  {
+    "file": "frontend\\src\\app\\assistance\\[id].tsx",
+    "before": "'#DFE5DB'",
+    "after": "c.border"
+  },
+  {
+    "file": "frontend\\src\\app\\assistance\\[id].tsx",
+    "before": ".join(' · ')",
+    "after": ".join(', ')"
+  },
+  {
+    "file": "frontend\\src\\app\\assistance\\[id].tsx",
+    "before": "/ · /g",
+    "after": ", "
+  },
+  {
+    "file": "frontend\\src\\app\\reports\\index.tsx",
+    "before": "/\\s+eyebrow=\"[^\"]*\"/g",
+    "after": ""
+  },
+  {
+    "file": "frontend\\src\\app\\reports\\index.tsx",
+    "before": "title=\"How are you doing?\"",
+    "after": "title=\"Report your situation\""
+  },
+  {
+    "file": "frontend\\src\\app\\reports\\index.tsx",
+    "before": "/ · /g",
+    "after": ", "
+  },
+  {
+    "file": "frontend\\src\\components\\common\\ui.tsx",
+    "before": "function Eyebrow(",
+    "after": "function Metadata("
+  },
+  {
+    "file": "frontend\\src\\components\\household\\HouseholdWizard.tsx",
+    "before": "STEP {step + 1} OF 5",
+    "after": "Step {step + 1} of 5"
+  },
+  {
+    "file": "frontend\\src\\components\\household\\HouseholdWizard.tsx",
+    "before": "<Eyebrow>",
+    "after": "<Metadata>"
+  },
+  {
+    "file": "frontend\\src\\components\\household\\HouseholdWizard.tsx",
+    "before": "</Eyebrow>",
+    "after": "</Metadata>"
+  },
+  {
+    "file": "frontend\\src\\components\\household\\HouseholdWizard.tsx",
+    "before": ", Eyebrow",
+    "after": ", Metadata"
+  },
+  {
+    "file": "frontend\\src\\components\\household\\HouseholdWizard.tsx",
+    "before": ".join(' · ')",
+    "after": ".join(', ')"
+  },
+  {
+    "file": "frontend\\src\\components\\household\\HouseholdWizard.tsx",
+    "before": "/ · /g",
+    "after": ", "
+  },
+  {
+    "file": "frontend\\src\\components\\plans\\AssignmentCard.tsx",
+    "before": "<Eyebrow>",
+    "after": "<Metadata>"
+  },
+  {
+    "file": "frontend\\src\\components\\plans\\AssignmentCard.tsx",
+    "before": "</Eyebrow>",
+    "after": "</Metadata>"
+  },
+  {
+    "file": "frontend\\src\\components\\plans\\AssignmentCard.tsx",
+    "before": "Eyebrow,",
+    "after": "Metadata,"
+  },
+  {
+    "file": "frontend\\src\\components\\plans\\AssignmentCard.tsx",
+    "before": "/ · /g",
+    "after": ", "
+  }
+]
