@@ -24,10 +24,10 @@ export default function Layout() {
   const nav: NavGroup[] = [
     { items: [
       { to: '/', label: 'Command center', icon: LayoutDashboard, end: true },
-      { to: '/evacuation-preview', label: 'Evacuation preview', icon: Route },
       { to: '/alerts', label: 'Alerts', icon: Bell, count: phase === 'active' ? d.alerts?.total : 0 },
       { to: '/map', label: 'Operations map', icon: Map },
       { to: '/families', label: 'Families', icon: Users },
+      { to: '/evacuation-preview', label: 'Evacuation preview', icon: Route },
     ] },
     { group: 'Communications', items: [
       { to: '/comms/broadcasts', label: 'Broadcasts', icon: Megaphone },
