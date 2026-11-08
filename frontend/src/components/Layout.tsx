@@ -1,105 +1,90 @@
-import { NavLink, Outlet } from 'react-router-dom'
-import { Bell, FileText, LayoutDashboard, Map, Megaphone, PackageSearch, RefreshCw, Truck, Users, Warehouse, type LucideIcon } from 'lucide-react'
+import { Link, NavLink, Outlet } from 'react-router-dom'
+import {
+  Bell, ChevronDown, FileText, LayoutDashboard, LogOut, Map, Megaphone, PackageSearch, RefreshCw, Send, Truck, Users, Warehouse,
+  type LucideIcon,
+} from 'lucide-react'
 import { useAuth } from '../auth'
 import { useData } from '../data'
 import { DISASTER_TYPES } from '../lib/constants'
-import { timeAgo } from '../lib/format'
+import { cap, timeAgo } from '../lib/format'
 
-type NavItem = {
-  to: string
-  label: string
-  icon: LucideIcon
-  end?: boolean
-  badge?: number
-  tone?: string
-  wip?: boolean
-}
-
-type NavGroup = {
-  section: string | null
-  items: NavItem[]
-}
+type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean; count?: number; preview?: boolean }
+type NavGroup = { group?: string; items: NavItem[] }
 
 export default function Layout() {
   const { user, logout } = useAuth()
   const d = useData()
-
   const helpOpen = d.reports.filter((r) => r.type === 'need_help' && r.status === 'received').length
-
   const nav: NavGroup[] = [
-    { section: null, items: [
-      { to: '/', label: 'Command Center', icon: LayoutDashboard, end: true },
-      { to: '/alerts', label: 'Alerts', icon: Bell, badge: d.alerts?.total, tone: 'alert' },
-      { to: '/map', label: 'Operations Map', icon: Map },
+    { items: [
+      { to: '/', label: 'Command center', icon: LayoutDashboard, end: true },
+      { to: '/alerts', label: 'Alerts', icon: Bell, count: d.alerts?.total },
+      { to: '/map', label: 'Operations map', icon: Map },
       { to: '/families', label: 'Families', icon: Users },
     ] },
-    { section: 'Communications', items: [
+    { group: 'Communications', items: [
       { to: '/comms/broadcasts', label: 'Broadcasts', icon: Megaphone },
-      { to: '/comms/reports', label: 'Family reports', icon: FileText, badge: helpOpen, tone: 'alert' },
+      { to: '/comms/reports', label: 'Family reports', icon: FileText, count: helpOpen },
     ] },
-    { section: 'Logistics', items: [
-      { to: '/logistics/needs', label: 'Needs', icon: PackageSearch, wip: true },
-      { to: '/logistics/dispatch', label: 'Dispatch', icon: Truck, wip: true },
-      { to: '/logistics/inventory', label: 'Inventory', icon: Warehouse, wip: true },
+    { group: 'Logistics', items: [
+      { to: '/logistics/needs', label: 'Needs', icon: PackageSearch, preview: true },
+      { to: '/logistics/dispatch', label: 'Dispatch', icon: Truck, preview: true },
+      { to: '/logistics/inventory', label: 'Inventory', icon: Warehouse, preview: true },
     ] },
   ]
-
   const errs = Object.entries(d.errors).filter(([, v]) => v)
+  const role = user?.role ?? 'operator'
 
   return (
-    <div className="shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true" />
-          <span>Haven <span className="brand-sub">Operations</span></span>
-        </div>
-        <nav aria-label="Main">
+    <div className="hx">
+      <aside className="hx-rail">
+        <Link to="/" className="hx-brand" style={{ color: 'inherit' }}>
+          <img src="/haven-mark.svg" alt="" />
+          <div><b>Haven</b><span>Operations</span></div>
+        </Link>
+        <nav className="hx-nav" aria-label="Main">
           {nav.map((g, i) => (
-            <div key={i} className="nav-group">
-              {g.section && <div className="nav-section">{g.section}</div>}
-              {g.items.map(({ to, label, icon: Icon, end, badge = 0, tone, wip }) => (
-                <NavLink key={to} to={to} end={end} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <div key={i} style={{ display: 'contents' }}>
+              {g.group && <div className="hx-nav-group">{g.group}</div>}
+              {g.items.map(({ to, label, icon: Icon, end, count = 0, preview }) => (
+                <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive ? 'active' : '')}>
                   <Icon size={17} aria-hidden="true" />
-                  <span>{label}</span>
-                  {wip && <span className="nav-wip" title="Work in progress">WIP</span>}
-                  {badge > 0 && <span className={`nav-badge tone-${tone}`}>{badge}</span>}
+                  <span className="label">{label}</span>
+                  {preview && <span className="preview">Preview</span>}
+                  {count > 0 && <span className="count" aria-label={`${count} open`}>{count}</span>}
                 </NavLink>
               ))}
             </div>
           ))}
         </nav>
-        <div className="sidebar-foot">
-          <div className="muted small">Signed in as <strong className="cap">{user?.role}</strong></div>
-          <button className="btn btn-sm btn-block" onClick={logout}>Sign out</button>
+        <div className="hx-rail-foot">
+          <div className="who">
+            <span className="avatar" aria-hidden="true">{role.slice(0, 2).toUpperCase()}</span>
+            <div><b>{cap(role)}</b>Signed in</div>
+          </div>
+          <button className="btn btn-sm btn-block" onClick={logout}><LogOut size={13} /> Sign out</button>
         </div>
       </aside>
 
-      <div className="main">
-        <header className="topbar">
-          <div className="disaster-pick">
-            <label htmlFor="disaster" className="sr-only">Disaster</label>
-            <select id="disaster" value={d.disasterId || ''} onChange={(e) => d.setDisasterId(e.target.value)}>
-              {d.disasters.map((x) => <option key={x.id} value={x.id}>{x.name} — {x.affected_area}</option>)}
+      <div className="hx-main">
+        <header className="hx-top">
+          <div className="hx-incident">
+            <label htmlFor="hx-disaster" className="sr-only">Disaster</label>
+            <select id="hx-disaster" value={d.disasterId || ''} onChange={(e) => d.setDisasterId(e.target.value)}>
+              {d.disasters.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
             </select>
-            {d.disaster && <span className="badge dtype">{DISASTER_TYPES[d.disaster.type] || d.disaster.type}</span>}
-            {d.disaster?.status === 'active' && <span className="live-dot" title="Active incident">Active</span>}
+            <ChevronDown size={16} />
           </div>
-          <div className="topbar-right">
-            <button className="sync" onClick={d.refresh} title="Refresh now">
-              <RefreshCw size={13} aria-hidden="true" /> Synced {d.lastSync ? timeAgo(d.lastSync) : '…'}
-            </button>
-          </div>
+          {d.disaster && <span className="badge t-muted">{DISASTER_TYPES[d.disaster.type] || d.disaster.type}</span>}
+          {d.disaster?.status === 'active' && <span className="hx-live">Active</span>}
+          <span className="spacer" />
+          <button className="hx-sync" onClick={() => d.refresh()} title="Refresh now"><RefreshCw size={13} /> Synced {d.lastSync ? timeAgo(d.lastSync) : '…'}</button>
+          <Link className="btn btn-primary" to="/comms/broadcasts"><Send size={14} /> Send broadcast</Link>
         </header>
-
-        {errs.length > 0 && (
-          <div className="error-bar" role="alert">
-            {errs.map(([k, v]) => <div key={k}><strong>{k}:</strong> {v}</div>)}
-          </div>
-        )}
-
-        <main className="content">
-          <Outlet />
-        </main>
+        {errs.length > 0 ? (
+          <div className="hx-errors" role="alert">{errs.map(([k, v]) => <div key={k}><strong>{k}:</strong> {v}</div>)}</div>
+        ) : <div />}
+        <main className="hx-content"><Outlet /></main>
       </div>
     </div>
   )
