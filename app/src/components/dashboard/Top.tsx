@@ -1,0 +1,99 @@
+// Header, connection status, and the official instruction band.
+import React, { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import { type } from '../../constants/theme';
+import { clock } from '../../demo/time';
+import type { OfficialInstruction } from '../../demo/types';
+import { Icon } from '../common/ui';
+import { Mono, useDash } from './parts';
+
+export function Header({ household, online, now, onHousehold, onPresenter, presenterOpen }: {
+  household: string; online: boolean; now: number; onHousehold: () => void; onPresenter: () => void; presenterOpen: boolean;
+}) {
+  const { c, s } = useDash();
+  return (
+    <View style={{ gap: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <View accessibilityElementsHidden aria-hidden style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: c.green, alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="home" size={15} color={c.onPrimary} />
+          </View>
+          <Text style={{ fontFamily: type.semibold, fontSize: 17, color: c.ink }}>Haven</Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <DemoLabel now={now} onPress={onPresenter} open={presenterOpen} />
+          <Pressable accessibilityRole="button" accessibilityLabel={`Household: ${household}. Edit household needs`} onPress={onHousehold}
+            style={({ pressed }) => [{ minHeight: 44, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface, flexDirection: 'row', alignItems: 'center', gap: 8 }, pressed && { opacity: 0.7 }]}>
+            <Icon name="users" size={17} color={c.green} />
+            <Text style={{ fontFamily: type.medium, fontSize: 15, color: c.ink }}>{household}</Text>
+          </Pressable>
+        </View>
+      </View>
+      <View style={{ gap: 4 }}>
+        <Text accessibilityRole="header" aria-level={1} style={s.h1}>Your household plan</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Icon name={online ? 'wifi' : 'wifi-off'} size={15} color={online ? c.muted : c.amber} />
+          <Text style={[s.secondary, !online && { color: c.amber }]}>{online ? 'Connected' : 'Offline: showing saved information'}</Text>
+          <Mono>· {clock(now)}</Mono>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+/** Persistent label that this is a demo with simulated conditions. Also opens presenter controls. */
+export function DemoLabel({ now, onPress, open }: { now: number; onPress: () => void; open: boolean }) {
+  const { c } = useDash();
+  return (
+    <Pressable accessibilityRole="button" aria-expanded={open} accessibilityLabel={`Demo, simulated conditions. Simulation time ${clock(now)}. ${open ? 'Hide' : 'Show'} presenter controls`}
+      onPress={onPress}
+      style={({ pressed }) => [{ minHeight: 44, paddingHorizontal: 12, borderRadius: 10, backgroundColor: c.presenter, flexDirection: 'row', alignItems: 'center', gap: 8 }, pressed && { opacity: 0.8 }]}>
+      <Icon name="sliders" size={15} color={c.presenterText} />
+      <Text style={{ fontFamily: type.medium, fontSize: 14, color: c.presenterText }}>Demo — simulated conditions</Text>
+    </Pressable>
+  );
+}
+
+export function ConnectionBanner({ online, savedAt, stale, staleSince }: { online: boolean; savedAt: number; stale: boolean; staleSince: number | null }) {
+  const { c, s } = useDash();
+  if (online && !stale) return null;
+  return (
+    <View accessibilityRole="alert" style={{ flexDirection: 'row', gap: 12, padding: 16, borderRadius: 12, backgroundColor: c.amberLight, borderLeftWidth: 4, borderLeftColor: c.amber }}>
+      <Icon name={online ? 'clock' : 'wifi-off'} size={18} color={c.amber} />
+      <View style={{ flex: 1, gap: 4 }}>
+        <Text style={[s.strong]}>{online ? 'Some information may be out of date' : 'You are offline'}</Text>
+        <Text style={s.noticeBody}>
+          {online
+            ? 'Shelter availability has not been updated recently. Check again before you leave.'
+            : 'This page shows information saved before you lost connection. Current conditions may be different.'}
+        </Text>
+        <Mono>{online ? `Last shelter update ${clock(staleSince ?? savedAt)}` : `Saved ${clock(savedAt)}`}</Mono>
+      </View>
+    </View>
+  );
+}
+
+/** Official instruction: issued by an authority, shown above and apart from the app's recommendation. */
+export function OfficialInstructionBand({ instruction }: { instruction: OfficialInstruction }) {
+  const { c, s } = useDash();
+  const [open, setOpen] = useState(false);
+  const critical = instruction.level === 'mandatory';
+  const tone = critical ? c.red : c.amber;
+  return (
+    <View accessibilityRole="summary" style={{ borderRadius: 12, borderWidth: 1, borderColor: tone, backgroundColor: critical ? c.redLight : c.amberLight, padding: 16, gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Icon name="alert-octagon" size={18} color={tone} />
+        <Text style={{ fontFamily: type.semibold, fontSize: 14, color: tone }}>Official instruction · {critical ? 'Mandatory' : 'Advisory'}</Text>
+      </View>
+      <Text style={{ fontFamily: type.semibold, fontSize: 19, lineHeight: 27, color: c.ink }}>{instruction.headline}</Text>
+      <Text style={s.secondary}>Issued by {instruction.authority}</Text>
+      <Mono>Issued {clock(instruction.issuedAt)} · Ref {instruction.id}</Mono>
+      {open && <Text style={s.instruction}>{instruction.details}</Text>}
+      <Pressable accessibilityRole="button" aria-expanded={open} onPress={() => setOpen(!open)}
+        style={({ pressed }) => [{ minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' }, pressed && { opacity: 0.7 }]}>
+        <Text style={{ fontFamily: type.medium, fontSize: 15, color: c.ink, textDecorationLine: 'underline' }}>{open ? 'Hide details' : 'Read full instruction'}</Text>
+        <Icon name={open ? 'chevron-up' : 'chevron-down'} size={16} color={c.ink} />
+      </Pressable>
+    </View>
+  );
+}

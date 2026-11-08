@@ -56,7 +56,8 @@ export type Action =
   | { type: 'messageQueued'; id: string; body: string }
   | { type: 'messageResult'; id: string }
   | { type: 'coordinatorReply' }
-  | { type: 'reset' };
+  | { type: 'reset' }
+  | { type: 'restore'; state: DemoState };
 
 export function initialState(): DemoState {
   const household = structuredClone(scenario.household);
@@ -203,5 +204,10 @@ export function reducer(state: DemoState, action: Action): DemoState {
     }
     case 'reset':
       return initialState();
+    case 'restore':
+      // Saved demo state from a previous page load. Messages caught mid-send are shown as failed.
+      return action.state.version === STATE_VERSION
+        ? { ...action.state, messages: action.state.messages.map((m) => (m.state === 'sending' ? { ...m, state: 'failed' } : m)) }
+        : state;
   }
 }

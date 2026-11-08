@@ -3,6 +3,7 @@ import { useFonts } from 'expo-font';
 import { IBMPlexSans_400Regular } from '@expo-google-fonts/ibm-plex-sans/400Regular';
 import { IBMPlexSans_500Medium } from '@expo-google-fonts/ibm-plex-sans/500Medium';
 import { IBMPlexSans_600SemiBold } from '@expo-google-fonts/ibm-plex-sans/600SemiBold';
+import { IBMPlexMono_400Regular } from '@expo-google-fonts/ibm-plex-mono/400Regular';
 import { IBMPlexMono_500Medium } from '@expo-google-fonts/ibm-plex-mono/500Medium';
 import { ActivityIndicator, View, Text } from 'react-native';
 import '../styles/web.css';
@@ -20,7 +21,7 @@ const client = new QueryClient({ defaultOptions: { queries: { staleTime: 30000, 
 export default function RootLayout() { return <ThemeProvider><Application /></ThemeProvider>; }
 function Application() {
   const { palette: colors, dark } = useTheme();
-  const [loaded, error] = useFonts({ IBMPlexSans_400Regular, IBMPlexSans_500Medium, IBMPlexSans_600SemiBold, IBMPlexMono_500Medium });
+  const [loaded, error] = useFonts({ IBMPlexSans_400Regular, IBMPlexSans_500Medium, IBMPlexSans_600SemiBold, IBMPlexMono_400Regular, IBMPlexMono_500Medium });
   if (!loaded) return <View style={{ flex: 1, backgroundColor: colors.cream, alignItems: 'center', justifyContent: 'center', gap: 16 }}>{error ? <Text>Unable to load fonts. Please restart Haven.</Text> : <ActivityIndicator color={colors.green} />}</View>;
   return <SafeAreaProvider><QueryClientProvider client={client}><AuthProvider><SessionApp /></AuthProvider></QueryClientProvider></SafeAreaProvider>; }
 function SessionApp() {
