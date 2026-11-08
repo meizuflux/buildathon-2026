@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ScrollView, Text, TextInput, View } from 'react-native';
 import { type } from '../../constants/theme';
 import { useAuth } from '../../hooks/useAuth';
-import { Icon } from './Icon';
+import { HavenLogo } from './HavenLogo';
 import { Action, InlineNotice, LinkButton, useDash } from './parts';
 
 export function SignIn() {
@@ -28,9 +28,7 @@ export function SignIn() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: c.cream }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24, gap: 24, width: '100%', maxWidth: 480, alignSelf: 'center' }} keyboardShouldPersistTaps="handled">
       <View style={{ alignItems: 'center', gap: 12 }}>
-        <View style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: c.green, alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="home" size={28} color={c.onPrimary} />
-        </View>
+        <HavenLogo size={56} />
         <Text accessibilityRole="header" aria-level={1} style={{ fontFamily: type.semibold, fontSize: 30, lineHeight: 36, color: c.ink }}>Haven</Text>
         <Text style={[s.secondary, { textAlign: 'center' }]}>Your household’s shelter plan, updates and coordination desk.</Text>
       </View>
