@@ -135,7 +135,7 @@ def test_geography_has_distinct_hubs_and_stable_merge_targets():
     merged = {old for s in sites for old in s["replaces"]}
     assert len(ids) == 9
     assert not ids.intersection(merged)
-    assert {"demo_shelter_02", "demo_shelter_03", "demo_shelter_07"} <= merged
+    assert {"shelter_02", "shelter_03", "shelter_07"} <= merged
     snapshots = [
         {"location": {"latitude": s["latitude"], "longitude": s["longitude"]}} for s in sites
     ]
@@ -176,7 +176,7 @@ def test_shelter_refresh_merges_legacy_sites_without_recreating_households(tmp_p
         db.execute(
             "INSERT INTO shelters VALUES (?,?,?,?,?,?,?,?,?,?,?)",
             (
-                "demo_shelter_03",
+                "shelter_03",
                 DEMO_DISASTER_ID,
                 "Legacy adjacent site",
                 "Address",
@@ -191,7 +191,7 @@ def test_shelter_refresh_merges_legacy_sites_without_recreating_households(tmp_p
         )
         db.execute(
             "INSERT INTO current_assignments VALUES (?,?,?,?,?)",
-            ("f", DEMO_DISASTER_ID, "demo_shelter_03", 2, "now"),
+            ("f", DEMO_DISASTER_ID, "shelter_03", 2, "now"),
         )
         db.execute(
             "INSERT INTO reports VALUES ('r','f','other','preserve me',NULL,NULL,'key','new','now')"
@@ -209,7 +209,7 @@ def test_shelter_refresh_merges_legacy_sites_without_recreating_households(tmp_p
     with sqlite3.connect(database) as db:
         assert db.execute("SELECT COUNT(*) FROM shelters").fetchone()[0] == 9
         assert (
-            db.execute("SELECT COUNT(*) FROM shelters WHERE id='demo_shelter_03'").fetchone()[0]
+            db.execute("SELECT COUNT(*) FROM shelters WHERE id='shelter_03'").fetchone()[0]
             == 0
         )
         assert (

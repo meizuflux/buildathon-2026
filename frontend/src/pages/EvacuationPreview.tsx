@@ -93,7 +93,7 @@ export default function EvacuationPreview() {
     const totals = new Map(preview[algo].shelters.map((s) => [s.shelter_id, s.total_people]))
     return shelterKey.split('\n').map((line) => {
       const [id, name, lat, lng] = line.split('|')
-      return { id, name: name.replace(/^Demo — /, ''), lat: Number(lat), lng: Number(lng), total: totals.get(id) ?? 0 }
+      return { id, name, lat: Number(lat), lng: Number(lng), total: totals.get(id) ?? 0 }
     })
   }, [preview, algo, shelterKey])
 

@@ -7020,7 +7020,7 @@
   ],
   "shelters": [
     {
-      "id": "demo_shelter_01",
+      "id": "shelter_01",
       "name": "Palmetto Ridge / Corkscrew School Hub",
       "address": "1655 Victory LN, Naples, FL 34120",
       "latitude": 26.2946508,
@@ -7036,15 +7036,15 @@
         "Corkscrew Elementary School"
       ],
       "replaces": [
-        "demo_shelter_02",
-        "demo_shelter_07"
+        "shelter_02",
+        "shelter_07"
       ],
       "sources": [
         "https://www.collierschools.com/schools"
       ]
     },
     {
-      "id": "demo_shelter_04",
+      "id": "shelter_04",
       "name": "Cypress Palm / Sabal Palm School Hub",
       "address": "4255 18th AVE NE, Naples, FL 34120",
       "latitude": 26.26544086,
@@ -7059,14 +7059,14 @@
         "Sabal Palm Elementary School"
       ],
       "replaces": [
-        "demo_shelter_03"
+        "shelter_03"
       ],
       "sources": [
         "https://www.collierschools.com/schools"
       ]
     },
     {
-      "id": "demo_shelter_05",
+      "id": "shelter_05",
       "name": "Big Cypress / Max Hasse Community Hub",
       "address": "3250 Golden Gate BLVD W, Naples, FL 34120",
       "latitude": 26.22708765,
@@ -7086,7 +7086,7 @@
       ]
     },
     {
-      "id": "demo_shelter_06",
+      "id": "shelter_06",
       "name": "Estates Elementary School",
       "address": "5945 Everglades BLVD N, Naples, FL 34120",
       "latitude": 26.34055866,
@@ -7103,7 +7103,7 @@
       ]
     },
     {
-      "id": "demo_shelter_08",
+      "id": "shelter_08",
       "name": "Big Corkscrew Island Regional Park",
       "address": "810 39th AVE NE, Naples, FL 34120",
       "latitude": 26.30460817,
@@ -7126,7 +7126,7 @@
       ]
     },
     {
-      "id": "demo_shelter_09",
+      "id": "shelter_09",
       "name": "Estates Branch Library",
       "address": "1266 Golden Gate BLVD W, Naples, FL 34120",
       "latitude": 26.22883162,
@@ -7143,7 +7143,7 @@
       ]
     },
     {
-      "id": "demo_shelter_10",
+      "id": "shelter_10",
       "name": "Palmetto Elementary School",
       "address": "3000 10th AVE SE, Naples, FL 34117",
       "latitude": 26.21009519,
@@ -7160,7 +7160,7 @@
       ]
     },
     {
-      "id": "demo_shelter_11",
+      "id": "shelter_11",
       "name": "Bear Creek Elementary School",
       "address": "2400 Cub CT, Naples, FL 34120",
       "latitude": 26.27311388,
@@ -7177,7 +7177,7 @@
       ]
     },
     {
-      "id": "demo_shelter_12",
+      "id": "shelter_12",
       "name": "Greater Naples Fire Rescue Station 74",
       "address": "99 Desoto BLVD S, Naples, FL 34117",
       "latitude": 26.22987791,

@@ -111,7 +111,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge High School",
             "status": "open",
             "people": 745,
@@ -122,7 +122,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_02",
+            "id": "shelter_02",
             "name": "Demo \u2014 Corkscrew Middle School",
             "status": "open",
             "people": 423,
@@ -133,7 +133,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_03",
+            "id": "shelter_03",
             "name": "Demo \u2014 Cypress Palm Middle School",
             "status": "open",
             "people": 600,
@@ -144,7 +144,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Sabal Palm Elementary School",
             "status": "open",
             "people": 0,
@@ -155,7 +155,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress Elementary School",
             "status": "open",
             "people": 500,
@@ -166,7 +166,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 79,
@@ -177,7 +177,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_07",
+            "id": "shelter_07",
             "name": "Demo \u2014 Corkscrew Elementary School",
             "status": "open",
             "people": 400,
@@ -332,7 +332,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 879,
@@ -343,7 +343,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 620,
@@ -354,7 +354,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 498,
@@ -365,7 +365,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 0,
@@ -376,7 +376,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 0,
@@ -387,7 +387,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 250,
@@ -398,7 +398,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 500,
@@ -409,7 +409,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 0,
@@ -420,7 +420,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 0,
@@ -576,7 +576,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 987,
@@ -587,7 +587,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 698,
@@ -598,7 +598,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 425,
@@ -609,7 +609,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 0,
@@ -620,7 +620,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 0,
@@ -631,7 +631,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 212,
@@ -642,7 +642,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 425,
@@ -653,7 +653,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 0,
@@ -664,7 +664,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 0,
@@ -829,7 +829,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 896,
@@ -840,7 +840,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 601,
@@ -851,7 +851,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 500,
@@ -862,7 +862,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 0,
@@ -873,7 +873,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 0,
@@ -884,7 +884,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 250,
@@ -895,7 +895,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 500,
@@ -906,7 +906,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 0,
@@ -917,7 +917,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 0,
@@ -1073,7 +1073,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 1023,
@@ -1084,7 +1084,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 662,
@@ -1095,7 +1095,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 425,
@@ -1106,7 +1106,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 0,
@@ -1117,7 +1117,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 0,
@@ -1128,7 +1128,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 212,
@@ -1139,7 +1139,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 425,
@@ -1150,7 +1150,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 0,
@@ -1161,7 +1161,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 0,
@@ -1326,7 +1326,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 904,
@@ -1337,7 +1337,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 657,
@@ -1348,7 +1348,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 500,
@@ -1359,7 +1359,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 0,
@@ -1370,7 +1370,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 0,
@@ -1381,7 +1381,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 250,
@@ -1392,7 +1392,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 500,
@@ -1403,7 +1403,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 0,
@@ -1414,7 +1414,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 0,
@@ -1570,7 +1570,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 1028,
@@ -1581,7 +1581,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 721,
@@ -1592,7 +1592,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 425,
@@ -1603,7 +1603,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 0,
@@ -1614,7 +1614,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 0,
@@ -1625,7 +1625,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 212,
@@ -1636,7 +1636,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 425,
@@ -1647,7 +1647,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 0,
@@ -1658,7 +1658,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 0,
@@ -1823,7 +1823,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 810,
@@ -1834,7 +1834,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 540,
@@ -1845,7 +1845,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 250,
@@ -1856,7 +1856,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 225,
@@ -1867,7 +1867,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 225,
@@ -1878,7 +1878,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 125,
@@ -1889,7 +1889,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 234,
@@ -1900,7 +1900,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 225,
@@ -1911,7 +1911,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 113,
@@ -2076,7 +2076,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 825,
@@ -2087,7 +2087,7 @@
             "budget_overflow": 105
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 550,
@@ -2098,7 +2098,7 @@
             "budget_overflow": 70
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 229,
@@ -2109,7 +2109,7 @@
             "budget_overflow": 29
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 229,
@@ -2120,7 +2120,7 @@
             "budget_overflow": 29
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 229,
@@ -2131,7 +2131,7 @@
             "budget_overflow": 29
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 114,
@@ -2142,7 +2142,7 @@
             "budget_overflow": 14
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 229,
@@ -2153,7 +2153,7 @@
             "budget_overflow": 29
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 229,
@@ -2164,7 +2164,7 @@
             "budget_overflow": 29
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 113,
@@ -2324,7 +2324,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 810,
@@ -2335,7 +2335,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 540,
@@ -2346,7 +2346,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 250,
@@ -2357,7 +2357,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 225,
@@ -2368,7 +2368,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 225,
@@ -2379,7 +2379,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 125,
@@ -2390,7 +2390,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 234,
@@ -2401,7 +2401,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 225,
@@ -2412,7 +2412,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 113,
@@ -2576,7 +2576,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "closed",
             "people": 0,
@@ -2587,7 +2587,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 780,
@@ -2598,7 +2598,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 330,
@@ -2609,7 +2609,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 325,
@@ -2620,7 +2620,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 325,
@@ -2631,7 +2631,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 174,
@@ -2642,7 +2642,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 325,
@@ -2653,7 +2653,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 325,
@@ -2664,7 +2664,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 163,
@@ -2828,7 +2828,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "closed",
             "people": 0,
@@ -2839,7 +2839,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "closed",
             "people": 0,
@@ -2850,7 +2850,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "closed",
             "people": 0,
@@ -2861,7 +2861,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "closed",
             "people": 0,
@@ -2872,7 +2872,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "closed",
             "people": 0,
@@ -2883,7 +2883,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "closed",
             "people": 0,
@@ -2894,7 +2894,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "closed",
             "people": 0,
@@ -2905,7 +2905,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "closed",
             "people": 0,
@@ -2916,7 +2916,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "closed",
             "people": 0,
@@ -3005,7 +3005,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 810,
@@ -3016,7 +3016,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 540,
@@ -3027,7 +3027,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 250,
@@ -3038,7 +3038,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 225,
@@ -3049,7 +3049,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 225,
@@ -3060,7 +3060,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 125,
@@ -3071,7 +3071,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 234,
@@ -3082,7 +3082,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 225,
@@ -3093,7 +3093,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 113,
@@ -3258,7 +3258,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 825,
@@ -3269,7 +3269,7 @@
             "budget_overflow": 105
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 550,
@@ -3280,7 +3280,7 @@
             "budget_overflow": 70
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 229,
@@ -3291,7 +3291,7 @@
             "budget_overflow": 29
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 228,
@@ -3302,7 +3302,7 @@
             "budget_overflow": 28
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 229,
@@ -3313,7 +3313,7 @@
             "budget_overflow": 29
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 114,
@@ -3324,7 +3324,7 @@
             "budget_overflow": 14
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 229,
@@ -3335,7 +3335,7 @@
             "budget_overflow": 29
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 229,
@@ -3346,7 +3346,7 @@
             "budget_overflow": 29
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 114,
@@ -3506,7 +3506,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 810,
@@ -3517,7 +3517,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 540,
@@ -3528,7 +3528,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 250,
@@ -3539,7 +3539,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 225,
@@ -3550,7 +3550,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 225,
@@ -3561,7 +3561,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 125,
@@ -3572,7 +3572,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 234,
@@ -3583,7 +3583,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 225,
@@ -3594,7 +3594,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 113,
@@ -3758,7 +3758,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "closed",
             "people": 0,
@@ -3769,7 +3769,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 780,
@@ -3780,7 +3780,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 340,
@@ -3791,7 +3791,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 325,
@@ -3802,7 +3802,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 325,
@@ -3813,7 +3813,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 164,
@@ -3824,7 +3824,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 325,
@@ -3835,7 +3835,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 325,
@@ -3846,7 +3846,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 163,
@@ -4010,7 +4010,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "closed",
             "people": 0,
@@ -4021,7 +4021,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "closed",
             "people": 0,
@@ -4032,7 +4032,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "closed",
             "people": 0,
@@ -4043,7 +4043,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "closed",
             "people": 0,
@@ -4054,7 +4054,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "closed",
             "people": 0,
@@ -4065,7 +4065,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "closed",
             "people": 0,
@@ -4076,7 +4076,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "closed",
             "people": 0,
@@ -4087,7 +4087,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "closed",
             "people": 0,
@@ -4098,7 +4098,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "closed",
             "people": 0,
@@ -4187,7 +4187,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 810,
@@ -4198,7 +4198,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 588,
@@ -4209,7 +4209,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 250,
@@ -4220,7 +4220,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 225,
@@ -4231,7 +4231,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 225,
@@ -4242,7 +4242,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 125,
@@ -4253,7 +4253,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 250,
@@ -4264,7 +4264,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 225,
@@ -4275,7 +4275,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 113,
@@ -4440,7 +4440,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 844,
@@ -4451,7 +4451,7 @@
             "budget_overflow": 124
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 563,
@@ -4462,7 +4462,7 @@
             "budget_overflow": 83
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 234,
@@ -4473,7 +4473,7 @@
             "budget_overflow": 34
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 234,
@@ -4484,7 +4484,7 @@
             "budget_overflow": 34
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 234,
@@ -4495,7 +4495,7 @@
             "budget_overflow": 34
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 117,
@@ -4506,7 +4506,7 @@
             "budget_overflow": 17
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 234,
@@ -4517,7 +4517,7 @@
             "budget_overflow": 34
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 234,
@@ -4528,7 +4528,7 @@
             "budget_overflow": 34
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 117,
@@ -4688,7 +4688,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "open",
             "people": 871,
@@ -4699,7 +4699,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 543,
@@ -4710,7 +4710,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 250,
@@ -4721,7 +4721,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 225,
@@ -4732,7 +4732,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 225,
@@ -4743,7 +4743,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 124,
@@ -4754,7 +4754,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 235,
@@ -4765,7 +4765,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 225,
@@ -4776,7 +4776,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 113,
@@ -4933,7 +4933,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "closed",
             "people": 0,
@@ -4944,7 +4944,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "open",
             "people": 798,
@@ -4955,7 +4955,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "open",
             "people": 350,
@@ -4966,7 +4966,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "open",
             "people": 325,
@@ -4977,7 +4977,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "open",
             "people": 325,
@@ -4988,7 +4988,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "open",
             "people": 175,
@@ -4999,7 +4999,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "open",
             "people": 350,
@@ -5010,7 +5010,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "open",
             "people": 325,
@@ -5021,7 +5021,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "open",
             "people": 163,
@@ -5185,7 +5185,7 @@
         },
         "shelters": [
           {
-            "id": "demo_shelter_01",
+            "id": "shelter_01",
             "name": "Demo \u2014 Palmetto Ridge / Corkscrew School Hub",
             "status": "closed",
             "people": 0,
@@ -5196,7 +5196,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_04",
+            "id": "shelter_04",
             "name": "Demo \u2014 Cypress Palm / Sabal Palm School Hub",
             "status": "closed",
             "people": 0,
@@ -5207,7 +5207,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_05",
+            "id": "shelter_05",
             "name": "Demo \u2014 Big Cypress / Max Hasse Community Hub",
             "status": "closed",
             "people": 0,
@@ -5218,7 +5218,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_06",
+            "id": "shelter_06",
             "name": "Demo \u2014 Estates Elementary School",
             "status": "closed",
             "people": 0,
@@ -5229,7 +5229,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_08",
+            "id": "shelter_08",
             "name": "Demo \u2014 Big Corkscrew Island Regional Park",
             "status": "closed",
             "people": 0,
@@ -5240,7 +5240,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_09",
+            "id": "shelter_09",
             "name": "Demo \u2014 Estates Branch Library",
             "status": "closed",
             "people": 0,
@@ -5251,7 +5251,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_10",
+            "id": "shelter_10",
             "name": "Demo \u2014 Palmetto Elementary School",
             "status": "closed",
             "people": 0,
@@ -5262,7 +5262,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_11",
+            "id": "shelter_11",
             "name": "Demo \u2014 Bear Creek Elementary School",
             "status": "closed",
             "people": 0,
@@ -5273,7 +5273,7 @@
             "budget_overflow": 0
           },
           {
-            "id": "demo_shelter_12",
+            "id": "shelter_12",
             "name": "Demo \u2014 Greater Naples Fire Rescue Station 74",
             "status": "closed",
             "people": 0,
