@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
-import { RESOURCE_KEYS } from '../lib/constants.js'
-import { LEVEL_LABEL, cap, shelterLevel, timeAgo } from '../lib/format.js'
+import { RESOURCE_KEYS } from '../lib/constants'
+import { LEVEL_LABEL, cap, shelterLevel, timeAgo } from '../lib/format'
+import type { Shelter } from '../api/types'
 
-const FILTERS = {
+const FILTERS: Record<string, { label: string; test: (s: Shelter) => boolean }> = {
   accepting: { label: 'Has space', test: (s) => s.status === 'open' && s.capacity.available_people > 0 },
   pets: { label: 'Pets', test: (s) => s.capabilities.pets_allowed },
   children: { label: 'Children', test: (s) => s.capabilities.child_friendly },
@@ -11,9 +12,15 @@ const FILTERS = {
   shortage: { label: 'Shortages', test: (s) => Object.values(s.resources).some((v) => v === 'limited' || v === 'unavailable') },
 }
 
-export default function ShelterList({ shelters, selectedId, onSelect, onEdit, onAdd }) {
+export default function ShelterList({ shelters, selectedId, onSelect, onEdit, onAdd }: {
+  shelters: Shelter[]
+  selectedId: string | null
+  onSelect: (id: string) => void
+  onEdit: (shelter: Shelter) => void
+  onAdd: () => void
+}) {
   const [query, setQuery] = useState('')
-  const [active, setActive] = useState([])
+  const [active, setActive] = useState<string[]>([])
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -22,7 +29,7 @@ export default function ShelterList({ shelters, selectedId, onSelect, onEdit, on
       .filter((s) => active.every((f) => FILTERS[f].test(s)))
   }, [shelters, query, active])
 
-  const toggle = (f) => setActive((a) => (a.includes(f) ? a.filter((x) => x !== f) : [...a, f]))
+  const toggle = (f: string) => setActive((a) => (a.includes(f) ? a.filter((x) => x !== f) : [...a, f]))
 
   return (
     <div className="panel-body">

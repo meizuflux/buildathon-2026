@@ -1,9 +1,10 @@
 # Haven Operations dashboard
 
-React + Vite dashboard for government operators managing disaster response.
-The backend's running OpenAPI schema at `http://127.0.0.1:8000/schema` is the
-API contract. The dashboard covers family operations, shelter management,
-allocation plans, operational alerts, official updates, and reports.
+React + TypeScript + Vite dashboard for government operators managing disaster
+response. The backend's OpenAPI schema is the API contract and is used to
+generate the dashboard's API types. The dashboard covers family operations,
+shelter management, allocation plans, operational alerts, official updates, and
+reports.
 
 The Logistics section contains preview-only WIP screens for Needs, Dispatch,
 and Inventory. Shelter names, reserved capacity, resource availability, and update
@@ -28,4 +29,18 @@ proxies `/api` to `http://127.0.0.1:8000` by default. Set `HAVEN_API_URL` before
 starting Vite to use a different backend. For a production deployment, route
 `/api` to the backend on the same origin.
 
-Run `npm run build` to check and build the dashboard.
+Run `npm run typecheck` to type-check, or `npm run build` to type-check and
+build the dashboard.
+
+## API types
+
+The Litestar CLI generates TypeScript definitions from the backend's OpenAPI
+schema. Regenerate them after changing an API response or request shape:
+
+```sh
+cd backend
+just schema-typescript
+```
+
+This writes `frontend/src/api/api-specs.ts`. Friendly aliases and dashboard-only
+additions live in `frontend/src/api/types.ts`.

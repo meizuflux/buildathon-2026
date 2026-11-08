@@ -1,39 +1,42 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { RefreshCw } from 'lucide-react'
-import { api } from '../api/index.js'
-import { useData } from '../data.jsx'
-import { Empty, PageHeader } from '../components/ui.jsx'
-import { timeAgo } from '../lib/format.js'
+import { api } from '../api'
+import { useData } from '../data'
+import { Empty, PageHeader } from '../components/ui'
+import { timeAgo } from '../lib/format'
+import type { FamilyPage, Plan, PlanPage } from '../api/types'
 
 const PAGE_SIZE = 50
 
 export default function Families() {
   const d = useData()
   const [offset, setOffset] = useState(0)
-  const [page, setPage] = useState(null)
-  const [plans, setPlans] = useState({})
-  const [error, setError] = useState(null)
-  const [planError, setPlanError] = useState(null)
+  const [page, setPage] = useState<FamilyPage | null>(null)
+  const [plans, setPlans] = useState<Record<string, Plan>>({})
+  const [error, setError] = useState<string | null>(null)
+  const [planError, setPlanError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [notice, setNotice] = useState(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
   useEffect(() => { setOffset(0); setPage(null); setPlans({}); setNotice(null) }, [d.disasterId])
   useEffect(() => {
-    if (!d.disasterId) return
+    const disasterId = d.disasterId
+    if (!disasterId) return
+    const id: string = disasterId
     let active = true
     setPage(null); setPlans({}); setError(null); setPlanError(null)
-    api.listFamilies(d.disasterId, PAGE_SIZE, offset).then((result) => { if (active) setPage(result) }).catch((err) => { if (active) setError(err.message) })
+    api.listFamilies(id, PAGE_SIZE, offset).then((result) => { if (active) setPage(result) }).catch((err) => { if (active) setError(err instanceof Error ? err.message : 'Unknown error') })
     async function loadPlans() {
-      const all = {}; let position = 0; let result
+      const all: Record<string, Plan> = {}; let position = 0; let result: PlanPage
       do {
-        result = await api.listPlans(d.disasterId, 1000, position)
+        result = await api.listPlans(id, 1000, position)
         for (const plan of result.plans) all[plan.family_id] = plan
         position += result.plans.length
       } while (result.plans.length && position < result.total)
       if (active) setPlans(all)
     }
-    loadPlans().catch((err) => { if (active) setPlanError(err.message) })
+    loadPlans().catch((err) => { if (active) setPlanError(err instanceof Error ? err.message : 'Unknown error') })
     return () => { active = false }
   }, [d.disasterId, offset, revision])
   const recompute = useCallback(async () => {
@@ -43,7 +46,7 @@ export default function Families() {
     try {
       await d.mutate((client) => client.generatePlan(family.id))
       setNotice('Plans recomputed for this disaster.'); setRevision((v) => v + 1)
-    } catch (err) { setError(err.message) } finally { setBusy(false) }
+    } catch (err) { setError(err instanceof Error ? err.message : 'Unknown error') } finally { setBusy(false) }
   }, [d, page])
 
   return <div className="page">

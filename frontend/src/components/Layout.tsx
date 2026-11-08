@@ -1,9 +1,24 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Bell, FileText, LayoutDashboard, Map, Megaphone, PackageSearch, RefreshCw, Truck, Users, Warehouse } from 'lucide-react'
-import { useAuth } from '../auth.jsx'
-import { useData } from '../data.jsx'
-import { DISASTER_TYPES } from '../lib/constants.js'
-import { timeAgo } from '../lib/format.js'
+import { Bell, FileText, LayoutDashboard, Map, Megaphone, PackageSearch, RefreshCw, Truck, Users, Warehouse, type LucideIcon } from 'lucide-react'
+import { useAuth } from '../auth'
+import { useData } from '../data'
+import { DISASTER_TYPES } from '../lib/constants'
+import { timeAgo } from '../lib/format'
+
+type NavItem = {
+  to: string
+  label: string
+  icon: LucideIcon
+  end?: boolean
+  badge?: number
+  tone?: string
+  wip?: boolean
+}
+
+type NavGroup = {
+  section: string | null
+  items: NavItem[]
+}
 
 export default function Layout() {
   const { user, logout } = useAuth()
@@ -11,7 +26,7 @@ export default function Layout() {
 
   const helpOpen = d.reports.filter((r) => r.type === 'need_help' && r.status === 'received').length
 
-  const nav = [
+  const nav: NavGroup[] = [
     { section: null, items: [
       { to: '/', label: 'Command Center', icon: LayoutDashboard, end: true },
       { to: '/alerts', label: 'Alerts', icon: Bell, badge: d.alerts?.total, tone: 'alert' },
@@ -42,7 +57,7 @@ export default function Layout() {
           {nav.map((g, i) => (
             <div key={i} className="nav-group">
               {g.section && <div className="nav-section">{g.section}</div>}
-              {g.items.map(({ to, label, icon: Icon, end, badge, tone, wip }) => (
+              {g.items.map(({ to, label, icon: Icon, end, badge = 0, tone, wip }) => (
                 <NavLink key={to} to={to} end={end} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                   <Icon size={17} aria-hidden="true" />
                   <span>{label}</span>
@@ -54,7 +69,7 @@ export default function Layout() {
           ))}
         </nav>
         <div className="sidebar-foot">
-          <div className="muted small">Signed in as <strong className="cap">{user.role}</strong></div>
+          <div className="muted small">Signed in as <strong className="cap">{user?.role}</strong></div>
           <button className="btn btn-sm btn-block" onClick={logout}>Sign out</button>
         </div>
       </aside>

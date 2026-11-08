@@ -1,17 +1,24 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, type Dispatch, type SetStateAction } from 'react'
 import { Link } from 'react-router-dom'
 import { MapContainer, TileLayer, CircleMarker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
-import { DEFAULT_CENTER, RESOURCE_KEYS, REPORT_TYPES } from '../lib/constants.js'
-import { LEVEL_LABEL, cap, shelterLevel, timeAgo } from '../lib/format.js'
+import { DEFAULT_CENTER, RESOURCE_KEYS, REPORT_TYPES } from '../lib/constants'
+import { LEVEL_LABEL, cap, shelterLevel, timeAgo, type ShelterLevel } from '../lib/format'
+import type { Family, Location, MapLayers, Report, Shelter } from '../api/types'
 
-export const LEVEL_COLOR = { ok: '#1f9d55', low: '#d98a00', full: '#d64545', closed: '#8a8f98' }
+export const LEVEL_COLOR: Record<ShelterLevel, string> = { ok: '#1f9d55', low: '#d98a00', full: '#d64545', closed: '#8a8f98' }
 
-const radiusFor = (total) => Math.max(7, Math.min(20, 5 + Math.sqrt(total || 0)))
+const LAYER_OPTIONS: { key: keyof MapLayers; label: string }[] = [
+  { key: 'shelters', label: 'Shelters' },
+  { key: 'families', label: 'Families' },
+  { key: 'reports', label: 'Family reports' },
+]
 
-function FitToData({ points, disasterId }) {
+const radiusFor = (total: number): number => Math.max(7, Math.min(20, 5 + Math.sqrt(total || 0)))
+
+function FitToData({ points, disasterId }: { points: [number, number][]; disasterId: string | null }) {
   const map = useMap()
-  const fitted = useRef(null)
+  const fitted = useRef<string | null>(null)
   useEffect(() => {
     if (!points.length || fitted.current === disasterId) return
     map.fitBounds(points, { padding: [40, 40], maxZoom: 13 })
@@ -20,7 +27,7 @@ function FitToData({ points, disasterId }) {
   return null
 }
 
-function FlyTo({ target }) {
+function FlyTo({ target }: { target: [number, number] | null }) {
   const map = useMap()
   useEffect(() => {
     if (target) map.flyTo(target, Math.max(map.getZoom(), 14), { duration: 0.6 })
@@ -28,7 +35,7 @@ function FlyTo({ target }) {
   return null
 }
 
-function ClickToPick({ onPick }) {
+function ClickToPick({ onPick }: { onPick?: (location: Location) => void }) {
   useMapEvents({
     click(e) {
       onPick?.({ latitude: +e.latlng.lat.toFixed(5), longitude: +e.latlng.lng.toFixed(5) })
@@ -40,9 +47,23 @@ function ClickToPick({ onPick }) {
 export default function ShelterMap({
   shelters, families = [], familyError, reports, disasterId, selectedId, onSelect, focus,
   layers, setLayers, picking, draftLocation, onPick,
+}: {
+  shelters: Shelter[]
+  families?: Family[]
+  familyError?: string | null
+  reports: Report[]
+  disasterId: string | null
+  selectedId: string | null
+  onSelect: (id: string) => void
+  focus: [number, number] | null
+  layers: MapLayers
+  setLayers: Dispatch<SetStateAction<MapLayers>>
+  picking: boolean
+  draftLocation?: Location
+  onPick?: (location: Location) => void
 }) {
-  const points = useMemo(
-    () => [...shelters, ...families].map((s) => [s.location.latitude, s.location.longitude]),
+  const points = useMemo<[number, number][]>(
+    () => [...shelters, ...families].map((s): [number, number] => [s.location.latitude, s.location.longitude]),
     [shelters, families],
   )
 
@@ -57,9 +78,9 @@ export default function ShelterMap({
         <FlyTo target={focus} />
         {picking && <ClickToPick onPick={onPick} />}
 
-        {layers.reports && reports.filter((r) => r.location).map((r) => (
+        {layers.reports && reports.filter((r): r is Report & { location: Location } => !!r.location).map((r) => (
           <CircleMarker key={r.id} center={[r.location.latitude, r.location.longitude]} radius={6}
-            pathOptions={{ color: '#7c3aed', weight: 2, fillColor: '#fff', fillOpacity: 1, dashArray: r.type === 'need_help' ? null : '2 3' }}>
+            pathOptions={{ color: '#7c3aed', weight: 2, fillColor: '#fff', fillOpacity: 1, dashArray: r.type === 'need_help' ? undefined : '2 3' }}>
             <Popup>
               <strong>{REPORT_TYPES[r.type] || r.type}</strong>
               <div className="popup-meta">{r.family_id} · {timeAgo(r.created_at)}</div>
@@ -112,16 +133,16 @@ export default function ShelterMap({
       ) : (
         <>
           <div className="layer-toggle" role="group" aria-label="Map layers">
-            {[['shelters', 'Shelters'], ['families', 'Families'], ['reports', 'Family reports']].map(([k, label]) => (
-              <label key={k} className="check">
-                <input type="checkbox" checked={layers[k]} onChange={(e) => setLayers((l) => ({ ...l, [k]: e.target.checked }))} />
+            {LAYER_OPTIONS.map(({ key, label }) => (
+              <label key={key} className="check">
+                <input type="checkbox" checked={layers[key]} onChange={(e) => setLayers((l) => ({ ...l, [key]: e.target.checked }))} />
                 {label}
               </label>
             ))}
             {layers.families && familyError && <span className="error" role="alert">Families could not be loaded: {familyError}</span>}
           </div>
           <div className="legend" aria-label="Map legend">
-            {Object.entries(LEVEL_COLOR).map(([k, c]) => <span key={k}><i style={{ background: c }} />{LEVEL_LABEL[k]}</span>)}
+            {Object.entries(LEVEL_COLOR).map(([k, c]) => <span key={k}><i style={{ background: c }} />{LEVEL_LABEL[k as ShelterLevel]}</span>)}
             <span><i style={{ background: '#60a5fa', border: '1px solid #1d4ed8' }} />Family</span>
             <span><i className="legend-report" />Family report</span>
           </div>

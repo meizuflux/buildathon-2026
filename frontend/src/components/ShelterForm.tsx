@@ -1,28 +1,46 @@
-import { useState } from 'react'
-import { AVAILABILITY, MEDICAL_STAFF, RESOURCE_KEYS, SHELTER_STATUSES } from '../lib/constants.js'
-import { cap } from '../lib/format.js'
+import { useState, type FormEvent } from 'react'
+import { AVAILABILITY, MEDICAL_STAFF, RESOURCE_KEYS, SHELTER_STATUSES } from '../lib/constants'
+import { cap } from '../lib/format'
+import type { ShelterInput } from '../api/types'
+
+type CapabilityToggle = {
+  key: 'pets_allowed' | 'child_friendly' | 'wheelchair_accessible'
+  label: string
+}
+
+const CAPABILITY_TOGGLES: CapabilityToggle[] = [
+  { key: 'pets_allowed', label: 'Pets allowed' },
+  { key: 'child_friendly', label: 'Child friendly' },
+  { key: 'wheelchair_accessible', label: 'Wheelchair accessible' },
+]
 
 // Used for both create and edit. The draft lives in the parent (App) so map
 // clicks can update its location while the form is open.
-export default function ShelterForm({ draft, setDraft, isNew, onCancel, onSave }) {
-  const [error, setError] = useState(null)
+export default function ShelterForm({ draft, setDraft, isNew, onCancel, onSave }: {
+  draft: ShelterInput
+  setDraft: (updater: (draft: ShelterInput) => ShelterInput) => void
+  isNew: boolean
+  onCancel: () => void
+  onSave: (draft: ShelterInput) => Promise<void>
+}) {
+  const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const set = (path, value) =>
+  const set = (path: string[], value: unknown) =>
     setDraft((d) => {
-      const next = structuredClone(d)
-      let o = next
-      for (const k of path.slice(0, -1)) o = o[k]
-      o[path.at(-1)] = value
-      return next
+      const next = structuredClone(d) as unknown as Record<string, unknown>
+      let o: Record<string, unknown> = next
+      for (const k of path.slice(0, -1)) o = o[k] as Record<string, unknown>
+      o[path[path.length - 1]] = value
+      return next as unknown as ShelterInput
     })
 
-  const toggleStaff = (role) => {
+  const toggleStaff = (role: string) => {
     const staff = draft.capabilities.medical_staff || []
     set(['capabilities', 'medical_staff'], staff.includes(role) ? staff.filter((r) => r !== role) : [...staff, role])
   }
 
-  async function submit(e) {
+  async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const { total_people: total, available_people: avail } = draft.capacity
     if (!draft.name.trim() || !draft.address.trim()) return setError('Name and address are required.')
@@ -33,12 +51,12 @@ export default function ShelterForm({ draft, setDraft, isNew, onCancel, onSave }
     try {
       await onSave(draft)
     } catch (err) {
-      setError(err.message)
+      setError(err instanceof Error ? err.message : 'Unable to save this shelter.')
       setBusy(false)
     }
   }
 
-  const num = (v) => (v === '' ? '' : Number(v))
+  const num = (v: string): number | '' => (v === '' ? '' : Number(v))
 
   return (
     <form className="panel-body form" onSubmit={submit}>
@@ -105,13 +123,9 @@ export default function ShelterForm({ draft, setDraft, isNew, onCancel, onSave }
       <fieldset>
         <legend>Can support</legend>
         <div className="checks">
-          {[
-            ['pets_allowed', 'Pets allowed'],
-            ['child_friendly', 'Child friendly'],
-            ['wheelchair_accessible', 'Wheelchair accessible'],
-          ].map(([k, label]) => (
-            <label key={k} className="check">
-              <input type="checkbox" checked={!!draft.capabilities[k]} onChange={(e) => set(['capabilities', k], e.target.checked)} />
+          {CAPABILITY_TOGGLES.map(({ key, label }) => (
+            <label key={key} className="check">
+              <input type="checkbox" checked={!!draft.capabilities[key]} onChange={(e) => set(['capabilities', key], e.target.checked)} />
               {label}
             </label>
           ))}
