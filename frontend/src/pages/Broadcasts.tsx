@@ -4,13 +4,13 @@ import { Send, Users } from 'lucide-react'
 import { api } from '../api'
 import type { BroadcastTarget, Severity, Update } from '../api/types'
 import { useData } from '../data'
-import { AUDIENCE_NEEDS, BROADCAST_TEMPLATES, SEVERITIES } from '../lib/constants'
+import { BROADCAST_TEMPLATES, SEVERITIES } from '../lib/constants'
 import { cap, fullTime, timeAgo } from '../lib/format'
 import { SEV_TONE, errorMessage } from '../lib/ops'
-import { Empty, Head, Meter, Seg } from '../components/ui'
+import { Empty, Head, Seg } from '../components/ui'
 
 type Draft = { title: string; message: string; severity: Severity; target: BroadcastTarget }
-type HistoryFilter = 'all' | 'published' | 'critical'
+type HistoryFilter = 'all' | Severity
 
 const blank: Draft = { title: '', message: '', severity: 'info', target: { type: 'all' } }
 const SEVERITY_HELP: Record<Severity, string> = {
@@ -81,8 +81,8 @@ export default function Broadcasts() {
 
   const shelterName = (id: string) => d.shelters.find((s) => s.id === id)?.name || id
   const history = [...d.updates]
-    .filter((u) => filter === 'all' || (filter === 'published' && (!u.status || u.status === 'published')) || u.severity === filter)
-    .sort((a, b) => (b.published_at || b.scheduled_for || '').localeCompare(a.published_at || a.scheduled_for || ''))
+    .filter((u) => filter === 'all' || u.severity === filter)
+    .sort((a, b) => (b.published_at || '').localeCompare(a.published_at || ''))
 
   return (
     <div className="hx-page">
@@ -132,38 +132,26 @@ export default function Broadcasts() {
           <div className="hx-panel-title" style={{ margin: 0 }}>
             <h2>Sent broadcasts <span className="muted" style={{ fontWeight: 400 }}>{d.updates.length}</span></h2>
             <select style={{ width: 'auto' }} value={filter} onChange={(e) => setFilter(e.target.value as HistoryFilter)} aria-label="Filter sent broadcasts">
-              <option value="all">All</option>
-              <option value="published">Live</option>
-              <option value="critical">Critical only</option>
+              <option value="all">All severities</option>
+              <option value="critical">Critical</option>
+              <option value="warning">Warning</option>
+              <option value="info">Info</option>
             </select>
           </div>
           {history.length === 0 && <Empty>No broadcasts match.</Empty>}
-          {history.map((u) => {
-            const read = u.read_count ?? 0
-            const pct = u.recipient_count ? Math.round((read / u.recipient_count) * 100) : 0
-            return (
-              <article key={u.id} className={`hx-sev-${u.severity}`} style={u.status === 'retracted' ? { opacity: 0.55 } : undefined}>
-                <div className="r1">
-                  <span className={`badge ${SEV_TONE[u.severity]}`}>{cap(u.severity)}</span>
-                  <strong>{u.title}</strong>
-                  {u.status && u.status !== 'published' && <span className="badge t-muted">{cap(u.status)}</span>}
-                </div>
-                <p>{u.message}</p>
-                <div className="hx-tags">
-                  <span className="hx-tag">{u.target?.type === 'shelter' ? `Families assigned to ${shelterName(u.target.shelter_id)}` : 'All families in this disaster'}</span>
-                  {(u.audience?.needs ?? []).map((n) => <span key={n} className="hx-tag">{AUDIENCE_NEEDS[n] ?? n}</span>)}
-                </div>
-                {u.read_count != null && <Meter value={pct / 100} thin />}
-                <div className="r3">
-                  <span>{u.read_count == null ? 'Read count unavailable' : `${read.toLocaleString()} of ${(u.recipient_count ?? 0).toLocaleString()} read (${pct}%)`}</span>
-                  <span title={fullTime(u.published_at || u.scheduled_for)}>
-                    {u.status === 'scheduled' ? `Sends ${timeAgo(u.scheduled_for)}` : `Sent ${timeAgo(u.published_at)}`}
-                    {u.expires_at && `, expires ${timeAgo(u.expires_at)}`}
-                  </span>
-                </div>
-              </article>
-            )
-          })}
+          {history.map((u) => (
+            <article key={u.id} className={`hx-sev-${u.severity}`}>
+              <div className="r1">
+                <span className={`badge ${SEV_TONE[u.severity]}`}>{cap(u.severity)}</span>
+                <strong>{u.title}</strong>
+              </div>
+              <p>{u.message}</p>
+              <div className="r3">
+                <span className="hx-tag">{u.target?.type === 'shelter' ? `Families assigned to ${shelterName(u.target.shelter_id)}` : 'All families in this disaster'}</span>
+                <span title={fullTime(u.published_at)}>Sent {timeAgo(u.published_at)}</span>
+              </div>
+            </article>
+          ))}
         </section>
       </div>
     </div>

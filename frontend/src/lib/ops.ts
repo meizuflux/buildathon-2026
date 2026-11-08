@@ -1,5 +1,5 @@
 import type { LiveApi } from '../api'
-import type { AlertPage, Family, Report, Severity, Shelter } from '../api/types'
+import type { AlertPage, Family, Report, ReportStatus, Severity, Shelter } from '../api/types'
 import { shelterLevel, type ShelterLevel } from './format'
 
 export { shelterLevel }
@@ -14,6 +14,13 @@ export const REPORT_TONE: Record<Report['type'], string> = {
 }
 
 export const SEV_TONE: Record<string, string> = { critical: 't-red', warning: 't-amber', info: 't-blue' }
+
+export const REPORT_STATUS_TEXT: Record<ReportStatus, string> = { received: 'New', acknowledged: 'Acknowledged', resolved: 'Resolved' }
+export const REPORT_STATUS_TONE: Record<ReportStatus, string> = { received: 't-red', acknowledged: 't-amber', resolved: 't-green' }
+
+// A report stays open until an operator resolves it.
+export const isOpen = (r: Pick<Report, 'status'>) => r.status !== 'resolved'
+export const isOpenHelp = (r: Pick<Report, 'status' | 'type'>) => r.type === 'need_help' && isOpen(r)
 
 export function shelterTotals(shelters: Shelter[]) {
   const active = shelters.filter((s) => s.status !== 'closed')
@@ -45,6 +52,7 @@ export type QueueItem = {
   shelterId?: string | null
   familyId?: string | null
   reportId?: string | null
+  report?: Report
 }
 
 // One "needs action" list: critical alerts, open help requests, then warnings.
@@ -60,15 +68,16 @@ export function needsAction(alerts: AlertPage | null, reports: Report[]): QueueI
     familyId: a.family_id,
   })
   const help = reports
-    .filter((r) => r.status === 'received' && (r.type === 'need_help' || r.type === 'resource_request'))
+    .filter((r) => isOpen(r) && (r.type === 'need_help' || r.type === 'resource_request'))
     .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''))
     .map<QueueItem>((r) => ({
       key: `r-${r.id}`,
       kind: 'help',
-      label: r.type === 'need_help' ? 'Needs help' : 'Resource request',
+      label: `${r.type === 'need_help' ? 'Needs help' : 'Resource request'}${r.status === 'acknowledged' ? ', acknowledged' : ''}`,
       title: r.message,
       when: r.created_at,
       reportId: r.location ? r.id : null,
+      report: r,
       familyId: r.family_id,
     }))
   return [

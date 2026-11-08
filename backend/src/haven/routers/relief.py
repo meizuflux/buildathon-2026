@@ -451,15 +451,17 @@ async def publish_update(
             await require_disaster(connection, disaster_id)
             if not data.title.strip() or not data.message.strip():
                 error(400, "invalid_request", "Update title and message must not be blank.")
+            audience = "all families"
             if target and target["type"] == "shelter":
                 shelter = await (
                     await connection.execute(
-                        "SELECT 1 FROM shelters WHERE id = ? AND disaster_id = ?",
+                        "SELECT name FROM shelters WHERE id = ? AND disaster_id = ?",
                         (target["shelter_id"], disaster_id),
                     )
                 ).fetchone()
                 if shelter is None:
                     error(404, "shelter_not_found", "Shelter not found in this disaster.")
+                audience = f"families assigned to {shelter[0]}"
             result = cast(
                 Update,
                 {
@@ -493,7 +495,7 @@ async def publish_update(
                 connection,
                 disaster_id=disaster_id,
                 event_type="update_published",
-                summary=f"Update {data.title} published",
+                summary=f"Broadcast sent to {audience}: {data.title}",
                 ref_kind="update",
                 ref_id=result["id"],
                 user=get_authenticated_user(request),

@@ -25,7 +25,7 @@ All application routes use the `/api` prefix. Register a family account with `PO
 
 To create an operator, run `just create-operator` locally and enter credentials interactively. Login attempts are limited to five per account and 50 per direct client IP in a 15-minute window; successful login clears the account counter, while the IP counter remains. The production recipe disables forwarded headers; behind a proxy, configure trusted proxy handling before relying on client-IP limits. Passwords use Argon2id with random salts, and only hashes of session tokens are stored.
 
-Family profiles, plans, and report submissions require the owning family's bearer token or an operator token. Shelter edits, official update publishing, and disaster report listings require an operator token. Disaster, shelter, and official update listings are public.
+Family profiles, plans, and report submissions require the owning family's bearer token or an operator token. Shelter edits, official update publishing, report listings and report status changes require an operator token. Disaster, shelter, and official update listings are public.
 
 Existing accounts created with the earlier scrypt implementation cannot sign in; recreate those development accounts.
 
@@ -63,6 +63,7 @@ CORS allows all origins by default; set `CORS_ORIGINS` to a comma-separated list
 | POST | `/disasters/{disaster_id}/updates/preview` | Count family profiles currently matching an update target (operator only). |
 | POST | `/families/{family_id}/reports` | Submit an idempotent family report. |
 | GET | `/disasters/{disaster_id}/reports` | List family reports as an operator. |
+| PATCH | `/reports/{report_id}` | Set a report's `status` to `received`, `acknowledged` or `resolved` (operator only). Each change is recorded in the activity timeline. |
 | GET | `/disasters/{disaster_id}/activity` | Operator timeline of recorded actions, newest first; optional `limit` (1–1000, default 50). |
 
 Family and plan listings accept `limit` (1–1000, default 100) and `offset` (default 0), and return `total`, `limit`, and `offset`. Shelter listings include resource availability labels, capabilities, and capacity; these describe shelter readiness and are not an inventory tracker or resource request system.

@@ -42,18 +42,16 @@ export type ActivityEntry =
 
 export type Report = Haven.ApiDisastersDisasterIdReportsListReports.Http200.ResponseBody['reports'][number]
 export type ReportType = Report['type']
+export type ReportStatus = Report['status']
+export type ReportStatusPatch = Haven.ApiReportsReportIdUpdateReport.RequestBody
 
 export type BroadcastTarget =
   | { type: 'all'; shelter_id?: null }
   | { type: 'shelter'; shelter_id: string }
 
-export type BroadcastAudience = { needs?: string[] }
-
-export type UpdateStatus = 'scheduled' | 'published' | 'retracted'
 export type Severity = 'info' | 'warning' | 'critical'
 
-// The generated schema omits several optional fields that older records may
-// still carry, so the dashboard models them as optional here.
+// The generated schema types `target` loosely, so the dashboard models it here.
 export type Update = {
   id: string
   disaster_id: string
@@ -61,13 +59,7 @@ export type Update = {
   message: string
   severity: Severity
   published_at: string
-  status?: UpdateStatus | null
-  scheduled_for?: string | null
-  expires_at?: string | null
   target?: BroadcastTarget | null
-  read_count?: number | null
-  recipient_count?: number | null
-  audience?: BroadcastAudience | null
 }
 
 export type UpdateList = { updates: Update[] }

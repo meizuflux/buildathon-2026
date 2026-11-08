@@ -31,14 +31,6 @@ export const DISASTER_TYPES: Record<string, string> = {
   tornado: 'Tornado',
 }
 
-export const AUDIENCE_NEEDS: Record<string, string> = {
-  immediate_medication: 'Needs medication',
-  accessibility: 'Accessibility needs',
-  no_car: 'No car',
-  children: 'Has children',
-  pets: 'Has pets',
-}
-
 export type BroadcastTemplate = {
   id: string
   name: string
