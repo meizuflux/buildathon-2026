@@ -1,6 +1,9 @@
 """Litestar application entry point."""
 
+import os
+
 from litestar import Litestar, Request, Router, get
+from litestar.config.cors import CORSConfig
 from litestar.exceptions import HTTPException
 from litestar.middleware import DefineMiddleware
 from litestar.openapi import OpenAPIConfig
@@ -10,6 +13,7 @@ from litestar.response import Response
 
 from haven.auth import DatabaseTokenAuthMiddleware
 from haven.db import connect
+from haven.donations import router as donations_router
 from haven.openapi import errors
 from haven.routers.accounts import router as accounts_router
 from haven.routers.activity import router as activity_router
@@ -68,10 +72,13 @@ app = Litestar(
                 alerts_router,
                 activity_router,
                 logistics_router,
+                donations_router,
             ],
         ),
     ],
     on_startup=[initialize_database],
+    # Web dashboard and Expo dev servers run on other origins; restrict with CORS_ORIGINS.
+    cors_config=CORSConfig(allow_origins=os.environ.get("CORS_ORIGINS", "*").split(",")),
     middleware=[DefineMiddleware(DatabaseTokenAuthMiddleware)],
     exception_handlers={HTTPException: http_error, Exception: server_error},
     openapi_config=OpenAPIConfig(

@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* react-native-web needs its root to fill the phone frame */
+.phone > div { display: flex; flex: 1; }
