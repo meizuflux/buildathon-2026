@@ -10,7 +10,18 @@ const SEND_MS = 900;
 const REPLY_MS = 2200;
 const RECALCULATES = new Set<Action['type']>(['setHousehold', 'triggerClosure', 'updateAvailability']);
 
-interface DemoContext {
+/** Live-backend extras. Absent in the simulated demo. */
+export interface LiveExtras {
+  disasterName: string;
+  lastSync: number | null;
+  error: string | null;
+  refresh: () => void;
+  signOut: () => void;
+}
+
+export interface DemoContext {
+  mode: 'demo' | 'live';
+  live?: LiveExtras;
   state: DemoState;
   view: View;
   steps: ReturnType<typeof steps>;
@@ -20,7 +31,7 @@ interface DemoContext {
   sendMessage: (body: string, retryId?: string) => void;
 }
 
-const Context = createContext<DemoContext | null>(null);
+export const Context = createContext<DemoContext | null>(null);
 
 export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [state, rawDispatch] = useReducer(reducer, undefined, initialState);
@@ -72,7 +83,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   }, [later]);
 
   const value = useMemo<DemoContext>(
-    () => ({ state, view: view(state), steps: steps(state), updating, dispatch, sendMessage }),
+    () => ({ mode: 'demo', state, view: view(state), steps: steps(state), updating, dispatch, sendMessage }),
     [state, updating, dispatch, sendMessage],
   );
 

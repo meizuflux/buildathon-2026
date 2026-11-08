@@ -50,7 +50,7 @@ export function Glyph({ name, size = 24, color }: { name: GlyphName; size?: numb
 
 export const NEED_VISUAL: Record<Requirement, { glyph: GlyphName; short: string }> = {
   wheelchairEntrance: { glyph: 'wheelchair', short: 'Step-free entry' },
-  dogs: { glyph: 'paw', short: 'Dogs welcome' },
+  dogs: { glyph: 'paw', short: 'Pets welcome' },
   children: { glyph: 'child', short: 'Families' },
   poweredEquipment: { glyph: 'power', short: 'Backup power' },
 };

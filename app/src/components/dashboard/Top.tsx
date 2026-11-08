@@ -3,13 +3,15 @@ import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { type } from '../../constants/theme';
 import { clock } from '../../demo/time';
+import { localMinute } from '../../demo/live';
 import type { OfficialInstruction } from '../../demo/types';
 import { Icon } from '../common/ui';
 import { Mono, useDash } from './parts';
 import { Countdown } from './visuals';
 
-export function Header({ household, online, now, onHousehold, onPresenter, presenterOpen }: {
+export function Header({ household, online, now, onHousehold, onPresenter, presenterOpen, live }: {
   household: string; online: boolean; now: number; onHousehold: () => void; onPresenter: () => void; presenterOpen: boolean;
+  live?: { name: string; syncedAt: number | null; onSignOut: () => void } | false;
 }) {
   const { c, s } = useDash();
   return (
@@ -22,7 +24,7 @@ export function Header({ household, online, now, onHousehold, onPresenter, prese
           <Text style={{ fontFamily: type.semibold, fontSize: 17, color: c.ink }}>Haven</Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', flexShrink: 1 }}>
-          <DemoLabel now={now} onPress={onPresenter} open={presenterOpen} />
+          {live ? <LiveLabel name={live.name} /> : <DemoLabel now={now} onPress={onPresenter} open={presenterOpen} />}
           <Pressable accessibilityRole="button" accessibilityLabel={`Household: ${household}. Edit household needs`} onPress={onHousehold}
             style={({ pressed }) => [{ minHeight: 44, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface, flexDirection: 'row', alignItems: 'center', gap: 8 }, pressed && { opacity: 0.7 }]}>
             <Icon name="users" size={17} color={c.green} />
@@ -35,7 +37,8 @@ export function Header({ household, online, now, onHousehold, onPresenter, prese
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Icon name={online ? 'wifi' : 'wifi-off'} size={15} color={online ? c.muted : c.amber} />
           <Text style={[s.secondary, !online && { color: c.amber }]}>{online ? 'Connected' : 'Offline: showing saved information'}</Text>
-          <Mono>· {clock(now)}</Mono>
+          <Mono>· {live ? (live.syncedAt ? `synced ${clock(localMinute(live.syncedAt))}` : 'not synced yet') : clock(now)}</Mono>
+          {live && <Pressable accessibilityRole="button" onPress={live.onSignOut} style={({ pressed }) => [{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 8 }, pressed && { opacity: 0.6 }]}><Text style={[s.secondary, { textDecorationLine: 'underline' }]}>Sign out</Text></Pressable>}
         </View>
       </View>
     </View>
@@ -52,6 +55,18 @@ export function DemoLabel({ now, onPress, open }: { now: number; onPress: () => 
       <Icon name="sliders" size={15} color={c.presenterText} />
       <Text style={{ fontFamily: type.medium, fontSize: 14, color: c.presenterText }}>Demo — simulated conditions</Text>
     </Pressable>
+  );
+}
+
+/** Live mode: data comes from the Haven service, whose demo records are fictional. */
+export function LiveLabel({ name }: { name: string }) {
+  const { c } = useDash();
+  return (
+    <View accessible accessibilityLabel={`Connected to Haven service. ${name}. Demo data, fictional records.`}
+      style={{ minHeight: 44, paddingHorizontal: 12, borderRadius: 10, backgroundColor: c.presenter, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <Icon name="database" size={15} color={c.presenterText} />
+      <Text style={{ fontFamily: type.medium, fontSize: 14, color: c.presenterText }}>Live service · demo data</Text>
+    </View>
   );
 }
 

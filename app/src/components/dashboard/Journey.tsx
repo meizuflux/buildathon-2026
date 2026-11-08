@@ -6,6 +6,7 @@ import { clock } from '../../demo/time';
 import type { Closure, DemoHousehold, Recommendation } from '../../demo/types';
 import { Icon } from '../common/ui';
 import JourneyMap from './JourneyMap';
+import { distanceKm } from '../../demo/live';
 import { travelMode } from './Recommendation';
 import { Action, Heading, InlineNotice, Mono, StatusLabel, useDash } from './parts';
 
@@ -24,6 +25,10 @@ export function Journey({ rec, household, closures, travelling, online, onLeft }
   }
   const relevant = closures.filter((x) => d.shelter.routes.some((r) => r.roads.includes(x.road)));
   const blocking = (x: Closure) => !d.route || d.route.roads.includes(x.road);
+  // Live backend: no route data. Show straight-line distance, clearly labelled, and no route line.
+  const unknownRoute = d.shelter.routes.length === 0;
+  const km = distanceKm(household.location, d.shelter).toFixed(1);
+  const ok = !!d.route || unknownRoute;
 
   return (
     <View style={s.section} nativeID="journey">
@@ -38,24 +43,24 @@ export function Journey({ rec, household, closures, travelling, online, onLeft }
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 4 }} aria-label="Map legend">
           <Legend swatch={<View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: c.ink }} />} label="Home area" />
           <Legend swatch={<View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: c.green }} />} label="Shelter" />
-          <Legend swatch={<View style={{ width: 20, borderTopWidth: 3, borderStyle: 'dashed', borderColor: c.green }} />} label="Illustrative route, not navigation" />
-          <Legend swatch={<Text style={{ color: c.red, fontFamily: type.semibold, fontSize: 16, lineHeight: 16 }}>×</Text>} label="Road closed" />
+          {!unknownRoute && <Legend swatch={<View style={{ width: 20, borderTopWidth: 3, borderStyle: 'dashed', borderColor: c.green }} />} label="Illustrative route, not navigation" />}
+          {!unknownRoute && <Legend swatch={<Text style={{ color: c.red, fontFamily: type.semibold, fontSize: 16, lineHeight: 16 }}>×</Text>} label="Road closed" />}
         </View>
 
         {/* Route line: start → time → destination */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }} accessible
-          accessibilityLabel={d.route ? `From ${household.location.label} to ${d.shelter.name}, about ${d.route.minutes} minutes by ${travelMode(household)} via ${d.route.via}` : `No route to ${d.shelter.name} currently available`}>
+          accessibilityLabel={unknownRoute ? `${d.shelter.name} is ${km} kilometres away in a straight line. Travel time is not available.` : d.route ? `From ${household.location.label} to ${d.shelter.name}, about ${d.route.minutes} minutes by ${travelMode(household)} via ${d.route.via}` : `No route to ${d.shelter.name} currently available`}>
           <Stop icon="home" color={c.ink} label="Home" />
           <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
-            <View style={{ alignSelf: 'stretch', borderTopWidth: 3, borderStyle: 'dashed', borderColor: d.route ? c.green : c.red }} />
-            <View style={{ position: 'absolute', top: -14, backgroundColor: d.route ? c.green : c.red, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 }}>
-              <Text style={{ fontFamily: type.semibold, fontSize: 14, color: c.onPrimary, fontVariant: ['tabular-nums'] }}>{d.route ? `${d.route.minutes} min` : 'No route'}</Text>
+            <View style={{ alignSelf: 'stretch', borderTopWidth: 3, borderStyle: 'dashed', borderColor: ok ? c.green : c.red }} />
+            <View style={{ position: 'absolute', top: -14, backgroundColor: ok ? c.green : c.red, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 }}>
+              <Text style={{ fontFamily: type.semibold, fontSize: 14, color: c.onPrimary, fontVariant: ['tabular-nums'] }}>{unknownRoute ? `${km} km` : d.route ? `${d.route.minutes} min` : 'No route'}</Text>
             </View>
           </View>
-          <Stop icon="map-pin" color={c.green} label={d.shelter.name.split(' ')[0] ?? d.shelter.name} />
+          <Stop icon="map-pin" color={c.green} label={d.shelter.name.replace(/^Demo\s*—\s*/, '').split(' ')[0] ?? d.shelter.name} />
         </View>
         <Text style={s.secondary}>
-          {d.route ? `Via ${d.route.via} · by ${travelMode(household)} · estimated${d.rerouted ? ' · avoids a closure' : ''}` : 'Every known route passes a closed road.'}
+          {unknownRoute ? 'Straight-line distance. Travel time and roads aren’t available from the service.' : d.route ? `Via ${d.route.via} · by ${travelMode(household)} · estimated${d.rerouted ? ' · avoids a closure' : ''}` : 'Every known route passes a closed road.'}
         </Text>
 
         {relevant.map((x) => (
@@ -69,13 +74,13 @@ export function Journey({ rec, household, closures, travelling, online, onLeft }
 
         {travelling ? (
           <StatusLabel tone="primary" icon="navigation">You’re on your way. Destination won’t change automatically.</StatusLabel>
-        ) : rec.status === 'recommended' && d.route ? (
+        ) : rec.status === 'recommended' && ok ? (
           <View style={{ gap: 6 }}>
             <Action title="We’ve left" icon="log-out" variant="secondary" onPress={onLeft} disabled={!online} />
             <Text style={[s.secondary, { textAlign: 'center' }]}>{online ? 'Locks your destination. Doesn’t reserve a space.' : 'Unavailable offline.'}</Text>
           </View>
         ) : null}
-        {!d.route && <InlineNotice tone="critical" icon="alert-triangle" title="Route unavailable">Message a coordinator before travelling.</InlineNotice>}
+        {!ok && <InlineNotice tone="critical" icon="alert-triangle" title="Route unavailable">Message a coordinator before travelling.</InlineNotice>}
       </View>
     </View>
   );

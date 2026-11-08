@@ -10,9 +10,9 @@ import { Action, Heading, InlineNotice, LinkButton, Mono, StatusLabel, useDash }
 
 type Tab = 'official' | 'coordinator' | 'changes';
 
-export function Updates({ broadcasts, messages, notices, online, tab, onTab, onSend, onComposerFocus }: {
+export function Updates({ broadcasts, messages, notices, online, tab, onTab, onSend, onComposerFocus, live }: {
   broadcasts: Broadcast[]; messages: Message[]; notices: SystemNotice[]; online: boolean;
-  tab: Tab; onTab: (t: Tab) => void; onSend: (body: string, retryId?: string) => void; onComposerFocus: (focused: boolean) => void;
+  tab: Tab; onTab: (t: Tab) => void; onSend: (body: string, retryId?: string) => void; onComposerFocus: (focused: boolean) => void; live?: boolean;
 }) {
   const { c, s } = useDash();
   const tabs: { id: Tab; label: string; icon: IconName; count: number }[] = [
@@ -40,7 +40,7 @@ export function Updates({ broadcasts, messages, notices, online, tab, onTab, onS
         </View>
         <View role="tabpanel" style={{ padding: 20, gap: 16 }}>
           {tab === 'official' && <Official broadcasts={broadcasts} />}
-          {tab === 'coordinator' && <Coordinator messages={messages} online={online} onSend={onSend} onFocus={onComposerFocus} />}
+          {tab === 'coordinator' && <Coordinator messages={messages} online={online} onSend={onSend} onFocus={onComposerFocus} live={!!live} />}
           {tab === 'changes' && <Changes notices={notices} />}
         </View>
       </View>
@@ -69,7 +69,7 @@ function Official({ broadcasts }: { broadcasts: Broadcast[] }) {
   );
 }
 
-function Coordinator({ messages, online, onSend, onFocus }: { messages: Message[]; online: boolean; onSend: (body: string, retryId?: string) => void; onFocus: (f: boolean) => void }) {
+function Coordinator({ messages, online, onSend, onFocus, live }: { messages: Message[]; online: boolean; onSend: (body: string, retryId?: string) => void; onFocus: (f: boolean) => void; live: boolean }) {
   const { c, s } = useDash();
   const [draft, setDraft] = useState('');
   const sending = messages.some((m) => m.state === 'sending');
@@ -81,6 +81,8 @@ function Coordinator({ messages, online, onSend, onFocus }: { messages: Message[
   };
   return (
     <>
+      {live && <Text style={s.secondary}>Messages go to the coordination team as help requests. Replies aren’t shown in this app yet.</Text>}
+      {live && messages.length === 0 && <Text style={s.secondary}>No messages yet.</Text>}
       <View style={{ gap: 12 }} aria-live="polite">
         {messages.map((m) => <Bubble key={m.id} message={m} onRetry={() => onSend(m.body, m.id)} />)}
       </View>

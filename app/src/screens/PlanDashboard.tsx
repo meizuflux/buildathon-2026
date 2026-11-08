@@ -29,11 +29,13 @@ function scrollTo(id: string) {
 
 export default function PlanDashboard() {
   const { c } = useDash();
-  const { state, view, steps, updating, dispatch, sendMessage } = useDemo();
+  const { mode, live, state, view, steps, updating, dispatch, sendMessage } = useDemo();
+  const isLive = mode === 'live';
   const { width } = useWindowDimensions();
   const wide = width >= WIDE;
   const [editing, setEditing] = useState(false);
-  const [presenter, setPresenter] = useState(() => width >= WIDE);
+  const [presenterOpen, setPresenter] = useState(() => width >= WIDE);
+  const presenter = !isLive && presenterOpen;
   const [tab, setTab] = useState<'official' | 'coordinator' | 'changes'>('official');
   const [composing, setComposing] = useState(false);
   const [dock, setDock] = useState(0);
@@ -43,7 +45,7 @@ export default function PlanDashboard() {
   const stale = state.online && !!d && view.now - d.shelter.spacesReportedAt > STALE_AFTER_MINUTES;
   const message = () => { setTab('coordinator'); setTimeout(() => scrollTo('updates'), 0); };
   const reviewJourney = () => scrollTo('journey');
-  const showSticky = !wide && !presenter && !composing && !editing && !updating && rec.status === 'recommended' && !!d?.route;
+  const showSticky = !wide && !presenter && !composing && !editing && !updating && rec.status === 'recommended' && (!!d?.route || d?.shelter.routes.length === 0);
 
   const instruction = view.instruction && <OfficialInstructionBand instruction={view.instruction} now={view.now} />;
   const recommendation = (
@@ -58,7 +60,7 @@ export default function PlanDashboard() {
   );
   const updates = (
     <Updates broadcasts={view.broadcasts} messages={state.messages} notices={state.notices} online={state.online}
-      tab={tab} onTab={setTab} onSend={sendMessage} onComposerFocus={setComposing} />
+      tab={tab} onTab={setTab} onSend={sendMessage} onComposerFocus={setComposing} live={isLive} />
   );
   const alternatives = <Alternatives rec={rec} household={view.household} />;
 
@@ -68,7 +70,8 @@ export default function PlanDashboard() {
         <View style={{ width: '100%', maxWidth: 1180, alignSelf: 'center', gap: 24 }}>
           <View role="main" style={{ gap: 24 }}>
             <Header household={view.household.name} online={state.online} now={view.now}
-              onHousehold={() => setEditing(true)} onPresenter={() => setPresenter(!presenter)} presenterOpen={presenter} />
+              onHousehold={() => setEditing(true)} onPresenter={() => setPresenter(!presenter)} presenterOpen={presenter}
+              live={live && { name: live.disasterName, syncedAt: live.lastSync, onSignOut: live.signOut }} />
             <ConnectionBanner online={state.online} savedAt={state.saved?.now ?? view.now} stale={stale} staleSince={d?.shelter.spacesReportedAt ?? null} />
             {wide ? (
               <View style={{ flexDirection: 'row', gap: 32, alignItems: 'flex-start' }}>

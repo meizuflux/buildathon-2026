@@ -12,9 +12,9 @@ const LABELS: Record<Requirement, { needed: string; met: string; unmet: string; 
     unknown: 'Wheelchair access not confirmed',
   },
   dogs: {
-    needed: 'Space for a dog',
-    met: 'Dogs accepted',
-    unmet: 'Dogs not accepted',
+    needed: 'Space for pets',
+    met: 'Pets accepted',
+    unmet: 'Pets not accepted',
     unknown: 'Pet policy not confirmed',
   },
   children: {
@@ -74,7 +74,8 @@ export function assess(h: DemoHousehold, shelter: DemoShelter, closures: Closure
   }
 
   const route = shelter.routes.find((r) => !r.roads.some((road) => closed.has(road))) ?? null;
-  if (!route) {
+  // No routes at all means travel information is unavailable (live backend), not that roads are closed.
+  if (!route && shelter.routes.length > 0) {
     const names = closures.filter((c) => shelter.routes.some((r) => r.roads.includes(c.road))).map((c) => c.label);
     blockers.push(`No route available: ${names.join(' and ')} closed`);
   }
@@ -96,7 +97,7 @@ function rank(a: ShelterAssessment, b: ShelterAssessment) {
   );
 }
 
-function whyNot(alt: ShelterAssessment, chosen: ShelterAssessment | null): string {
+export function whyNot(alt: ShelterAssessment, chosen: ShelterAssessment | null): string {
   if (alt.blockers.length) return alt.blockers.join('. ') + '.';
   const softUnmet = alt.checks.filter((c) => c.need === 'possibly' && c.state === 'not_available');
   if (softUnmet.length) return `${softUnmet.map((c) => c.label).join('. ')}. This may matter for your household.`;

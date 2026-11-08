@@ -9,6 +9,7 @@ import type { DemoHousehold, Recommendation as Rec, ShelterAssessment } from '..
 import { Icon } from '../common/ui';
 import { Action, InlineNotice, LinkButton, Mono, StatusLabel, useDash } from './parts';
 import { NEED_VISUAL, NeedBadge, ShelterArt, Stat } from './visuals';
+import { distanceKm } from '../../demo/live';
 
 export function travelMode(h: DemoHousehold) {
   return h.vehicle === 'yes' ? 'car' : 'assisted transport';
@@ -68,6 +69,8 @@ export function Recommendation({ rec, household, now, updating, lastChange, onRe
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
             {d.route
               ? <Stat glyph={household.vehicle === 'yes' ? 'car' : undefined} icon="clock" value={`${d.route.minutes} min`} label={`by ${travelMode(household)}${d.rerouted ? ' · detour' : ''}`} />
+              : d.shelter.routes.length === 0
+              ? <Stat icon="navigation" value={`${distanceKm(household.location, d.shelter).toFixed(1)} km`} label="straight-line distance" />
               : <Stat icon="x-octagon" value="No route" label="roads closed" tone={c.red} />}
             <Spaces assessment={d} household={household} />
             <Stat icon="check-circle" value={`${d.checks.filter((x) => x.state === 'confirmed').length}/${d.checks.length}`} label="needs confirmed" tone={c.confirmed} />
@@ -82,7 +85,7 @@ export function Recommendation({ rec, household, now, updating, lastChange, onRe
             </View>
           </View>
 
-          <Freshness assessment={d} now={now} />
+          <Freshness assessment={d} now={now} reserved={!!rec.reserved} />
 
           {unknowns.length > 0 && (
             <InlineNotice tone="attention" icon="help-circle" title="Still unknown">
@@ -108,7 +111,7 @@ function Spaces({ assessment, household }: { assessment: ShelterAssessment; hous
 }
 
 /** When availability was reported, and that nothing is reserved. */
-function Freshness({ assessment, now }: { assessment: ShelterAssessment; now: number }) {
+function Freshness({ assessment, now, reserved }: { assessment: ShelterAssessment; now: number; reserved: boolean }) {
   const { s } = useDash();
   const at = assessment.shelter.spacesReportedAt;
   const stale = now - at > STALE_AFTER_MINUTES;
@@ -117,7 +120,9 @@ function Freshness({ assessment, now }: { assessment: ShelterAssessment; now: nu
       <StatusLabel tone={stale ? 'attention' : 'neutral'} icon="clock">
         Availability reported {clock(at)} ({ago(now, at)}){stale ? ' · may be out of date' : ''}
       </StatusLabel>
-      <StatusLabel tone="neutral" icon="info">Placement not confirmed. No space is reserved.</StatusLabel>
+      {reserved
+        ? <StatusLabel tone="neutral" icon="info">Space counted for you in the coordinators’ plan. Placement not confirmed.</StatusLabel>
+        : <StatusLabel tone="neutral" icon="info">Placement not confirmed. No space is reserved.</StatusLabel>}
       {stale && <Text style={[s.secondary, { paddingLeft: 24 }]}>Check again before you leave.</Text>}
     </View>
   );

@@ -143,4 +143,8 @@ export interface Recommendation {
   /** The household already left; the destination was kept even if conditions changed. */
   keptBecauseTravelling: boolean;
   advisory: string | null;
+  /** Live backend: the coordinators' plan counted space for this household. Still not a confirmed placement. */
+  reserved?: boolean;
+  /** Live backend: alert messages attached to the allocation plan. */
+  planAlerts?: string[];
 }

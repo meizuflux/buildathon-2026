@@ -7,6 +7,7 @@ import type { Answer, DemoHousehold, Recommendation, Requirement } from '../../d
 import { Icon } from '../common/ui';
 import { Action, Heading, InlineNotice, LinkButton, useDash } from './parts';
 import { Glyph, type GlyphName } from './visuals';
+import { PETS_UNSPECIFIED } from '../../demo/live';
 
 export function HouseholdFit({ household, rec, onEdit }: { household: DemoHousehold; rec: Recommendation; onEdit: () => void }) {
   const { c, s } = useDash();
@@ -16,7 +17,9 @@ export function HouseholdFit({ household, rec, onEdit }: { household: DemoHouseh
   const tiles: { key: string; glyph: GlyphName; value: string; label: string; requirement?: Requirement }[] = [
     { key: 'adults', glyph: 'adult', value: String(household.adults), label: household.adults === 1 ? 'Adult' : 'Adults' },
     ...(household.children > 0 ? [{ key: 'children', glyph: 'child' as const, value: String(household.children), label: household.children === 1 ? 'Child' : 'Children', requirement: 'children' as const }] : []),
-    ...(household.dogs > 0 ? [{ key: 'dogs', glyph: 'paw' as const, value: String(household.dogs), label: household.dogs === 1 ? 'Dog' : 'Dogs', requirement: 'dogs' as const }] : []),
+    ...(household.dogs > 0 ? [household.petNote === PETS_UNSPECIFIED
+      ? { key: 'dogs', glyph: 'paw' as const, value: 'Yes', label: 'Pets', requirement: 'dogs' as const }
+      : { key: 'dogs', glyph: 'paw' as const, value: String(household.dogs), label: household.dogs === 1 ? 'Dog' : 'Dogs', requirement: 'dogs' as const }] : []),
     ...(household.wheelchairEntrance !== 'no' ? [{ key: 'wheel', glyph: 'wheelchair' as const, value: household.wheelchairEntrance === 'yes' ? 'Needed' : 'Not sure', label: 'Step-free entry', requirement: 'wheelchairEntrance' as const }] : []),
     ...(household.poweredEquipment !== 'no' ? [{ key: 'power', glyph: 'power' as const, value: household.poweredEquipment === 'yes' ? 'Needed' : 'Not sure', label: 'Backup power', requirement: 'poweredEquipment' as const }] : []),
     { key: 'car', glyph: 'car', value: household.vehicle === 'yes' ? 'Yes' : household.vehicle === 'no' ? 'No' : 'Not sure', label: 'Vehicle' },
@@ -118,8 +121,9 @@ function Count({ label, value, min = 0, max = 9, onChange }: { label: string; va
 }
 
 /** Household needs editor. Answers are kept in a draft until saved, and kept if saving fails. */
-export function EditNeedsSheet({ visible, household, online, onSave, onClose }: {
+export function EditNeedsSheet({ visible, household, online, onSave, onClose, title = 'Edit household needs', saveTitle = 'Save and update recommendation', dismissable = true, saveError = null }: {
   visible: boolean; household: DemoHousehold; online: boolean; onSave: (h: DemoHousehold) => void; onClose: () => void;
+  title?: string; saveTitle?: string; dismissable?: boolean; saveError?: string | null;
 }) {
   const { c, s } = useDash();
   const [draft, setDraft] = useState(household);
@@ -136,14 +140,14 @@ export function EditNeedsSheet({ visible, household, online, onSave, onClose }: 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: 'rgba(20,45,66,0.45)', alignItems: 'center', justifyContent: 'flex-end' }}>
-        <View role="dialog" aria-modal aria-label="Edit household needs"
+        <View role="dialog" aria-modal aria-label={title}
           style={{ width: '100%', maxWidth: 560, maxHeight: '92%', backgroundColor: c.surface, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderRadius: 16, marginBottom: 0 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: c.border }}>
-            <Text accessibilityRole="header" aria-level={2} style={s.h2}>Edit household needs</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Close without saving" onPress={onClose}
+            <Text accessibilityRole="header" aria-level={2} style={s.h2}>{title}</Text>
+            {dismissable && <Pressable accessibilityRole="button" accessibilityLabel="Close without saving" onPress={onClose}
               style={({ pressed }) => [{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }, pressed && { opacity: 0.6 }]}>
               <Icon name="x" size={22} color={c.ink} />
-            </Pressable>
+            </Pressable>}
           </View>
           <ScrollView contentContainerStyle={{ padding: 20, gap: 20 }}>
             <Text style={s.secondary}>Not sure? That’s fine. We’ll show what’s still unknown.</Text>
@@ -152,15 +156,15 @@ export function EditNeedsSheet({ visible, household, online, onSave, onClose }: 
             <View style={{ gap: 12 }}>
               <Count label="Adults" value={draft.adults} min={1} onChange={(n) => set('adults', n)} />
               <Count label="Children" value={draft.children} onChange={(n) => setDraft((d) => ({ ...d, children: n, childAges: d.childAges.slice(0, n) }))} />
-              <Count label="Dogs" value={draft.dogs} onChange={(n) => set('dogs', n)} />
+              <Count label={draft.petNote === PETS_UNSPECIFIED ? 'Pets' : 'Dogs'} value={draft.dogs} onChange={(n) => set('dogs', n)} />
             </View>
             <Choice label="Do you have a vehicle you can use?" value={draft.vehicle} onChange={(v) => set('vehicle', v)} />
             <Choice label="Do you need help with transport?" value={draft.transportHelp} onChange={(v) => set('transportHelp', v)} />
-            {error && <InlineNotice tone="critical" icon="alert-circle" title="Not saved">{error}</InlineNotice>}
+            {(error ?? saveError) && <InlineNotice tone="critical" icon="alert-circle" title="Not saved">{error ?? saveError}</InlineNotice>}
           </ScrollView>
           <View style={{ padding: 20, paddingTop: 12, gap: 8, borderTopWidth: 1, borderTopColor: c.border }}>
-            <Action title="Save and update recommendation" icon="check" onPress={save} />
-            <LinkButton title="Cancel" onPress={onClose} tone="neutral" />
+            <Action title={saveTitle} icon="check" onPress={save} />
+            {dismissable && <LinkButton title="Cancel" onPress={onClose} tone="neutral" />}
           </View>
         </View>
       </View>
