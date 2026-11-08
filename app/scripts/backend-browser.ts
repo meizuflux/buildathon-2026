@@ -1,16 +1,29 @@
 ﻿import { randomBytes } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 async function run() {
   const { default: puppeteer } = await import('puppeteer-core');
   const url = process.env.HAVEN_AUDIT_URL ?? 'http://localhost:8081';
+  const apiBase = process.env.HAVEN_TEST_API_URL ?? process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:8000';
+  const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+  const disasterResponse = await fetch(apiBase + '/api/disasters');
+  assert(disasterResponse.ok, 'Start the app backend before running this UI test.');
+  const { disasters } = await disasterResponse.json() as { disasters: { id: string }[] };
+  const disaster = disasters[0]; assert(disaster, 'Run just demo-data from the backend folder first.');
+  const shelterResponse = await fetch(apiBase + '/api/shelters?disaster_id=' + encodeURIComponent(disaster.id));
+  assert(shelterResponse.ok, 'Unable to load shelters from the app backend.');
+  const { shelters } = await shelterResponse.json() as { shelters: { status: string; location: { latitude: number; longitude: number }; capabilities: { pets_allowed: boolean; child_friendly: boolean } }[] };
+  const shelter = shelters.find(item => item.status === 'open' && item.capabilities.pets_allowed && item.capabilities.child_friendly);
+  assert(shelter, 'The seeded disaster must have an open child- and pet-friendly shelter.');
   const browser = await puppeteer.launch({ executablePath: process.env.CHROME_PATH ?? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', headless: true });
-  const out = resolve('..', '.hallmark/screens'); mkdirSync(out, { recursive: true });
+  await browser.defaultBrowserContext().overridePermissions(new URL(url).origin, ['geolocation']);
+  const out = resolve(appRoot, '.expo/backend-screens'); mkdirSync(out, { recursive: true });
   const errors: string[] = []; const reports: { id: string; status: string; message: string }[] = [];
   const suffix = randomBytes(8).toString('hex');
   try {
-    const page = await browser.newPage(); await page.setViewport({ width: 390, height: 844 });
+    const page = await browser.newPage(); await page.setViewport({ width: 390, height: 844 }); await page.setGeolocation(shelter.location);
     page.on('pageerror', error => errors.push(String(error)));
     page.on('response', response => { if (/\/api\/families\/[^/]+\/reports$/.test(response.url()) && response.request().method() === 'POST' && response.ok()) void response.json().then(body => reports.push(body)); });
     async function clickVisible(label: string) {
@@ -18,13 +31,13 @@ async function run() {
       for (const element of elements) { const bounds = await element.boundingBox(); if (bounds && bounds.width > 0 && bounds.height > 0) { await element.click(); return; } }
       throw new Error('No visible action: ' + label);
     }
-    await page.goto(url + '/(tabs)', { waitUntil: 'domcontentloaded' });
+    await page.goto(url + '/', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('[aria-label="Create an account"]', { timeout: 30000 });
     await page.locator('[aria-label="Create an account"]').click();
     await page.locator('[aria-label="Email"]').fill('mobile-' + suffix + '@integration.example');
     await page.locator('[aria-label="Password"]').fill(randomBytes(24).toString('hex'));
     await page.locator('[aria-label="Create account"]').click();
-    await page.waitForFunction(() => document.body.innerText.includes('Around you'), { timeout: 30000 }).catch(async error => { console.log((await page.evaluate(() => document.body.innerText)).slice(0, 2200)); await page.screenshot({ path: resolve(out, 'live-backend-auth-failure.png') }); throw error; });
+    await page.waitForFunction(() => Array.from(document.querySelectorAll('[role="heading"]')).some(heading => heading.getAttribute('aria-level') === '1' && heading.textContent?.trim() === 'My Plan'), { timeout: 30000 }).catch(async error => { console.log((await page.evaluate(() => document.body.innerText)).slice(0, 2200)); await page.screenshot({ path: resolve(out, 'live-backend-auth-failure.png') }); throw error; });
     await page.goto(url + '/(onboarding)', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('[aria-label="Number of people in household"]');
     await page.locator('[aria-label="Number of people in household"]').fill('4');
@@ -35,13 +48,13 @@ async function run() {
     await page.locator('[aria-label="We have access to a car"]').click();
     await page.locator('[aria-label="Continue"]').click();
     await page.waitForSelector('[aria-label="Full home address"]');
-    await page.locator('[aria-label="Full home address"]').fill('Demo household, Golden Gate Estates, Naples, FL 34120');
-    await page.locator('[aria-label="Latitude"]').fill('26.25');
-    await page.locator('[aria-label="Longitude"]').fill('-81.58');
+    await page.locator('[aria-label="Current location"]').click();
+    await page.waitForFunction(() => document.body.innerText.includes('Current location ·'));
     await page.locator('[aria-label="Continue"]').click();
     await page.waitForSelector('[aria-label="Save household profile"]');
     await page.locator('[aria-label="Save household profile"]').click();
-    await page.waitForFunction(() => document.body.innerText.includes('Shelter assignment'), { timeout: 30000 });
+    await page.waitForFunction(() => document.body.innerText.includes('Assigned shelter'), { timeout: 30000 });
+    await clickVisible('Nearby');
     await page.waitForSelector('.leaflet-container');
     await page.screenshot({ path: resolve(out, 'live-backend-shelter.png') });
     await clickVisible('Support');
@@ -52,16 +65,16 @@ async function run() {
     assert.equal(reports.length, 1); assert.equal(reports[0]?.status, 'received'); assert.equal(reports[0]?.message, 'Live mobile test: can you help with transportation?');
     await page.screenshot({ path: resolve(out, 'live-backend-support.png') });
     await clickVisible('Household');
-    await page.locator('[aria-label="Edit household"]').click();
+    await page.locator('[aria-label="Edit Details"]').click();
     await page.waitForSelector('[aria-label="Save changes"]');
     assert.equal(await page.$('[aria-label="Continue"]'), null);
     await page.locator('[aria-label="Number of people in household"]').fill('5');
     await page.locator('[aria-label="Save changes"]').click();
     await page.waitForFunction(() => window.location.pathname.includes('/profile'));
-    await page.waitForSelector('[aria-label="Edit household"]', { visible: true });
+    await page.waitForSelector('[aria-label="Edit Details"]', { visible: true });
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('[aria-label="Edit household"]', { visible: true }).catch(async error => { console.log((await page.evaluate(() => document.body.innerText)).slice(0, 2000)); throw error; });
-    await page.locator('[aria-label="Edit household"]').click();
+    await page.waitForSelector('[aria-label="Edit Details"]', { visible: true }).catch(async error => { console.log((await page.evaluate(() => document.body.innerText)).slice(0, 2000)); throw error; });
+    await page.locator('[aria-label="Edit Details"]').click();
     await page.waitForSelector('[aria-label="Number of people in household"]');
     assert.equal(await page.$eval('[aria-label="Number of people in household"]', el => (el as HTMLInputElement).value), '5');
     assert.equal(await page.$eval('[aria-label="Dogs count"]', el => el.textContent), '1');

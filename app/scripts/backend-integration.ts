@@ -1,12 +1,15 @@
 ﻿import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { createMasterAdapter } from '../src/services/adapters/masterAdapter';
 import { makeHttpClient, ApiError } from '../src/services/api/http';
-import { loginSchema, userSchema } from '../src/services/api/masterSchemas';
+import { loginSchema, pointSchema, userSchema } from '../src/services/api/masterSchemas';
 import type { CacheStore } from '../src/storage/cache';
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const backendRoot = resolve(repoRoot, 'backend');
 async function run() {
   const base = process.env.HAVEN_TEST_API_URL ?? 'http://127.0.0.1:8000';
   if (!/^http:\/\/(127\.0\.0\.1|localhost):/.test(base)) throw new Error('This test only creates data in a local backend.');
@@ -21,8 +24,11 @@ async function run() {
   const api = createMasterAdapter(http, store, base);
   assert.equal(await api.getHousehold(), null);
   const disasters = await api.getDisasters(); assert(disasters.length, 'Run npm run backend:seed first.');
-  const disaster = disasters.find(d => d.id === 'demo_golden_gate_hurricane')!; assert(disaster);
-  const input = { name: 'My household', disasterId: disaster.id, adults: 2, children: 2, pets: 2, petTypes: '2 dogs', petDetails: [{ kind: 'Dogs', count: 2 }], needs: [], otherNeeds: '', hasCar: true, canDrive: false, seats: 0, needsTransport: false, needsShelter: false, needsFood: false, location: { label: '100 Integration Road, Golden Gate Estates, FL', latitude: 26.28490551, longitude: -81.54218268 } };
+  const disaster = disasters[0]!;
+  const shelters = await http('/api/shelters?disaster_id=' + encodeURIComponent(disaster.id), z.object({ shelters: z.array(z.object({ status: z.string(), location: pointSchema, capabilities: z.object({ pets_allowed: z.boolean(), child_friendly: z.boolean() }).passthrough() })) }));
+  const shelter = shelters.shelters.find(item => item.status === 'open' && item.capabilities.pets_allowed && item.capabilities.child_friendly);
+  assert(shelter, 'The seeded disaster must have an open child- and pet-friendly shelter.');
+  const input = { name: 'My household', disasterId: disaster.id, adults: 2, children: 2, pets: 2, petTypes: '2 dogs', petDetails: [{ kind: 'Dogs', count: 2 }], needs: [], otherNeeds: '', hasCar: true, canDrive: false, seats: 0, needsTransport: false, needsShelter: false, needsFood: false, location: { label: 'Integration test address, ' + disaster.affectedArea, ...shelter.location } };
   const family = await api.createHousehold(input); assert.equal(family.adults, 2); assert.equal(family.petDetails?.[0]?.count, 2);
   assert.equal((await api.getHousehold())?.location.label, input.location.label);
   const plan = await api.getCurrentPlan(); assert(plan?.shelterAssignment?.coordinates, 'The actual allocator must return a mapped shelter.');
@@ -35,8 +41,8 @@ async function run() {
   assert.equal((await api.getSituationReports()).length, 1);
   // Create a local test operator without modifying backend source or using shared credentials.
   const operatorEmail = 'operator-' + suffix + '@integration.example'; const operatorPassword = randomBytes(24).toString('hex');
-  const python = resolve('..', 'backend/.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
-  const seed = spawnSync(python, ['-c', 'import asyncio,os,uuid; from haven.auth import hash_password,now,timestamp; from haven.db import connect\nasync def main():\n async with connect() as db:\n  await db.execute("INSERT INTO users (id,email,password_hash,role,created_at) VALUES (?,?,?,?,?)",("user_"+uuid.uuid4().hex,os.environ["TEST_EMAIL"],hash_password(os.environ["TEST_PASSWORD"]),"operator",timestamp(now())))\nasyncio.run(main())'], { env: { ...process.env, DATABASE_PATH: process.env.DATABASE_PATH ?? resolve('..', '.runtime/haven.sqlite3'), TEST_EMAIL: operatorEmail, TEST_PASSWORD: operatorPassword }, encoding: 'utf8', windowsHide: true });
+  const python = resolve(backendRoot, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
+  const seed = spawnSync(python, ['-c', 'import asyncio,os,uuid; from haven.auth import hash_password,now,timestamp; from haven.db import connect\nasync def main():\n async with connect() as db:\n  await db.execute("INSERT INTO users (id,email,password_hash,role,created_at) VALUES (?,?,?,?,?)",("user_"+uuid.uuid4().hex,os.environ["TEST_EMAIL"],hash_password(os.environ["TEST_PASSWORD"]),"operator",timestamp(now())))\nasyncio.run(main())'], { cwd: backendRoot, env: { ...process.env, DATABASE_PATH: process.env.DATABASE_PATH ?? resolve(backendRoot, 'disaster_response.sqlite3'), TEST_EMAIL: operatorEmail, TEST_PASSWORD: operatorPassword }, encoding: 'utf8', windowsHide: true });
   assert.equal(seed.status, 0, seed.stderr);
   const opLogin = await http('/api/auth/login', loginSchema, { method: 'POST', body: { email: operatorEmail, password: operatorPassword } });
   const operator = makeHttpClient(base, async () => opLogin.access_token);

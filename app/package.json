@@ -12,11 +12,8 @@
     "test": "tsx --test tests/*.test.ts",
     "build:web": "expo export --platform web",
     "design:audit": "tsx scripts/backend-browser.ts",
-    "backend:start": "node scripts/backend.mjs",
-    "backend:seed": "node scripts/backend.mjs --seed",
     "test:backend": "tsx scripts/backend-integration.ts",
-    "test:backend:ui": "tsx scripts/backend-browser.ts",
-    "backend:verify": "node scripts/verify-backend.mjs"
+    "test:backend:ui": "tsx scripts/backend-browser.ts"
   },
   "dependencies": {
     "@expo-google-fonts/ibm-plex-mono": "^0.4.1",
